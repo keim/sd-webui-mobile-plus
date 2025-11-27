@@ -1,0 +1,47 @@
+@media (min-width: 769px) {
+    #responsive-design-inject-panel {
+        display: none !important;
+    }
+}
+
+#responsive-design-inject-panel {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: row;
+    left: 0px;
+    right: 0px;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+#responsive-design-inject-panel > button {
+    pointer-events: auto;
+    position: relative;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#responsive-design-inject-panel > .operator {
+    display: none;
+}
+
+#responsive-design-inject-panel.opened > .operator {
+    display: flex;
+}
+
+#responsive-design-inject-button {
+    background-image: url('./svg/power.svg');
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 2rem;
+    height: 2rem;
+}
+
+.opened > #responsive-design-inject-button {
+    background-color: #ccddff;
+}
