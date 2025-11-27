@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #tabs > .tab-nav,
 #txt2img_extra_tabs > .tab-nav {
     flex-wrap: nowrap !important;
@@ -43,3 +44,50 @@
     display: none;
 }
 
+=======
+#tabs > .tab-nav,
+#txt2img_extra_tabs > .tab-nav {
+    flex-wrap: nowrap !important;
+    overflow-x: scroll !important;
+    min-height: 1.6rem !important;
+}
+#tabs > .tab-nav > button,
+#txt2img_extra_tabs > .tab-nav > button {
+    height: 1.6rem;
+    padding: 0px 16px;
+}
+#quicksettings, 
+#txt2img_tools, 
+#txt2img_styles_edit_button, 
+.extra-networks-controls-div {
+    display: none;
+}
+.nega-hidden #txt2img_neg_prompt_row{
+    display: none;
+}
+.nega-hidden #txt2img_styles{
+    display: none;
+}
+#txt2img_sampling,
+#txt2img_scheduler,
+#txt2img_steps {
+    display: none;
+}
+#txt2img_hr,
+#txt2img_enable,
+#txt2img_column_size,
+#txt2img_dimensions_row,
+#txt2img_column_batch {
+    display: none;
+}
+#txt2img_cfg_scale,
+#txt2img_seed_row,
+#txt2img_seed_extras,
+#txt2img_override_settings_row {
+    display: none;
+}
+#txt2img_script_container {
+    display: none;
+}
+
+>>>>>>> bdd6376ba6b8dd6e8e69612a423e2a075c8ec3d0
