@@ -1,71 +1,134 @@
 /* Responsive Design CSS for Smartphone Plus */
-#tabs > .tab-nav,
-#txt2img_extra_tabs > .tab-nav {
+.tab-nav {
     flex-wrap: nowrap !important;
+    white-space: nowrap !important;
     overflow-x: scroll !important;
     min-height: 1.6rem !important;
 }
-#tabs > .tab-nav > button,
-#txt2img_extra_tabs > .tab-nav > button {
+.tab-nav > button {
     height: 1.6rem;
     padding: 0px 16px;
 }
-
-#txt2img_extra_tabs > .tab-nav > button:nth-child(2),
-#txt2img_extra_tabs > .tab-nav > button:nth-child(3),
-#txt2img_extra_tabs > .tab-nav > button:nth-child(4) {
-    display: none;
+#tabs {
+    background-color: var(--background-fill-primary);
+    margin-top: 1.6rem;
+}
+#tabs > .tab-nav {
+    background-color: var(--background-fill-primary) !important;
+    margin-top: -1.6rem;
+    z-index: 10000;
+}
+#quicksettings {
+    background-color: var(--background-fill-primary) !important;
+    position: fixed;
+    z-index: 10000;
+    margin: 2rem 0.5rem;
+    padding: 1rem 0.5rem !important;
+    border-style: solid;
+    border-width: 1px;
+    border-color: gray;
 }
 
+.app {
+    padding: 0 !important;
+}
+
+/* t2i prompter */
+#txt2img_prompt textarea,
+#img2img_prompt textarea {
+    height: 12rem !important;
+}
+/* t2i result screen */
 #txt2img_results {
     margin: 0 !important;
 }
 
-#txt2img_lora_cards > .card {
-    height: 4rem;
+/* checkpoint,lora cards */
+#txt2img_lora_cards > .card,
+#txt2img_checkpoints_cards > .card, 
+#img2img_lora_cards > .card,
+#img2img_checkpoints_cards > .card {
+    height: 6rem;
+    width: 100%;
     margin: 0 !important;
-    font-size: 50% !important;
+    font-size: 75% !important;
+}
+#txt2img_checkpoints_dirs > button,
+#txt2img_lora_dirs > button,
+#img2img_checkpoints_dirs > button,
+#img2img_lora_dirs > button {
+    height: 1.6rem;
 }
 
-#quicksettings, 
+/* Hide some UI parts */
 #txt2img_tools, 
+#txt2img_extra_tabs > .tab-nav > button:nth-child(2),
+#txt2img_extra_tabs > .tab-nav > button:nth-child(3),
+#img2img_extra_tabs > .tab-nav > button:nth-child(2),
+#img2img_extra_tabs > .tab-nav > button:nth-child(3),
 .extra-networks-controls-div {
     display: none;
 }
 
-/* Negaボタンで切り替え */
-.nega-hidden #txt2img_prompt_container > div:last-child,
-.nega-hidden #txt2img_actions_column {
+.setting-hidden #sspp-setting {
+    background-color: #fff !important;
+}
+.setting-hidden #txt2img_seed_row,
+.setting-hidden #txt2img_seed_extras,
+.setting-hidden #quicksettings,
+.setting-hidden #resize_mode,
+.setting-hidden #soft_inpainting_enabled,
+.setting-hidden #soft_inpainting_enabled,
+.setting-hidden #img2img_denoising_strength,
+.setting-hidden #img2img_seed_row,
+.setting-hidden #img2img_seed_extras {
     display: none;
 }
 
-/* Sampleボタンで切り替え */
-.sample-hidden #sampler_selection_txt2img {
+.nega-prompt-hidden #sspp-nega-prompt {
+    background-color: #fff !important;
+}
+.nega-prompt-hidden #txt2img_neg_prompt_row,
+.nega-prompt-hidden #txt2img_actions_column, 
+.nega-prompt-hidden #img2img_neg_prompt_row,
+.nega-prompt-hidden #img2img_actions_column {
     display: none;
 }
 
-/* Sizeボタンで切り替え */
+.sampling-hidden #sspp-sampling {
+    background-color: #fff !important;
+}
+.sampling-hidden #sampler_selection_txt2img,
+.sampling-hidden #sampler_selection_img2img {
+    display: none;
+}
+
+.size-hidden #sspp-size {
+    background-color: #fff !important;
+}
+.size-hidden #txt2img_accordions,
 .size-hidden #txt2img_column_size,
-.size-hidden #txt2img_dimensions_row {
+.size-hidden #txt2img_dimensions_row,
+.size-hidden #img2img_accordions,
+.size-hidden #img2img_column_size,
+.size-hidden #img2img_dimensions_row {
     display: none;
 }
 
-#txt2img_prompt textarea {
-    height: 12rem !important;
-}
 
-#txt2img_accordions,
-#txt2img_column_batch {
+#txt2img_column_batch,
+#img2img_column_batch {
     display: none;
 }
 
 #txt2img_cfg_scale,
-#txt2img_seed_row,
-#txt2img_seed_extras,
-#txt2img_override_settings_row {
+#txt2img_override_settings_row,
+#img2img_cfg_scale,
+#img2img_override_settings_row {
     display: none;
 }
 
-#txt2img_script_container {
+#txt2img_script_container,
+#img2img_script_container {
     display: none;
 }

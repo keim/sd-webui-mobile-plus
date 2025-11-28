@@ -1,40 +1,38 @@
 // 画面上部のInjectパネルの表示/非表示を切り替える
 function insertPanel() {
-    const panel = document.createElement('div');
+    const panel = document.getElementById('sd-smartphone-plus-panel');
+    const root = document.getElementById('tabs').parentNode;
 
-    // Injectボタンの追加
-    _insertButton(panel, "", "responsive-design-inject-button", "", e => {
+    _setOnClick('sspp-inject-css', () => {
         panel.classList.toggle("opened", _toggleResponsiveCSS());
+    })
+    // Negaボタンの追加
+    _setOnClick('sspp-setting', e => {
+        root.classList.toggle("setting-hidden");
     });
     // Negaボタンの追加
-    _insertButton(panel, "Nega", "nagetive-prompt-toggle-button", "operator", e => {
-        document.getElementById('tabs').classList.toggle("nega-hidden");
+    _setOnClick('sspp-nega-prompt', e => {
+        root.classList.toggle("nega-prompt-hidden");
     });
     // Sampleボタンの追加
-    _insertButton(panel, "Sample", "sample-toggle-button", "operator", e => {
-        document.getElementById('tabs').classList.toggle("sample-hidden");
+    _setOnClick('sspp-sampling', e => {
+        root.classList.toggle("sampling-hidden");
     });
     // Sizeボタンの追加
-    _insertButton(panel, "Size", "size-toggle-button", "operator", e => {
-        document.getElementById('tabs').classList.toggle("size-hidden");
+    _setOnClick('sspp-size', e => {
+        root.classList.toggle("size-hidden");
     });
 
-    // パネル追加
-    panel.id = 'responsive-design-inject-panel';
-    document.body.insertBefore(panel, document.body.firstChild);
-    
-    console.log("Responsive design CSS injector has been loaded.")
+    root.appendChild(panel)
+    root.classList.add('setting-hidden', 'nega-prompt-hidden', 'sampling-hidden', 'size-hidden');
+
+    console.log("Responsive design CSS injector has been loaded.");
 }
 
 
 // パネルにボタンを追加するユーティリティ関数
-function _insertButton(panel, label, id, className, onClick) {
-    const button = document.createElement('button');
-    button.id = id;
-    button.className = className;
-    button.textContent = label;
-    button.addEventListener('click', onClick);
-    panel.appendChild(button);
+function _setOnClick(id, onClick) {
+    document.getElementById(id).addEventListener('click', onClick)
 }
 
 
@@ -51,17 +49,9 @@ function _toggleResponsiveCSS() {
         link.type = 'text/css';
         link.href = 'file=extensions/sd-webui-smartphone-plus/responsive.css';
         document.head.appendChild(link);
-
-        // Negaボタンの初期状態設定
-        document.getElementById('tabs').classList.add("nega-hidden", "size-hidden", "sample-hidden");
-
         return true
     } else {
         existingLink.remove();
         return false
     }
 }
-
-
-// ページ読み込み時に自動的にInjectボタンを表示
-document.addEventListener('DOMContentLoaded', insertPanel);

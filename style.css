@@ -1,46 +1,83 @@
+/* the Panel is shown only in smart phone */
 @media (min-width: 769px) {
-    #responsive-design-inject-panel {
+    #sd-smartphone-plus-panel {
         display: none !important;
     }
 }
 
-#responsive-design-inject-panel {
+/* panel */
+#sd-smartphone-plus-panel {
+    position: fixed;
     display: flex;
-    align-items: flex-start;
     flex-direction: row;
     left: 0px;
     right: 0px;
+    bottom: 0px;
     pointer-events: none;
     z-index: 10000;
 }
 
-#responsive-design-inject-panel > button {
+#sd-smartphone-plus-panel > button {
     pointer-events: auto;
     position: relative;
-    padding: 0.2rem 1rem;
+    flex: 0 1 16.67%;
+    display: flex;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0rem 0.6rem;
+    padding-top: 2rem;
     margin: 0.1rem;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.6rem;
     font-weight: bold;
+    border-style: solid;
+    border-width: 1px;
+    border-color: gray;
+    background-repeat: no-repeat;
+    background-size: 50%;
+    background-position: top;
 }
 
-#responsive-design-inject-panel > .operator {
+#sd-smartphone-plus-panel > button.operator {
+    display: none;
+    background-color: #abf;
+}
+
+#sspp-inject-css {
+    background-image: url('./svg/power.svg');
+    background-color: #fff;
+}
+#sspp-setting {
+    background-image: url('./svg/cog.svg');
+}
+#sspp-nega-prompt {
+    background-image: url('./svg/receipt-text-minus.svg');
+}
+#sspp-sampling {
+    background-image: url('./svg/layers-triple.svg');
+}
+#sspp-size {
+    background-image: url('./svg/resize.svg');
+}
+
+#sd-smartphone-plus-panel.opened > #sspp-inject-css {
+    background-color: #abf;
+}
+#sd-smartphone-plus-panel > #sspp-inject-css > span.sspp-button-label-on {
     display: none;
 }
-#responsive-design-inject-panel.opened > .operator {
+#sd-smartphone-plus-panel.opened > #sspp-inject-css > span.sspp-button-label-on {
+    display: flex;
+}
+#sd-smartphone-plus-panel > #sspp-inject-css > span.sspp-button-label-onff {
+    display: flex;
+}
+#sd-smartphone-plus-panel.opened > #sspp-inject-css > span.sspp-button-label-off {
+    display: none;
+}
+#sd-smartphone-plus-panel.opened > button.operator {
     display: flex;
 }
 
-#responsive-design-inject-button {
-    background-image: url('./svg/power.svg');
-    background-repeat: no-repeat;
-    background-size: contain;
-    width: 1.6rem;
-    height: 1.6rem;
-}
-
-.opened > #responsive-design-inject-button {
-    background-color: #ccddff;
-}
