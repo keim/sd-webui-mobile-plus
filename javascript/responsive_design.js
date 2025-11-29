@@ -7,16 +7,12 @@ function insertPanel() {
         panel.classList.toggle("opened", _toggleResponsiveCSS());
     })
     // Negaボタンの追加
-    _setOnClick('sspp-setting', e => {
-        root.classList.toggle("setting-hidden");
-    });
-    // Negaボタンの追加
     _setOnClick('sspp-nega-prompt', e => {
         root.classList.toggle("nega-prompt-hidden");
     });
-    // Sampleボタンの追加
-    _setOnClick('sspp-sampling', e => {
-        root.classList.toggle("sampling-hidden");
+    // Configボタンの追加
+    _setOnClick('sspp-config', e => {
+        root.classList.toggle("config-hidden");
     });
     // Sizeボタンの追加
     _setOnClick('sspp-size', e => {
@@ -24,7 +20,7 @@ function insertPanel() {
     });
 
     root.appendChild(panel)
-    root.classList.add('setting-hidden', 'nega-prompt-hidden', 'sampling-hidden', 'size-hidden');
+    root.classList.add('size-hidden', 'config-hidden', 'nega-prompt-hidden');
 
     console.log("Responsive design CSS injector has been loaded.");
 }

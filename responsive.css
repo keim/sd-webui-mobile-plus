@@ -18,17 +18,6 @@
     margin-top: -1.6rem;
     z-index: 10000;
 }
-#quicksettings {
-    background-color: var(--background-fill-primary) !important;
-    position: fixed;
-    z-index: 10000;
-    margin: 2rem 0.5rem;
-    padding: 1rem 0.5rem !important;
-    border-style: solid;
-    border-width: 1px;
-    border-color: gray;
-}
-
 .app {
     padding: 0 !important;
 }
@@ -60,28 +49,19 @@
     height: 1.6rem;
 }
 
+#img2img_image {
+    max-height:40remm !important;
+    object-fit: contain;
+}
+
 /* Hide some UI parts */
 #txt2img_tools, 
 #txt2img_extra_tabs > .tab-nav > button:nth-child(2),
 #txt2img_extra_tabs > .tab-nav > button:nth-child(3),
 #img2img_extra_tabs > .tab-nav > button:nth-child(2),
 #img2img_extra_tabs > .tab-nav > button:nth-child(3),
+#quicksettings,
 .extra-networks-controls-div {
-    display: none;
-}
-
-.setting-hidden #sspp-setting {
-    background-color: #fff !important;
-}
-.setting-hidden #txt2img_seed_row,
-.setting-hidden #txt2img_seed_extras,
-.setting-hidden #quicksettings,
-.setting-hidden #resize_mode,
-.setting-hidden #soft_inpainting_enabled,
-.setting-hidden #soft_inpainting_enabled,
-.setting-hidden #img2img_denoising_strength,
-.setting-hidden #img2img_seed_row,
-.setting-hidden #img2img_seed_extras {
     display: none;
 }
 
@@ -95,40 +75,37 @@
     display: none;
 }
 
-.sampling-hidden #sspp-sampling {
+.config-hidden #sspp-config {
     background-color: #fff !important;
 }
-.sampling-hidden #sampler_selection_txt2img,
-.sampling-hidden #sampler_selection_img2img {
+.config-hidden #txt2img_seed_row,
+.config-hidden #txt2img_seed_extras,
+.config-hidden #resize_mode,
+.config-hidden #soft_inpainting_enabled,
+.config-hidden #soft_inpainting_enabled,
+.config-hidden #img2img_denoising_strength,
+.config-hidden #img2img_seed_row,
+.config-hidden #img2img_seed_extras {
     display: none;
 }
-
+.config-hidden #sampler_selection_txt2img,
+.config-hidden #txt2img_accordions,
+.config-hidden #txt2img_column_size,
+.config-hidden #txt2img_dimensions_row,
+.config-hidden #txt2img_column_batch,
+.config-hidden #txt2img_cfg_scale,
+.config-hidden #txt2img_override_settings_row,
+.config-hidden #txt2img_script_container,
+.config-hidden #sampler_selection_img2img,
+.config-hidden #img2img_accordions,
+.config-hidden #img2img_column_size,
+.config-hidden #img2img_dimensions_row,
+.config-hidden #img2img_column_batch,
+.config-hidden #img2img_cfg_scale,
+.config-hidden #img2img_override_settings_row,
+.config-hidden #img2img_script_container {
+    display: none;
+}
 .size-hidden #sspp-size {
     background-color: #fff !important;
-}
-.size-hidden #txt2img_accordions,
-.size-hidden #txt2img_column_size,
-.size-hidden #txt2img_dimensions_row,
-.size-hidden #img2img_accordions,
-.size-hidden #img2img_column_size,
-.size-hidden #img2img_dimensions_row {
-    display: none;
-}
-
-
-#txt2img_column_batch,
-#img2img_column_batch {
-    display: none;
-}
-
-#txt2img_cfg_scale,
-#txt2img_override_settings_row,
-#img2img_cfg_scale,
-#img2img_override_settings_row {
-    display: none;
-}
-
-#txt2img_script_container,
-#img2img_script_container {
-    display: none;
 }

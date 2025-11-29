@@ -8,17 +8,14 @@ def on_ui_tabs():
         gr.HTML("""
 <div id="sd-smartphone-plus-panel" class="">
     <button id="sspp-inject-css" class="">
-        <span class="sspp-button-label-off">Inject CSS</span>
-        <span class="sspp-button-label-on">Extract CSS</span>
-    </button>
-    <button id="sspp-setting" class="operator">
-        <span class="sspp-button-label">Setting</span>
+        <span class="sspp-button-label-off">InjectCSS</span>
+        <span class="sspp-button-label-on">ExtractCSS</span>
     </button>
     <button id="sspp-nega-prompt" class="operator">
         <span class="sspp-button-label">Negative</span>
     </button>
-    <button id="sspp-sampling" class="operator">
-        <span class="sspp-button-label">Sampling</span>
+    <button id="sspp-config" class="operator">
+        <span class="sspp-button-label">Props</span>
     </button>
     <button id="sspp-size" class="operator">
         <span class="sspp-button-label">Size</span>
