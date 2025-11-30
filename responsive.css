@@ -116,4 +116,6 @@
 .size-select #sspp-size-selector {
     display: flex !important;
 }
-
+.word-select #sspp-currword {
+    background-color: #ccc !important;
+}

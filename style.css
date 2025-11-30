@@ -9,15 +9,20 @@
 #sd-smartphone-plus-panel {
     position: fixed;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     left: 0px;
     right: 0px;
     bottom: 0px;
     pointer-events: none;
     z-index: 10000;
 }
-
-#sd-smartphone-plus-panel > button {
+#sd-smartphone-plus-panel > .sspp-panel-column {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 0.1rem 0rem;
+}
+#sd-smartphone-plus-panel button {
     pointer-events: auto;
     position: relative;
     flex: 1 1 0;
@@ -41,10 +46,17 @@
     background-position: top;
 }
 
-#sd-smartphone-plus-panel > button.operator {
+#sd-smartphone-plus-panel button.helper,
+#sd-smartphone-plus-panel button.selector-item {
+    min-height: 1.8rem;
+    padding-top: 0;
+    font-size: 1rem;
     display: none;
 }
-#sd-smartphone-plus-panel > div.selector {
+#sd-smartphone-plus-panel button.operator {
+    display: none;
+}
+#sd-smartphone-plus-panel div.selector {
     display: none;
     position: fixed;
     flex-direction: column;
@@ -96,7 +108,8 @@ button.selector-item {
 #sd-smartphone-plus-panel.opened > #sspp-inject-css > span.sspp-button-label-off {
     display: none;
 }
-#sd-smartphone-plus-panel.opened > button.operator {
+#sd-smartphone-plus-panel.opened button.helper, 
+#sd-smartphone-plus-panel.opened button.operator {
     display: flex;
 }
 
