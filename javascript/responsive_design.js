@@ -4,7 +4,7 @@ function insertPanel() {
     const root = document.getElementById('tabs').parentNode;
 
     _setOnClick('sspp-inject-css', () => {
-        panel.classList.toggle("opened", _toggleResponsiveCSS());
+        root.classList.toggle('sspp-opened', _toggleResponsiveCSS());
     })
     // Negaボタンの追加
     _setOnClick('sspp-nega-prompt', e => {
@@ -18,26 +18,38 @@ function insertPanel() {
     _setOnClick('sspp-size', e => {
         panel.classList.toggle("size-select");
     });
+    sspp_updateSizeDisplay();
+    root.appendChild(panel);
+    root.classList.add('config-hidden', 'nega-prompt-hidden');
+
+
+    const helper = document.getElementById('sd-smartphone-plus-prompt-helper');
+    const t2i = document.getElementById('txt2img_prompt_container');
+    _setOnClick('sspp-generate', e => {
+        const generateButton = document.getElementById('txt2img_generate');
+        generateButton.click();
+    })
     _setOnClick('sspp-prevword', e => {
-        sspp_selectPrevWord(panel.classList.contains("word-select"))
+        _sspp_selectPrevWord(_promptTextArea(), helper.classList.contains("word-select"))
     });
     _setOnClick('sspp-currword', e => {
         sspp_selectWord(panel.classList.contains("word-select"));
-        panel.classList.toggle("word-select");
+        helper.classList.toggle("word-select");
     });
     _setOnClick('sspp-nextword', e => {
-        sspp_selectNextWord(panel.classList.contains("word-select"))
+        _sspp_selectNextWord(_promptTextArea(), helper.classList.contains("word-select"))
+    });
+    _setOnClick('sspp-parentheses', e => {
+        _sspp_emphasize(_promptTextArea());
     });
     _setOnClick('sspp-ratedown', e => {
-        _sspp_insideBlacket(_promptTextArea(), -0.05);
+        _sspp_changerate(_promptTextArea(), -0.05);
     });
     _setOnClick('sspp-rateup', e => {
-        _sspp_insideBlacket(_promptTextArea(), +0.05);
+        _sspp_changerate(_promptTextArea(), +0.05);
     });
-
-    sspp_updateSizeDisplay();
-    root.appendChild(panel)
-    root.classList.add('config-hidden', 'nega-prompt-hidden');
+    t2i.appendChild(helper);
+    
 
     console.log("Responsive design CSS injector has been loaded.");
 }
@@ -110,11 +122,6 @@ function _sspp_unselectWord(textArea) {
 }
 
 // テキストエリア内の前の単語を選択する
-function sspp_selectPrevWord(hold) {
-    const textArea = _promptTextArea();
-    if (!textArea) return;
-    _sspp_selectPrevWord(textArea, hold);
-}
 function _sspp_selectPrevWord(textArea, hold) {
     _sspp_selectCurrentWord(textArea);
     const text = textArea.value;
@@ -129,11 +136,6 @@ function _sspp_selectPrevWord(textArea, hold) {
 }
 
 // テキストエリア内の次の単語を選択する
-function sspp_selectNextWord() {
-    const textArea = _promptTextArea();
-    if (!textArea) return;
-    _sspp_selectNextWord(textArea, hold);
-}
 function _sspp_selectNextWord(textArea, hold) {
     _sspp_selectCurrentWord(textArea);
     const text = textArea.value;
@@ -146,21 +148,35 @@ function _sspp_selectNextWord(textArea, hold) {
     textArea.focus();
 }
 
-function _sspp_insideBlacket(textArea, rateGain) {
+function _sspp_changerate(textArea, rateGain) {
+    _sspp_selectCurrentWord(textArea);
     const text = textArea.value;
-    let start = textArea.selectionStart;
-    while (start > 0 && !/[([<]/.test(text[start - 1])) start--;
-    let end = textArea.selectionEnd;
-    while (end < text.length && !/[)\]>]/.test(text[end])) end++;
-    if (start > 0 && end < text.length -1) {
-        const m = text.substring(start, end).match(/(.*?)(:\s*([\n.]))?/);
-        const rate = ((m[2]) ? parseFloat(m[3]) : 1) + rateGain;
-        if (rate < 0) return;
-        const newText = `${text.slice(0, start)}${m[1]}:${rate.toFixed(2)}${text.slice(end)}`;
-        textArea.value = newText;
-        textArea.setSelectionRange(start, end);
-        textArea.focus();
-    }
+    const before = text.substring(0, textArea.selectionStart);
+    const after = text.substring(textArea.selectionStart);
+    const newAfter = after.replace(/(:\s*([\d.]+))?\s*\)/, (m, p1, p2) => {
+        const rate = (p2 ? (parseFloat(p2) || 0) : 1.1) + rateGain;
+        return `:${(rate < 0) ? 0 : rate.toFixed(2)})`;
+    });
+    textArea.value = before + newAfter;
+    textArea.dispatchEvent(new Event('input', { bubbles: true }));
+    textArea.setSelectionRange(before.length, before.length);
+}
+
+function _sspp_emphasize(textArea) {
+    _sspp_selectCurrentWord(textArea);
+    const text = textArea.value;
+    const before = text.substring(0, textArea.selectionStart);
+    const content = text.substring(textArea.selectionStart, textArea.selectionEnd);
+    const after =  text.substring(textArea.selectionEnd);
+    const contentR = content.replaceAll(/[()]/g, '');
+    
+    const newBefore = before.replace(/^(.*)\((?!.*[)>])([^(]*)$/s, '$1$2');
+    const newContent = (/^\([^<()>]*\)$/s.test(content)) ? contentR : `(${contentR})`;
+    const newAfter  = after.replace(/^([^<(]*)\)(.*)$/s, '$1$2');
+    
+    textArea.value = newBefore + newContent + newAfter;
+    textArea.dispatchEvent(new Event('input', { bubbles: true }));
+    textArea.setSelectionRange(newBefore.length, newBefore.length + newContent.length);
 }
 
 

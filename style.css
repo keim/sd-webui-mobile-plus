@@ -9,29 +9,121 @@
 #sd-smartphone-plus-panel {
     position: fixed;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     left: 0px;
     right: 0px;
     bottom: 0px;
     pointer-events: none;
     z-index: 10000;
 }
-#sd-smartphone-plus-panel > .sspp-panel-column {
+
+#sd-smartphone-plus-panel > button {
+    pointer-events: auto;
+    position: relative;
+    flex: 0 1 16.67%;
+    display: flex;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0rem 0.6rem;
+    padding-top: 2rem;
+    margin: 0.1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.6rem;
+    font-weight: bold;
+    border-style: solid;
+    border-width: 1px;
+    border-color: gray;
+    background-repeat: no-repeat;
+    background-size: 50%;
+    background-position: top;
+}
+
+#sd-smartphone-plus-panel > button.operator {
+    display: none;
+    background-color: #abf;
+}
+
+#sspp-inject-css {
+    background-image: url('./svg/power.svg');
+    background-color: #fff;
+}
+#sspp-setting {
+    background-image: url('./svg/cog.svg');
+}
+#sspp-nega-prompt {
+    background-image: url('./svg/receipt-text-minus.svg');
+}
+#sspp-sampling {
+    background-image: url('./svg/layers-triple.svg');
+}
+#sspp-size {
+    background-image: url('./svg/resize.svg');
+}
+
+#sd-smartphone-plus-panel.opened > #sspp-inject-css {
+    background-color: #abf;
+}
+#sd-smartphone-plus-panel > #sspp-inject-css > span.sspp-button-label-on {
+    display: none;
+}
+#sd-smartphone-plus-panel.opened > #sspp-inject-css > span.sspp-button-label-on {
+    display: flex;
+}
+#sd-smartphone-plus-panel > #sspp-inject-css > span.sspp-button-label-onff {
+    display: flex;
+}
+#sd-smartphone-plus-panel.opened > #sspp-inject-css > span.sspp-button-label-off {
+    display: none;
+}
+#sd-smartphone-plus-panel.opened > button.operator {
+    display: flex;
+}
+
+/* the Panel is shown only in smart phone */
+@media (min-width: 769px) {
+    #sd-smartphone-plus-panel {
+        display: none !important;
+    }
+}
+
+/* panel */
+#sd-smartphone-plus-panel {
+    pointer-events: none;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    z-index: 10000;
+}
+#sd-smartphone-plus-prompt-helper {
+    margin-top: -16px;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    left: 0px;
+    right: 0px;
+    gap: 0.1rem;
+}
+.sspp-panel > .sspp-panel-column {
     display: flex;
     flex-direction: row;
     justify-content: center;
+    gap: 0.1rem;
     padding: 0.1rem 0rem;
 }
-#sd-smartphone-plus-panel button {
+.sspp-panel button {
     pointer-events: auto;
     position: relative;
     flex: 1 1 0;
     display: flex;
     justify-content: center;
     min-height: 2.4rem;
-    padding: 0rem 0.6rem;
-    padding-top: 1.6rem;
-    margin: 0.1rem;
+    padding: 1.6rem 0.6rem 0rem 0.6rem;
     cursor: pointer;
     font-size: 0.6rem;
     font-weight: bold;
@@ -46,17 +138,11 @@
     background-position: top;
 }
 
-#sd-smartphone-plus-panel button.helper,
-#sd-smartphone-plus-panel button.selector-item {
-    min-height: 1.8rem;
-    padding-top: 0;
+.sspp-panel button.selector-item {
+    padding:0.7rem 0.6rem;
     font-size: 1rem;
-    display: none;
 }
-#sd-smartphone-plus-panel button.operator {
-    display: none;
-}
-#sd-smartphone-plus-panel div.selector {
+.sspp-panel .selector {
     display: none;
     position: fixed;
     flex-direction: column;
@@ -64,7 +150,7 @@
     left: 4rem;
     right: 4rem;
 }
-button.selector-item {
+.sspp-panel button.selector-item {
     pointer-events: auto;
     height: 2rem;
     padding: 0rem 0.6rem;
@@ -92,24 +178,47 @@ button.selector-item {
 #sspp-size {
     background-image: url('./svg/resize.svg');
 }
+#sspp-prevword {
+    background-image: url('./svg/arrow-expand-left.svg');
+}
+#sspp-currword {
+    background-image: url('./svg/arrow-expand-horizontal.svg');
+}
+#sspp-nextword {
+    background-image: url('./svg/arrow-expand-right.svg');
+}
+#sspp-parentheses {
+    background-image: url('./svg/code-parentheses.svg');
+}
+#sspp-ratedown {
+    background-image: url('./svg/pan-down.svg');
+}
+#sspp-rateup {
+    background-image: url('./svg/pan-up.svg');
+}
+#sspp-generate {
+    padding:0.6rem 0.6rem;
+    font-size: 1.2rem;
+}
 
-#sd-smartphone-plus-panel.opened > #sspp-inject-css {
+.sspp-panel button.helper,
+.sspp-panel button.operator {
+    display: none;
+}
+.sspp-opened .sspp-panel button.helper, 
+.sspp-opened .sspp-panel button.operator {
+    display: flex;
+}
+
+.sspp-opened #sspp-inject-css {
     background-color: #ccc;
 }
-#sd-smartphone-plus-panel > #sspp-inject-css > span.sspp-button-label-on {
+.sspp-opened #sspp-inject-css > .sspp-button-label-on,
+#sspp-inject-css > .sspp-button-label-onff {
+    display: flex;
+}
+.sspp-opened #sspp-inject-css > .sspp-button-label-off,
+#sspp-inject-css > .sspp-button-label-on {
     display: none;
-}
-#sd-smartphone-plus-panel.opened > #sspp-inject-css > span.sspp-button-label-on {
-    display: flex;
-}
-#sd-smartphone-plus-panel > #sspp-inject-css > span.sspp-button-label-onff {
-    display: flex;
-}
-#sd-smartphone-plus-panel.opened > #sspp-inject-css > span.sspp-button-label-off {
-    display: none;
-}
-#sd-smartphone-plus-panel.opened button.helper, 
-#sd-smartphone-plus-panel.opened button.operator {
-    display: flex;
 }
 

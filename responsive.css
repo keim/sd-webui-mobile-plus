@@ -27,10 +27,21 @@
 #img2img_prompt textarea {
     height: 12rem !important;
 }
+#txt2img_generate {
+    display: none !important;
+}
+#sspp-generate {
+    color: var(--button-primary-text-color) !important;
+    border-color: var(--button-primary-border-color) !important;
+    background: var(--button-primary-background-fill) !important;
+}
+
 /* t2i result screen */
 #txt2img_results {
     margin: 0 !important;
 }
+
+
 
 /* checkpoint,lora cards */
 #txt2img_lora_cards > .card,
