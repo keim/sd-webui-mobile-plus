@@ -141,6 +141,38 @@ function sspp_setSize(width, height) {
     _sspp_updateSizeDisplay();
 }
 
+const sspp_sizeList = []
+function sspp_newSize(e) {
+    
+}
+
+function sspp_selectSize(e) {
+    
+}
+
+function sspp_removeSize(e) {
+    
+}
+
+const sspp_clipList = []
+function sspp_newClip(e) {
+    const textArea = _promptArea();
+    sspp_clipList.push(textArea.value);
+}
+
+function sspp_selectClip(e) {
+    
+}
+
+function sspp_removeClip(e) {
+    
+}
+
+
+function sspp_closeSelector() {
+    document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select', 'size-select')    
+}
+
 // サイズ表示を更新する
 function _sspp_updateSizeDisplay() {
     const size = _sizeInputs();
@@ -242,14 +274,6 @@ function _sspp_emphasize() {
     textArea.setSelectionRange(newBefore.length, newBefore.length + newContent.length);
 }
 
-const clipboard = []
-function sspp_setClip() {
-    const textArea = _promptArea();
-    clipboard.push(textArea.value);
-}
-function _updateClipSelector() {
-    
-}
 
 
 

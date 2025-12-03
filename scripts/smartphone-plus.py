@@ -32,22 +32,29 @@ def on_ui_tabs():
         <button id="sspp-size" class="operator">
             <span class="sspp-button-label">Size</span>
         </button>
-        <div id="sspp-size-selector" class="selector">
-            <button class="selector-item" onclick="sspp_setSize(1440, 810)">1440x810 (16:9)</button>
-            <button class="selector-item" onclick="sspp_setSize(1440, 960)">1440x960 (3:2)</button>
-            <button class="selector-item" onclick="sspp_setSize(1440, 1080)">1440x1080 (4:3)</button>
-            <button class="selector-item" onclick="sspp_setSize(1280, 1280)">1280x1280 (1:1)</button>
-            <button class="selector-item" onclick="sspp_setSize(1080, 1440)">1080x1440 (3:4)</button>
-            <button class="selector-item" onclick="sspp_setSize(960, 1440)">960x1440 (2:3)</button>
-            <button class="selector-item" onclick="sspp_setSize(810, 1440)">810x1440 (9:16)</button>
-        </div>
         <button id="sspp-clip" class="operator">
             <span class="sspp-button-label">Clip</span>
         </button>
-        <div id="sspp-clip-selector" class="selector">
-            <div class="selector-item" onclick="sspp_setSize(1440, 810)">...
+        <div id="sspp-size-selector" class="selector">
+            <div class="selector-item" index="1">
+                <button class="selector-item-label" onclick="sspp_selectSize" />
+                <button class="selector-item-button" onclick="sspp_removeSize" />
             </div>
-            <button class="selector-item" onclick="sspp_setClip()">+</button>
+            <div class="selector-item">
+                <input type="text" placeholder="name"/>
+                <input type="number" min="64" max="2048" step="32" placeholder="width"/>
+                <input type="number" min="64" max="2048" step="32" placeholder="height"/>
+                <button id="sspp-size-register" class="selector-item-button" onclick="sspp_newSize"/>
+            </div>
+            <div class="sspp-selector-background" onclick="sspp_closeSelector"></div>
+        </div>
+        <div id="sspp-clip-selector" class="selector">
+            <div class="selector-item" index="1">
+                <button class="selector-item-label" onclick="sspp_selectClip" />
+                <button class="selector-item-button" onclick="sspp_removeClip" />
+            </div>
+            <button class="selector-item" onclick="sspp_newClip">+</button>
+            <div class="sspp-selector-background" onclick="sspp_closeSelector"></div>
         </div>
     </div>
 </div>

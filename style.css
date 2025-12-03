@@ -16,16 +16,6 @@
     bottom: 0px;
     z-index: 10000;
 }
-#sd-smartphone-plus-prompt-helper {
-    margin-top: -16px;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    left: 0px;
-    right: 0px;
-    gap: 0.1rem;
-}
 .sspp-panel > .sspp-panel-column {
     display: flex;
     flex-direction: row;
@@ -55,29 +45,60 @@
     background-position: top;
 }
 
-.sspp-panel button.selector-item {
-    padding:0.7rem 0.6rem;
-    font-size: 1rem;
-}
 .sspp-panel .selector {
     display: none;
     position: fixed;
     flex-direction: column;
-    top: 4rem;
-    left: 4rem;
-    right: 4rem;
+    justify-content: center;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-sizing: border-box;
 }
-.sspp-panel button.selector-item {
+.sspp-panel .selector-item {
     pointer-events: auto;
-    height: 2rem;
-    padding: 0rem 0.6rem;
+    flex: 0 0 2rem;
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    font-size: 1rem;
+    padding: 0.2rem 0.6rem;
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
     border-color: #999;
     color: #333;
     background-color: #fff;
-    margin: 0.1rem;
+    margin: 0.1rem 2rem;
+    z-index: 100;
+}
+.sspp-panel .sspp-selector-background {
+    pointer-events: auto;
+    position: fixed;
+    background-color: rgba(255,255,255,0.5);
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 99;
+}
+.sspp-panel .selector-item input {
+    height: 2rem;
+    flex: 1 1 0;
+    min-width: 0;
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    border-color: #ccc;
+}
+.sspp-panel .selector-item input[type=text] {
+    flex: 2 2 0;
+}
+.sspp-panel .selector-item .selector-item-button {
+    height: 1.4rem;
+    flex: 0 0 1.4rem;
+    border-width: 0;
+    background-position: center;
 }
 
 #sspp-inject-css {
@@ -115,6 +136,13 @@
 }
 #sspp-rateup {
     background-image: url('./svg/pan-up.svg');
+}
+#sspp-size-register {
+    background-image: url('./svg/plus.svg');
+}
+
+.sspp-size-close {
+    background-image: url('./svg/close.svg');
 }
 #sspp-generate {
     padding:0.6rem 0.6rem;
