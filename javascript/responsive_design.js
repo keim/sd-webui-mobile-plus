@@ -1,12 +1,9 @@
 // 画面上部のInjectパネルの表示/非表示を切り替える
 function insertPanel() {
-    _initialize();
     _setupMenuButtons();
     _addEventListener();
     _insertInteractiveWidget();
     _sspp_updateSizeDisplay();
-    _sspp_updateSizeSelector();
-    _sspp_updateClipSelector();
     console.log("Responsive design CSS injector has been loaded.");
 }
 
@@ -117,11 +114,6 @@ function _promptArea() {
     if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
     return document.querySelector(`#${_sspp_currentTabName}_prompt textarea`);
 }
-function _negaPromptArea() {
-    if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
-    return document.querySelector(`#${_sspp_currentTabName}_neg_prompt textarea`);
-}
-
 
 function _sizeInputs() {
     if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
@@ -149,193 +141,37 @@ function sspp_setSize(width, height) {
     _sspp_updateSizeDisplay();
 }
 
-const sspp_sizeList = [];
-const sspp_clipList = [];
-let sspp_sizeSelectorItem = null;
-let sspp_clipSelectorItem = null;
-function _initialize() {
-    const sizeListJSON = localStorage.getItem('sspp_size_list');
-    const clipListJSON = localStorage.getItem('sspp_clip_list');
-    if (sizeListJSON) {
-        sspp_sizeList.push(...JSON.parse(sizeListJSON));
-    } else {
-        sspp_sizeList.push(["SD1.5(3:2)", 768, 512]);
-        sspp_sizeList.push(["SD1.5(1:1)", 768, 768]);
-        sspp_sizeList.push(["SD1.5(2:3)", 512, 768]);
-        sspp_sizeList.push(["SDXL(4:3)", 1280, 960]);
-        sspp_sizeList.push(["SDXL(1:1)", 1024, 1024]);
-        sspp_sizeList.push(["SDXL(3:4)", 960, 1280]);
-        sspp_sizeList.push(["16:9", 1440, 810]);
-        sspp_sizeList.push(["3:2", 1440, 960]);
-        sspp_sizeList.push(["4:3", 1440, 1080]);
-        sspp_sizeList.push(["1:1", 1280, 1280]);
-        sspp_sizeList.push(["3:4", 1080, 1440]);
-        sspp_sizeList.push(["2:3", 960, 1440]);
-        sspp_sizeList.push(["9:16", 810, 1440]);
-        localStorage.setItem('sspp_size_list', JSON.stringify(sspp_sizeList));
-    }
-    if (clipListJSON) {
-        sspp_clipList.push(...JSON.parse(clipListJSON));
-    } else {
-        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-    }
-    sspp_sizeSelectorItem = document.querySelector('#sspp-size-selector .selector-item[index="1"]');
-    sspp_clipSelectorItem = document.querySelector('#sspp-clip-selector .selector-item[index="1"]');
-    if (sspp_sizeSelectorItem) sspp_sizeSelectorItem.remove();
-    if (sspp_clipSelectorItem) sspp_clipSelectorItem.remove();
+const sspp_sizeList = []
+function sspp_newSize(e) {
+    
 }
 
-// 新しいサイズを登録する
-function sspp_newSize(me) {
-    const inputs = me.parentNode.querySelectorAll('input');
-    const name = inputs[0].value;
-    const width = parseInt(inputs[1].value);
-    const height = parseInt(inputs[2].value);
+function sspp_selectSize(e) {
     
-    if (!width || !height) {
-        alert('Please fill in all fields (name, width, height)');
-        return;
-    }
-    
-    sspp_sizeList.push([name, width, height]);
-    localStorage.setItem('sspp_size_list', JSON.stringify(sspp_sizeList));
-    
-    inputs[0].value = '';
-    inputs[1].value = '';
-    inputs[2].value = '';
-    
-    _sspp_updateSizeSelector();
 }
 
-function sspp_selectSize(me) {
-    const sizeItem = me.parentNode;
-    const index = sizeItem.getAttribute('index') - 1;
-    if (index > -1) {
-        size = sspp_sizeList[index];
-        sspp_setSize(size[1], size[2]);
-    }
+function sspp_removeSize(e) {
+    
 }
 
-function sspp_removeSize(me) {
-    const sizeItem = me.parentNode;
-    const index = sizeItem.getAttribute('index') - 1;
-    if (index > -1) {
-        sspp_sizeList.splice(index, 1);
-        localStorage.setItem('sspp_size_list', JSON.stringify(sspp_sizeList));
-        sizeItem.remove();
-        _sspp_updateSizeSelector();
-    }
-}
-
-function sspp_newClip(me) {
+const sspp_clipList = []
+function sspp_newClip(e) {
     const textArea = _promptArea();
-    const negaTextArea = _negaPromptArea();
-
-    const inputs = me.parentNode.querySelectorAll('input');
-    const name = inputs[0].value;
-    
-    if (!name) {
-        alert('Please fill in name field');
-        return;
-    }
-    
-    sspp_clipList.push([name, textArea.value, negaTextArea.value]);
-    localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-    
-    inputs[0].value = '';
-    _sspp_updateClipSelector();
+    sspp_clipList.push(textArea.value);
 }
 
-function sspp_selectClip(me) {
-    const clipItem = sspp_clipList[me.parentNode.getAttribute('index') - 1];
+function sspp_selectClip(e) {
     
-    if (clipItem) {
-        const textArea = _promptArea();
-        const negaTextArea = _negaPromptArea();
-        if (textArea && negaTextArea) {
-            textArea.value = clipItem[1];
-            textArea.dispatchEvent(new Event('input', { bubbles: true }));
-            negaTextArea.value = clipItem[2];
-            negaTextArea.dispatchEvent(new Event('input', { bubbles: true }));
-            document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select');
-        }
-    }
 }
 
-function sspp_removeClip(me) {
-    const clipItem = me.parentNode;
-    const index = clipItem.getAttribute('index') - 1;
-    if (index > -1) {
-        sspp_clipList.splice(index, 1);
-        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-        // remove the element from the DOM
-        clipItem.remove();
-        // update the selector UI
-        _sspp_updateClipSelector();
-    }
+function sspp_removeClip(e) {
+    
 }
 
-// セレクターを閉じる
-function sspp_closeSelector(me) {
+
+function sspp_closeSelector() {
     document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select', 'size-select')    
 }
-
-
-// サイズセレクターの UI を更新する
-function _sspp_updateSizeSelector() {
-    const sizeSelector = document.getElementById('sspp-size-selector');
-
-    // remove any existing generated selector items (those with an index)
-    const sizeItems = sizeSelector.querySelectorAll('.selector-item[index]');
-    sizeItems.forEach(item => item.remove());
-
-    // If we have a template item captured during initialization, clone it for each size
-    if (sspp_sizeSelectorItem) {
-        sspp_sizeList.forEach((size, idx) => {
-            const clone = sspp_sizeSelectorItem.cloneNode(true);
-            clone.setAttribute('index', idx + 1);
-            const labelBtn = clone.querySelector('.selector-item-label');
-            if (labelBtn) {
-                labelBtn.textContent = `${size[0]} (${size[1]}x${size[2]})`;
-                labelBtn.setAttribute('onclick', 'sspp_selectSize(this)');
-            }
-            const removeBtn = clone.querySelector('.sspp-close.selector-item-button');
-            if (removeBtn) {
-                removeBtn.setAttribute('onclick', 'sspp_removeSize(this)');
-            }
-            const lastItem = document.getElementById('sspp-size-new-item');
-            sizeSelector.insertBefore(clone, lastItem);
-        });
-    }
-}
-
-// クリップセレクターの UI を更新する
-function _sspp_updateClipSelector() {
-    const clipSelector = document.getElementById('sspp-clip-selector');
-    const clipItems = clipSelector.querySelectorAll('.selector-item[index]');
-    clipItems.forEach(item => item.remove());
-    
-    // 新しいクリップアイテムを追加
-    const addButton = clipSelector.querySelector('.selector-item:not([index])');
-    if (sspp_clipSelectorItem) {
-        sspp_clipList.forEach((prompts, idx) => {
-            const clone = sspp_clipSelectorItem.cloneNode(true);
-            clone.setAttribute('index', idx + 1);
-            const labelBtn = clone.querySelector('.selector-item-label');
-            if (labelBtn) {
-                labelBtn.textContent = `${prompts[0]}`;
-                labelBtn.setAttribute('onclick', 'sspp_selectClip(this)');
-            }
-            const removeBtn = clone.querySelector('.sspp-close.selector-item-button');
-            if (removeBtn) {
-                removeBtn.setAttribute('onclick', 'sspp_removeClip(this)');
-            }
-            const lastItem = document.getElementById('sspp-clip-new-item');
-            clipSelector.insertBefore(clone, lastItem);
-        });
-    }
-}
-
 
 // サイズ表示を更新する
 function _sspp_updateSizeDisplay() {
