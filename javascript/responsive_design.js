@@ -4,15 +4,63 @@ function insertPanel() {
     _setupMenuButtons();
     _addEventListener();
     _insertInteractiveWidget();
+
     _sspp_updateSizeDisplay();
     _sspp_updateSizeSelector();
     _sspp_updateClipSelector();
+
     console.log("Responsive design CSS injector has been loaded.");
 }
 
+// グローバル変数
 const _sspp_tabNames = [];
 let _sspp_currentTabName = '';
+const sspp_sizeList = [];
+const sspp_clipList = [];
+let sspp_sizeSelectorItem = null;
+let sspp_clipSelectorItem = null;
+let geminiapi = null;
 
+// 初期化処理
+function _initialize() {
+    const sizeListJSON = localStorage.getItem('sspp_size_list');
+    const clipListJSON = localStorage.getItem('sspp_clip_list');
+    if (sizeListJSON) {
+        sspp_sizeList.push(...JSON.parse(sizeListJSON));
+    } else {
+        sspp_sizeList.push(["SD1.5(3:2)", 768, 512]);
+        sspp_sizeList.push(["SD1.5(1:1)", 768, 768]);
+        sspp_sizeList.push(["SD1.5(2:3)", 512, 768]);
+        sspp_sizeList.push(["SDXL(4:3)", 1280, 960]);
+        sspp_sizeList.push(["SDXL(1:1)", 1024, 1024]);
+        sspp_sizeList.push(["SDXL(3:4)", 960, 1280]);
+        sspp_sizeList.push(["16:9", 1440, 810]);
+        sspp_sizeList.push(["3:2", 1440, 960]);
+        sspp_sizeList.push(["4:3", 1440, 1080]);
+        sspp_sizeList.push(["1:1", 1280, 1280]);
+        sspp_sizeList.push(["3:4", 1080, 1440]);
+        sspp_sizeList.push(["2:3", 960, 1440]);
+        sspp_sizeList.push(["9:16", 810, 1440]);
+        localStorage.setItem('sspp_size_list', JSON.stringify(sspp_sizeList));
+    }
+    if (clipListJSON) {
+        sspp_clipList.push(...JSON.parse(clipListJSON));
+    } else {
+        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
+    }
+    sspp_sizeSelectorItem = document.querySelector('#sspp-size-selector .selector-item[index="1"]');
+    sspp_clipSelectorItem = document.querySelector('#sspp-clip-selector .selector-item[index="1"]');
+    if (sspp_sizeSelectorItem) sspp_sizeSelectorItem.remove();
+    if (sspp_clipSelectorItem) sspp_clipSelectorItem.remove();
+
+    import("./modules/geminiapi.js").then(module => {
+        geminiapi = module.geminiapi();
+    }).catch(err => {
+        console.error("Failed to load geminiapi module:", err);
+    });
+}
+
+// メニューボタンのセットアップ
 function _setupMenuButtons() {
     // パネルにボタンを追加するユーティリティ関数
     const onclick = (id, onClick) => {
@@ -46,28 +94,28 @@ function _setupMenuButtons() {
 
     // [Previous word]
     onclick('sspp-prevword', e => {
-        _sspp_selectPrevWord(panel.classList.contains("word-select"));
+        sspp_wordOps.selectPrevWord(panel.classList.contains("word-select"));
     });
     // [Current word]
     onclick('sspp-currword', e => {
-        sspp_selectWord(panel.classList.contains("word-select"));
+        sspp_wordOps.selectWord(panel.classList.contains("word-select"));
         panel.classList.toggle("word-select");
     });
     // [Next word]
     onclick('sspp-nextword', e => {
-        _sspp_selectNextWord(panel.classList.contains("word-select"));
+        sspp_wordOps.selectNextWord(panel.classList.contains("word-select"));
     });
     // [Emphasize]
     onclick('sspp-parentheses', e => {
-        _sspp_emphasize();
+        sspp_wordOps.emphasize();
     });
     // [rate down]
     onclick('sspp-ratedown', e => {
-        _sspp_changerate(-0.1);
+        sspp_wordOps.changerate(-0.1);
     });
     // [rate up]
     onclick('sspp-rateup', e => {
-        _sspp_changerate(0.1);
+        sspp_wordOps.changerate(0.1);
     });
 
     // [Generate]
@@ -80,6 +128,7 @@ function _setupMenuButtons() {
     root.classList.add('config-hidden', 'nega-prompt-hidden');
 }
 
+// タブ変更イベントの追加
 function _addEventListener() {
     const tabButtons = document.querySelectorAll('#tabs>.tab-nav>button');
     tabButtons.forEach(btn => _sspp_tabNames.push(btn.textContent.trim().toLowerCase()));
@@ -96,6 +145,7 @@ function _addEventListener() {
     });
 }
 
+// インタラクティブウィジェット用のメタタグを挿入する
 function _insertInteractiveWidget() {
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (viewportMeta) {
@@ -149,41 +199,6 @@ function sspp_setSize(width, height) {
     _sspp_updateSizeDisplay();
 }
 
-const sspp_sizeList = [];
-const sspp_clipList = [];
-let sspp_sizeSelectorItem = null;
-let sspp_clipSelectorItem = null;
-function _initialize() {
-    const sizeListJSON = localStorage.getItem('sspp_size_list');
-    const clipListJSON = localStorage.getItem('sspp_clip_list');
-    if (sizeListJSON) {
-        sspp_sizeList.push(...JSON.parse(sizeListJSON));
-    } else {
-        sspp_sizeList.push(["SD1.5(3:2)", 768, 512]);
-        sspp_sizeList.push(["SD1.5(1:1)", 768, 768]);
-        sspp_sizeList.push(["SD1.5(2:3)", 512, 768]);
-        sspp_sizeList.push(["SDXL(4:3)", 1280, 960]);
-        sspp_sizeList.push(["SDXL(1:1)", 1024, 1024]);
-        sspp_sizeList.push(["SDXL(3:4)", 960, 1280]);
-        sspp_sizeList.push(["16:9", 1440, 810]);
-        sspp_sizeList.push(["3:2", 1440, 960]);
-        sspp_sizeList.push(["4:3", 1440, 1080]);
-        sspp_sizeList.push(["1:1", 1280, 1280]);
-        sspp_sizeList.push(["3:4", 1080, 1440]);
-        sspp_sizeList.push(["2:3", 960, 1440]);
-        sspp_sizeList.push(["9:16", 810, 1440]);
-        localStorage.setItem('sspp_size_list', JSON.stringify(sspp_sizeList));
-    }
-    if (clipListJSON) {
-        sspp_clipList.push(...JSON.parse(clipListJSON));
-    } else {
-        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-    }
-    sspp_sizeSelectorItem = document.querySelector('#sspp-size-selector .selector-item[index="1"]');
-    sspp_clipSelectorItem = document.querySelector('#sspp-clip-selector .selector-item[index="1"]');
-    if (sspp_sizeSelectorItem) sspp_sizeSelectorItem.remove();
-    if (sspp_clipSelectorItem) sspp_clipSelectorItem.remove();
-}
 
 // 新しいサイズを登録する
 function sspp_newSize(me) {
@@ -347,97 +362,95 @@ function _sspp_updateSizeDisplay() {
 
 
 // テキストエリア内の現在の単語を選択/解除する
-function sspp_selectWord(hold) {
-    if (hold) _sspp_unselectWord();
-    else _sspp_selectCurrentWord();
-}
-function _sspp_selectCurrentWord() {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    const text = textArea.value;
-    let start = textArea.selectionStart;
-    while (start > 0 && !/\s/.test(text[start - 1])) start--;
-    let end = textArea.selectionEnd;
-    while (end < text.length && !/\s/.test(text[end])) end++;
-    textArea.setSelectionRange(start, end);
-    textArea.focus();
-}
-function _sspp_unselectWord() {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    const pos = textArea.selectionEnd;
-    textArea.setSelectionRange(pos, pos);
-    textArea.focus();
-}
+class WordOperations {
+    selectWord(hold) {
+        if (hold) this.unselectWord();
+        else this.selectCurrentWord();
+    }
 
-// テキストエリア内の前の単語を選択する
-function _sspp_selectPrevWord(hold) {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    _sspp_selectCurrentWord(textArea);
-    const text = textArea.value;
-    let end = textArea.selectionStart;
-    if (end === 0) return;
-    end--;
-    while (end > 0 && /\s/.test(text[end - 1])) end--;
-    let start = end;
-    while (start > 0 && !/\s/.test(text[start - 1])) start--;
-    textArea.setSelectionRange(start, hold ? textArea.selectionEnd : end);
-    textArea.focus();
-}
-
-// テキストエリア内の次の単語を選択する
-function _sspp_selectNextWord(hold) {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    _sspp_selectCurrentWord(textArea);
-    const text = textArea.value;
-    let start = textArea.selectionEnd;
-    if (start === text.length) return;
-    while (start < text.length && /\s/.test(text[start])) start++;
-    let end = start;
-    while (end < text.length && !/\s/.test(text[end])) end++;
-    textArea.setSelectionRange(hold ? textArea.selectionStart : start, end);
-    textArea.focus();
-}
-
-// ":n)" のn値を変更
-function _sspp_changerate(rateGain) {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    _sspp_selectCurrentWord(textArea);
-    const text = textArea.value;
-    const before = text.substring(0, textArea.selectionStart);
-    const after = text.substring(textArea.selectionStart);
-    const newAfter = after.replace(/(:\s*([\d.]+))?\s*\)/, (m, p1, p2) => {
-        const rate = (p2 ? (parseFloat(p2) || 0) : 1.1) + rateGain;
-        return `:${(rate < 0) ? 0 : rate.toFixed(1)})`;
-    });
-    textArea.value = before + newAfter;
-    textArea.dispatchEvent(new Event('input', { bubbles: true }));
-    textArea.setSelectionRange(before.length, before.length);
-}
-
-// "()"で囲う
-function _sspp_emphasize() {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    _sspp_selectCurrentWord(textArea);
-    const text = textArea.value;
-    const before = text.substring(0, textArea.selectionStart);
-    const content = text.substring(textArea.selectionStart, textArea.selectionEnd);
-    const after =  text.substring(textArea.selectionEnd);
-    const contentR = content.replaceAll(/[()]/g, '');
+    _selectCurrentWord() {
+        const textArea = _promptArea();
+        if (!textArea) return;
+        const text = textArea.value;
+        let start = textArea.selectionStart;
+        while (start > 0 && !/\s/.test(text[start - 1])) start--;
+        let end = textArea.selectionEnd;
+        while (end < text.length && !/\s/.test(text[end])) end++;
+        textArea.setSelectionRange(start, end);
+        textArea.focus();
+    }
     
-    const newBefore = before.replace(/^(.*)\((?!.*[)>])([^(]*)$/s, '$1$2');
-    const newContent = (/^\([^<()>]*\)$/s.test(content)) ? contentR : `(${contentR})`;
-    const newAfter  = after.replace(/^([^<(]*)\)(.*)$/s, '$1$2');
-    
-    textArea.value = newBefore + newContent + newAfter;
-    textArea.dispatchEvent(new Event('input', { bubbles: true }));
-    textArea.setSelectionRange(newBefore.length, newBefore.length + newContent.length);
-}
+    _unselectWord() {
+        const textArea = _promptArea();
+        if (!textArea) return;
+        const pos = textArea.selectionEnd;
+        textArea.setSelectionRange(pos, pos);
+        textArea.focus();
+    }
 
+    selectPrevWord(hold) {
+        const textArea = _promptArea();
+        if (!textArea) return;
+        this.selectCurrentWord();
+        const text = textArea.value;
+        let end = textArea.selectionStart;
+        if (end === 0) return;
+        end--;
+        while (end > 0 && /\s/.test(text[end - 1])) end--;
+        let start = end;
+        while (start > 0 && !/\s/.test(text[start - 1])) start--;
+        textArea.setSelectionRange(start, hold ? textArea.selectionEnd : end);
+        textArea.focus();
+    }
+    
+    selectNextWord(hold) {
+        const textArea = _promptArea();
+        if (!textArea) return;
+        this.selectCurrentWord();
+        const text = textArea.value;
+        let start = textArea.selectionEnd;
+        if (start === text.length) return;
+        while (start < text.length && /\s/.test(text[start])) start++;
+        let end = start;
+        while (end < text.length && !/\s/.test(text[end])) end++;
+        textArea.setSelectionRange(hold ? textArea.selectionStart : start, end);
+        textArea.focus();
+    }
+
+    changerate(rateGain) {
+        const textArea = _promptArea();
+        if (!textArea) return;
+        this.selectCurrentWord();
+        const text = textArea.value;
+        const before = text.substring(0, textArea.selectionStart);
+        const after = text.substring(textArea.selectionStart);
+        const newAfter = after.replace(/(:\s*([\d.]+))?\s*\)/, (m, p1, p2) => {
+            const rate = (p2 ? (parseFloat(p2) || 0) : 1.1) + rateGain;
+            return `:${(rate < 0) ? 0 : rate.toFixed(1)})`;
+        });
+        textArea.value = before + newAfter;
+        textArea.dispatchEvent(new Event('input', { bubbles: true }));
+        textArea.setSelectionRange(before.length, before.length);
+    }
+
+    emphasize() {
+        const textArea = _promptArea();
+        if (!textArea) return;
+        this.selectCurrentWord();
+        const text = textArea.value;
+        const before = text.substring(0, textArea.selectionStart);
+        const content = text.substring(textArea.selectionStart, textArea.selectionEnd);
+        const after =  text.substring(textArea.selectionEnd);
+        const contentR = content.replaceAll(/[()]/g, '');
+        const newBefore = before.replace(/^(.*)\((?!.*[)>])([^(]*)$/s, '$1$2');
+        const newContent = (/^\([^<()>]*\)$/s.test(content)) ? contentR : `(${contentR})`;
+        const newAfter  = after.replace(/^([^<(]*)\)(.*)$/s, '$1$2');
+        textArea.value = newBefore + newContent + newAfter;
+        textArea.dispatchEvent(new Event('input', { bubbles: true }));
+        textArea.setSelectionRange(newBefore.length, newBefore.length + newContent.length);
+    }
+}
+const sspp_wordOps = new WordOperations();
 
 
 

@@ -1,5 +1,13 @@
-from modules import script_callbacks
+from modules import script_callbacks, shared
 import gradio as gr
+
+def on_ui_settings():
+    section = ("smartphone_plus", "SP+");
+    shared.opts.add_option(
+        "gemini_api_key",
+        shared.OptionInfo( "", "Gemini API Key", section = section ))
+
+script_callbacks.on_ui_settings(on_ui_settings)
 
 def on_ui_tabs():
     with gr.Blocks() as interface:
@@ -62,7 +70,13 @@ def on_ui_tabs():
     </div>
 </div>
         """)
-        
+
+        gr.Textbox(
+            value = lambda: shared.opts.gemini_api_key,
+            visible = False,
+            elem_id = "sspp_gemini_api_key"
+        )
+
         interface.load(
             fn=None, 
             inputs=None, 
