@@ -244,6 +244,8 @@ function _setupMenuButtons() {
     onclick('sspp-generate', e => {
         const generateButton = _generateButton();
         if (generateButton) generateButton.click();
+        const textArea = _promptArea();
+        if (textArea) this._appendWordDictionaryByPrompt(textArea.value)
     });
 
     root.appendChild(panel);
@@ -267,6 +269,7 @@ function _addEventListener() {
         _sspp_currentTabName = tabName;
         _sspp_updateSizeDisplay();
     });
+
     tabsElem.addEventListener('keyup', e => {
         const textarea = e.target.closest("textarea");
         if (textarea === _promptArea()) sspp_showCandidateList();
@@ -286,11 +289,10 @@ function _insertInteractiveWidget() {
 
 
 
-// 現在選択されているタブの名前を取得する
+// 現在選択されているタブの名前/UIを取得する
 function _currentTabName() {
     return document.querySelector('#tabs button.selected').textContent.trim().toLowerCase();
 }
-
 function _promptArea() {
     if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
     return document.querySelector(`#${_sspp_currentTabName}_prompt textarea`);
@@ -299,8 +301,6 @@ function _negaPromptArea() {
     if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
     return document.querySelector(`#${_sspp_currentTabName}_neg_prompt textarea`);
 }
-
-
 function _sizeInputs() {
     if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
     return [
@@ -308,27 +308,13 @@ function _sizeInputs() {
         document.querySelector(`#${_sspp_currentTabName}_height input`)
     ];
 }
-
 function _generateButton() {
     if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
     return document.getElementById(`${_sspp_currentTabName}_generate`);
 }
 
 
-// サイズ選択ボタンが押されたときの処理
-function sspp_setSize(width, height) {
-    const size = _sizeInputs();
-    if (!size) return;
-    size[0].value = width;
-    size[0].dispatchEvent(new Event('input', { bubbles: true }));
-    size[1].value = height;
-    size[1].dispatchEvent(new Event('input', { bubbles: true }));
-    document.getElementById('sd-smartphone-plus-panel').classList.remove("size-select");
-    _sspp_updateSizeDisplay();
-}
-
-
-// 新しいサイズを登録する
+// Size Selector
 function sspp_newSize(me) {
     const inputs = me.parentNode.querySelectorAll('input');
     const name = inputs[0].value;
@@ -336,7 +322,7 @@ function sspp_newSize(me) {
     const height = parseInt(inputs[2].value);
     
     if (!width || !height) {
-        alert('Please fill in all fields (name, width, height)');
+        alert('Please fill in width and height fields');
         return;
     }
     
@@ -351,11 +337,10 @@ function sspp_newSize(me) {
 }
 
 function sspp_selectSize(me) {
-    const sizeItem = me.parentNode;
-    const index = sizeItem.getAttribute('index') - 1;
-    if (index > -1) {
-        size = sspp_sizeList[index];
-        sspp_setSize(size[1], size[2]);
+    const index = me.parentNode.getAttribute('index') - 1;
+    const sizeItem = sspp_sizeList[index];
+    if (sizeItem) {
+        sspp_setSize(sizeItem[1], sizeItem[2]);
     }
 }
 
@@ -370,61 +355,18 @@ function sspp_removeSize(me) {
     }
 }
 
-function sspp_newClip(me) {
-    const textArea = _promptArea();
-    const negaTextArea = _negaPromptArea();
-
-    const inputs = me.parentNode.querySelectorAll('input');
-    const name = inputs[0].value;
-    
-    if (!name) {
-        alert('Please fill in name field');
-        return;
-    }
-    
-    sspp_clipList.push([name, textArea.value, negaTextArea.value]);
-    localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-    
-    inputs[0].value = '';
-    _sspp_updateClipSelector();
-}
-
-function sspp_selectClip(me) {
-    const clipItem = sspp_clipList[me.parentNode.getAttribute('index') - 1];
-    
-    if (clipItem) {
-        const textArea = _promptArea();
-        const negaTextArea = _negaPromptArea();
-        if (textArea && negaTextArea) {
-            textArea.value = clipItem[1];
-            textArea.dispatchEvent(new Event('input', { bubbles: true }));
-            negaTextArea.value = clipItem[2];
-            negaTextArea.dispatchEvent(new Event('input', { bubbles: true }));
-            document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select');
-        }
+function sspp_setSize(width, height) {
+    const sizeUI = _sizeInputs();
+    if (sizeUI) {
+        sizeUI[0].value = width;
+        sizeUI[0].dispatchEvent(new Event('input', { bubbles: true }));
+        sizeUI[1].value = height;
+        sizeUI[1].dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('sd-smartphone-plus-panel').classList.remove("size-select");
+        _sspp_updateSizeDisplay();
     }
 }
 
-function sspp_removeClip(me) {
-    const clipItem = me.parentNode;
-    const index = clipItem.getAttribute('index') - 1;
-    if (index > -1) {
-        sspp_clipList.splice(index, 1);
-        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-        // remove the element from the DOM
-        clipItem.remove();
-        // update the selector UI
-        _sspp_updateClipSelector();
-    }
-}
-
-// セレクターを閉じる
-function sspp_closeSelector(me) {
-    document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select', 'size-select')    
-}
-
-
-// サイズセレクターの UI を更新する
 function _sspp_updateSizeSelector() {
     const sizeSelector = document.getElementById('sspp-size-selector');
 
@@ -452,7 +394,66 @@ function _sspp_updateSizeSelector() {
     }
 }
 
-// クリップセレクターの UI を更新する
+function _sspp_updateSizeDisplay() {
+    const size = _sizeInputs();
+    if (!size) return;
+    const sizeLabel = document.querySelector('#sspp-size>span.sspp-button-label');
+    sizeLabel.textContent = `${size[0].value}x${size[1].value}`;
+}
+
+
+
+// Clipboard Selector
+function sspp_newClip(me) {
+    const inputs = me.parentNode.querySelectorAll('input');
+    const name = inputs[0].value;
+    
+    if (!name) {
+        alert('Please fill in name field');
+        return;
+    }
+    
+    const textArea = _promptArea();
+    const negaTextArea = _negaPromptArea();
+    sspp_clipList.push([name, textArea.value, negaTextArea.value]);
+    localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
+    
+    inputs[0].value = '';
+
+    _sspp_updateClipSelector();
+}
+
+function sspp_selectClip(me) {
+    const index = me.parentNode.getAttribute('index') - 1;
+    const clipItem = sspp_clipList[index];
+    if (clipItem) {
+        sspp_setPrompt(clipItem[1], clipItem[2]);
+    }
+}
+
+function sspp_removeClip(me) {
+    const clipItem = me.parentNode;
+    const index = clipItem.getAttribute('index') - 1;
+    if (index > -1) {
+        sspp_clipList.splice(index, 1);
+        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
+        clipItem.remove();
+        _sspp_updateClipSelector();
+    }
+}
+
+function sspp_setPrompt(prompt, negaPrompt) {
+    const textArea = _promptArea();
+    const negaTextArea = _negaPromptArea();
+    if (textArea && negaTextArea) {
+        textArea.value = prompt;
+        textArea.dispatchEvent(new Event('input', { bubbles: true }));
+        negaTextArea.value = negaPrompt;
+        negaTextArea.dispatchEvent(new Event('input', { bubbles: true }));
+        document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select');
+    }
+}
+
 function _sspp_updateClipSelector() {
     const clipSelector = document.getElementById('sspp-clip-selector');
     const clipItems = clipSelector.querySelectorAll('.selector-item[index]');
@@ -479,14 +480,11 @@ function _sspp_updateClipSelector() {
     }
 }
 
-
-// サイズ表示を更新する
-function _sspp_updateSizeDisplay() {
-    const size = _sizeInputs();
-    if (!size) return;
-    const sizeLabel = document.querySelector('#sspp-size>span.sspp-button-label');
-    sizeLabel.textContent = `${size[0].value}x${size[1].value}`;
+// セレクターを閉じる
+function sspp_closeSelector(me) {
+    document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select', 'size-select')    
 }
+
 
 
 // テキストエリア内の現在の単語を選択/解除する
@@ -585,7 +583,6 @@ class WordOperations {
     }
 }
 const sspp_wordOps = new WordOperations();
-
 
 
 

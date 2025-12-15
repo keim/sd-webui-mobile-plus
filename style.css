@@ -5,6 +5,10 @@
     }
 }
 
+.contain {
+    margin-bottom: 10rem;
+}
+
 /* panel */
 #sd-smartphone-plus-panel {
     pointer-events: none;

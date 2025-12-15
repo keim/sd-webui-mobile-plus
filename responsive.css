@@ -18,8 +18,8 @@
     margin-top: -1.6rem;
     z-index: 10000;
 }
-.app {
-    padding: 0 !important;
+.gradio-container, .tabitem {
+    padding: 0.5rem 0.2rem !important;
 }
 
 /* t2i prompter */
@@ -38,10 +38,17 @@
 }
 
 /* t2i result screen */
-#txt2img_results {
+#txt2img_results,
+#img2img_results {
     margin: 0 !important;
 }
-
+#img2img_copy_to_img2img > button,
+#img2img_copy_to_sketch > button,
+#img2img_copy_to_inpaint > button,
+#img2img_copy_to_inpaint_sketch > button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+}
 
 
 /* checkpoint,lora cards */
@@ -60,7 +67,6 @@
 #img2img_lora_dirs > button {
     height: 1.6rem;
 }
-
 #img2img_image,
 #img2img_sketch,
 #img2maskimg, 
@@ -71,7 +77,6 @@
 }
 
 /* Hide some UI parts */
-#txt2img_tools, 
 #txt2img_extra_tabs > .tab-nav > button:nth-child(2),
 #txt2img_extra_tabs > .tab-nav > button:nth-child(3),
 #img2img_extra_tabs > .tab-nav > button:nth-child(2),
@@ -84,6 +89,7 @@
 .nega-prompt-hidden #sspp-nega-prompt {
     background-color: #ccc !important;
 }
+.nega-prompt-hidden #txt2img_tools,
 .nega-prompt-hidden #txt2img_neg_prompt_row,
 .nega-prompt-hidden #txt2img_actions_column, 
 .nega-prompt-hidden #img2img_neg_prompt_row,
@@ -98,10 +104,14 @@
 .config-hidden #txt2img_seed_extras,
 .config-hidden #resize_mode,
 .config-hidden #soft_inpainting_enabled,
-.config-hidden #soft_inpainting_enabled,
-.config-hidden #img2img_denoising_strength,
+/*.config-hidden #img2img_denoising_strength,*/
 .config-hidden #img2img_seed_row,
-.config-hidden #img2img_seed_extras {
+.config-hidden #img2img_seed_extras,
+.config-hidden #img2img_mask_blur,
+.config-hidden #img2img_mask_alpha,
+.config-hidden #img2img_inpainting_fill,
+.config-hidden #img2img_inpaint_full_res,
+.config-hidden #img2img_inpaint_full_res_padding {
     display: none;
 }
 .config-hidden #sampler_selection_txt2img,
@@ -113,6 +123,10 @@
 .config-hidden #txt2img_override_settings_row,
 .config-hidden #txt2img_script_container,
 .config-hidden #sampler_selection_img2img,
+.config-hidden #img2img_label_copy_to_img2img,
+.config-hidden #img2img_label_copy_to_sketch,
+.config-hidden #img2img_label_copy_to_inpaint,
+.config-hidden #img2img_label_copy_to_inpaint_sketch,
 .config-hidden #img2img_accordions,
 .config-hidden #img2img_column_size,
 .config-hidden #img2img_dimensions_row,
