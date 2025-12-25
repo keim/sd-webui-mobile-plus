@@ -3,7 +3,9 @@ from PIL import Image
 import gradio as gr
 import os
 import glob
+import re
 import json
+
 
 def on_ui_settings():
     section = ("mobile_plus", "Mobile+");
@@ -55,7 +57,7 @@ script_callbacks.on_ui_tabs(on_ui_tabs)
 
 
 IMAGE_DIR = "outputs/txt2img-images"
-MAX_IMAGES = 100
+MAX_IMAGES = 300
 
 def extract_posi_prompt_from_png(image_path):
     try:
@@ -95,7 +97,10 @@ def process_latest_images():
     for image_path in image_files[:MAX_IMAGES]:
         prompt = extract_posi_prompt_from_png(image_path)
         if prompt:
-            prompts.append(prompt)
+            # Trim whitespace, replace consecutive whitespace (including full-width) with single space, and avoid duplicates
+            prompt = re.sub(r'[\s\u3000]+', ' ', prompt.strip())
+            if prompt and prompt not in prompts:
+                prompts.append(prompt)
     
     print(f"[Mobile+] Extracted {len(prompts)} prompts from latest images")
     return prompts
