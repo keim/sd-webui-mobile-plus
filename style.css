@@ -52,9 +52,20 @@
     background-position: top;
 }
 
-.sspp-panel .selector {
+.sspp-panel .sspp-selector-background {
     display: none;
+    pointer-events: auto;
     position: fixed;
+    background-color: rgba(255,255,255,0.5);
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 99;
+}
+.sspp-panel .selector {
+    display: flex;
+    position: relative;
     flex-direction: column;
     justify-content: center;
     top: 0;
@@ -62,6 +73,10 @@
     right: 0;
     bottom: 0;
     box-sizing: border-box;
+}
+.sspp-panel .selector.boxlist {
+    flex-direction: row !important;
+    flex-wrap: wrap; 
 }
 .sspp-panel .selector-item {
     pointer-events: auto;
@@ -79,16 +94,6 @@
     background-color: #fff;
     margin: 0.1rem 2rem;
     z-index: 100;
-}
-.sspp-panel .sspp-selector-background {
-    pointer-events: auto;
-    position: fixed;
-    background-color: rgba(255,255,255,0.5);
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 99;
 }
 .sspp-panel .selector-item input {
     height: 2rem;
@@ -114,6 +119,28 @@
     border-width: 0;
     background-position: center;
 }
+.sspp-panel .selector-box {
+    pointer-events: auto;
+    flex: 0 0 33%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.2rem;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #999;
+    color: #333;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    z-index: 100;
+}
+
+
 
 #sspp-inject-css {
     background-image: url('./svg/power.svg');

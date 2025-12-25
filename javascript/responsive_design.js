@@ -17,7 +17,7 @@ function insertPanel() {
 const _sspp_tabNames = [];
 let _sspp_currentTabName = '';
 const sspp_sizeList = [];
-const sspp_clipList = [];
+let sspp_clipList = [];
 let sspp_sizeSelectorItem = null;
 let sspp_clipSelectorItem = null;
 let geminiapi = null;
@@ -30,7 +30,6 @@ let sspp_currentWord = '';
 function _initialize() {
     // サイズリストとクリップリストをローカルストレージから読み込む
     const sizeListJSON = localStorage.getItem('sspp_size_list');
-    const clipListJSON = localStorage.getItem('sspp_clip_list');
     if (sizeListJSON) {
         sspp_sizeList.push(...JSON.parse(sizeListJSON));
     } else {
@@ -49,13 +48,8 @@ function _initialize() {
         sspp_sizeList.push(["9:16", 810, 1440]);
         localStorage.setItem('sspp_size_list', JSON.stringify(sspp_sizeList));
     }
-    if (clipListJSON) {
-        sspp_clipList.push(...JSON.parse(clipListJSON));
-    } else {
-        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-    }
     sspp_sizeSelectorItem = document.querySelector('#sspp-size-selector .selector-item[index="1"]');
-    sspp_clipSelectorItem = document.querySelector('#sspp-clip-selector .selector-item[index="1"]');
+    sspp_clipSelectorItem = document.querySelector('#sspp-clip-selector .selector-box[index="1"]');
     if (sspp_sizeSelectorItem) sspp_sizeSelectorItem.remove();
     if (sspp_clipSelectorItem) sspp_clipSelectorItem.remove();
 
@@ -70,10 +64,11 @@ function _initialize() {
 
 function _initWordDictionary() {
     const promptHistoryBox = document.getElementById("sspp_prompt_history");
-    const promptHistory = JSON.parse(promptHistoryBox.querySelector("textarea, input").value);
+    sspp_clipList = JSON.parse(promptHistoryBox.querySelector("textarea, input").value);
     sspp_wordDictionary['__first__'] = {}
     sspp_wordDictionary['__last__'] = {}
-    promptHistory.reverse().forEach(prompt => this._appendWordDictionaryByPrompt(prompt));
+    console.log(sspp_clipList)
+    sspp_clipList.reverse().forEach(([url, posi, nega]) => this._appendWordDictionaryByPrompt(posi));
 }
 
 function _splitWords(prompt) {
@@ -204,6 +199,7 @@ function _setupMenuButtons() {
     });
     // [Size selector]
     onclick('sspp-size', e => {
+        _sspp_updateSizeDisplay();
         panel.classList.toggle("size-select");
     });
     // [Clipboard selector]
@@ -368,7 +364,7 @@ function sspp_setSize(width, height) {
 }
 
 function _sspp_updateSizeSelector() {
-    const sizeSelector = document.getElementById('sspp-size-selector');
+    const sizeSelector = document.querySelector('#sspp-size-selector>.selector');
 
     // remove any existing generated selector items (those with an index)
     const sizeItems = sizeSelector.querySelectorAll('.selector-item[index]');
@@ -416,7 +412,6 @@ function sspp_newClip(me) {
     const textArea = _promptArea();
     const negaTextArea = _negaPromptArea();
     sspp_clipList.push([name, textArea.value, negaTextArea.value]);
-    localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
     
     inputs[0].value = '';
 
@@ -428,17 +423,6 @@ function sspp_selectClip(me) {
     const clipItem = sspp_clipList[index];
     if (clipItem) {
         sspp_setPrompt(clipItem[1], clipItem[2]);
-    }
-}
-
-function sspp_removeClip(me) {
-    const clipItem = me.parentNode;
-    const index = clipItem.getAttribute('index') - 1;
-    if (index > -1) {
-        sspp_clipList.splice(index, 1);
-        localStorage.setItem('sspp_clip_list', JSON.stringify(sspp_clipList));
-        clipItem.remove();
-        _sspp_updateClipSelector();
     }
 }
 
@@ -455,27 +439,18 @@ function sspp_setPrompt(prompt, negaPrompt) {
 }
 
 function _sspp_updateClipSelector() {
-    const clipSelector = document.getElementById('sspp-clip-selector');
+    const clipSelector = document.querySelector('#sspp-clip-selector>.selector');
     const clipItems = clipSelector.querySelectorAll('.selector-item[index]');
     clipItems.forEach(item => item.remove());
     
     // 新しいクリップアイテムを追加
-    const addButton = clipSelector.querySelector('.selector-item:not([index])');
     if (sspp_clipSelectorItem) {
         sspp_clipList.forEach((prompts, idx) => {
             const clone = sspp_clipSelectorItem.cloneNode(true);
             clone.setAttribute('index', idx + 1);
-            const labelBtn = clone.querySelector('.selector-item-label');
-            if (labelBtn) {
-                labelBtn.textContent = `${prompts[0]}`;
-                labelBtn.setAttribute('onclick', 'sspp_selectClip(this)');
-            }
-            const removeBtn = clone.querySelector('.sspp-close.selector-item-button');
-            if (removeBtn) {
-                removeBtn.setAttribute('onclick', 'sspp_removeClip(this)');
-            }
-            const lastItem = document.getElementById('sspp-clip-new-item');
-            clipSelector.insertBefore(clone, lastItem);
+            clone.setAttribute('style', `background-image:url(${prompts[0]});`);
+            clone.setAttribute('onclick', 'sspp_selectClip(this)');
+            clipSelector.appendChild(clone);
         });
     }
 }

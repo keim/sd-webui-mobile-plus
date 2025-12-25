@@ -7,5 +7,5 @@ export function geminiapi() {
         console.error("Gemini API key is missing.");
         return;
     }
-    return GoogleGenerativeAI(apikey);
+    return new GoogleGenerativeAI(apikey);
 }

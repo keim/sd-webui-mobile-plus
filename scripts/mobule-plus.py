@@ -5,6 +5,7 @@ import os
 import glob
 import re
 import json
+from urllib.parse import quote
 
 
 def on_ui_settings():
@@ -56,8 +57,8 @@ def on_ui_tabs():
 script_callbacks.on_ui_tabs(on_ui_tabs)
 
 
-IMAGE_DIR = "outputs/txt2img-images"
-MAX_IMAGES = 300
+IMAGE_DIR = shared.opts.outdir_save
+MAX_IMAGES = 500
 
 def extract_posi_prompt_from_png(image_path):
     try:
@@ -66,14 +67,20 @@ def extract_posi_prompt_from_png(image_path):
         if parameters:
             # Extract positive prompt (everything before "Negative prompt:")
             if "Negative prompt:" in parameters:
-                positive_prompt = parameters.split("Negative prompt:")[0].strip()
+                prompts = parameters.split("Negative prompt:")
+                positive_prompt = prompts[0].strip()
+                if "\nSteps:" in prompts[1]:
+                    negative_prompt = prompts[1].split("\nSteps:")[0].strip()
+                else:
+                    negative_prompt = prompts[1].strip()
             else:
+                negative_prompt = ""
                 # If no negative prompt section, split at Steps: or other parameters
                 if "\nSteps:" in parameters:
                     positive_prompt = parameters.split("\nSteps:")[0].strip()
                 else:
                     positive_prompt = parameters.strip()
-            return positive_prompt
+            return [positive_prompt, negative_prompt]
         return None
     except Exception as e:
         print(f"[Mobile+] Error processing {image_path}: {e}")
@@ -94,13 +101,18 @@ def process_latest_images():
     
     # Process only the latest MAX_IMAGES
     prompts = []
+    seen_prompts = set()
     for image_path in image_files[:MAX_IMAGES]:
         prompt = extract_posi_prompt_from_png(image_path)
+        # convert image_path to image url link (relative to webui root) and URL-encode
+        rel_path = os.path.relpath(image_path, webui_root).replace(os.sep, '/')
+        url = f"/file={quote(rel_path)}"
         if prompt:
             # Trim whitespace, replace consecutive whitespace (including full-width) with single space, and avoid duplicates
-            prompt = re.sub(r'[\s\u3000]+', ' ', prompt.strip())
-            if prompt and prompt not in prompts:
-                prompts.append(prompt)
+            posiprompt = re.sub(r'[\s\u3000]+', ' ', prompt[0].strip())
+            if posiprompt and posiprompt not in seen_prompts:
+                prompts.append([url, posiprompt, prompt[1].strip()])
+                seen_prompts.add(posiprompt)
     
     print(f"[Mobile+] Extracted {len(prompts)} prompts from latest images")
     return prompts
