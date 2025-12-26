@@ -57,13 +57,13 @@ def on_ui_tabs():
 script_callbacks.on_ui_tabs(on_ui_tabs)
 
 
-IMAGE_DIR = shared.opts.outdir_save
 MAX_IMAGES = 500
 
-def extract_posi_prompt_from_png(image_path):
+def extract_pnginfo(image_path):
     try:
         img = Image.open(image_path)
         parameters = img.info.get('parameters')
+        width, height = img.size
         if parameters:
             # Extract positive prompt (everything before "Negative prompt:")
             if "Negative prompt:" in parameters:
@@ -80,7 +80,7 @@ def extract_posi_prompt_from_png(image_path):
                     positive_prompt = parameters.split("\nSteps:")[0].strip()
                 else:
                     positive_prompt = parameters.strip()
-            return [positive_prompt, negative_prompt]
+            return [positive_prompt, negative_prompt, width, height]
         return None
     except Exception as e:
         print(f"[Mobile+] Error processing {image_path}: {e}")
@@ -88,8 +88,8 @@ def extract_posi_prompt_from_png(image_path):
 
 def process_latest_images():
     webui_root = os.getcwd()
-    full_image_dir = os.path.join(webui_root, IMAGE_DIR)
-    
+    full_image_dir = os.path.join(webui_root, shared.opts.outdir_save)
+
     if not os.path.exists(full_image_dir):
         print(f"[Mobile+] Image directory not found: {full_image_dir}")
         return []
@@ -103,16 +103,19 @@ def process_latest_images():
     prompts = []
     seen_prompts = set()
     for image_path in image_files[:MAX_IMAGES]:
-        prompt = extract_posi_prompt_from_png(image_path)
+        pnginfo = extract_pnginfo(image_path)
         # convert image_path to image url link (relative to webui root) and URL-encode
         rel_path = os.path.relpath(image_path, webui_root).replace(os.sep, '/')
         url = f"/file={quote(rel_path)}"
-        if prompt:
+
+        if pnginfo:
             # Trim whitespace, replace consecutive whitespace (including full-width) with single space, and avoid duplicates
-            posiprompt = re.sub(r'[\s\u3000]+', ' ', prompt[0].strip())
-            if posiprompt and posiprompt not in seen_prompts:
-                prompts.append([url, posiprompt, prompt[1].strip()])
-                seen_prompts.add(posiprompt)
+            posiprompt = re.sub(r'[ \t\u3000]+', ' ', pnginfo[0].strip())
+            negaprompt = re.sub(r'[ \t\u3000]+', ' ', pnginfo[1].strip())
+            seen_prompt = posiprompt + negaprompt
+            if seen_prompt and seen_prompt not in seen_prompts:
+                prompts.append([url, posiprompt, negaprompt, pnginfo[2], pnginfo[3]])
+                seen_prompts.add(seen_prompt)
     
     print(f"[Mobile+] Extracted {len(prompts)} prompts from latest images")
     return prompts

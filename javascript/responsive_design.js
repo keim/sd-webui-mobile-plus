@@ -9,6 +9,7 @@ function insertPanel() {
     _sspp_updateSizeDisplay();
     _sspp_updateSizeSelector();
     _sspp_updateClipSelector();
+    _constructCandidateButtons("__first__")
 
     console.log("Responsive design CSS injector has been loaded.");
 }
@@ -61,13 +62,11 @@ function _initialize() {
     });
 }
 
-
+// 辞書初期化
 function _initWordDictionary() {
     const promptHistoryBox = document.getElementById("sspp_prompt_history");
     sspp_clipList = JSON.parse(promptHistoryBox.querySelector("textarea, input").value);
     sspp_wordDictionary['__first__'] = {}
-    sspp_wordDictionary['__last__'] = {}
-    console.log(sspp_clipList)
     sspp_clipList.reverse().forEach(([url, posi, nega]) => this._appendWordDictionaryByPrompt(posi));
 }
 
@@ -84,9 +83,9 @@ function _appendWordDictionaryByPrompt(prompt) {
             // 新しい単語の場合は辞書を初期化
             sspp_wordDictionary[word] = {};
         } else {
-            // 出現した単語の記録済みスコアを0.9倍する
+            // 出現した単語の記録済みスコアを0.95倍する
             Object.keys(sspp_wordDictionary[word]).forEach(context => {
-                sspp_wordDictionary[word][context] *= 0.9;
+                sspp_wordDictionary[word][context] *= 0.95;
             });
         }
         // コンテキスト単語を登録
@@ -110,11 +109,8 @@ function _appendWordDictionaryByPrompt(prompt) {
             const lastWord = words[words.length - c];
             if (!(firstWord in sspp_wordDictionary['__first__'])) sspp_wordDictionary['__first__'][firstWord] = 0;
             sspp_wordDictionary['__first__'][firstWord] += 5-c;
-            if (!(lastWord in sspp_wordDictionary['__last__'])) sspp_wordDictionary['__last__'][lastWord] = 0;
-            sspp_wordDictionary['__last__'][lastWord] += 5-c;
         }
         sspp_candidateList['__first__'] = null;
-        sspp_candidateList['__last__'] = null;
     }
 }
 
@@ -151,18 +147,23 @@ function sspp_showCandidateList() {
     if (!cursor) return;
     const currentWord = textArea.value.substring(cursor.start, cursor.end).trim().toLowerCase();
     if (sspp_currentWord === currentWord) return;
+    sspp_currentWord = currentWord;
+    _constructCandidateButtons(currentWord)
+}
 
+function _constructCandidateButtons(targetWord) {
+    const textArea = _promptArea();
+    if (!textArea) return;
+    const candidates = sspp_getCandidateList(targetWord);
+    if (candidates.length === 0) return;
     const candidateDiv = document.getElementById('sspp-candidate');
     candidateDiv.classList.add('hidden');
-    sspp_currentWord = currentWord;
-    const candidates = sspp_getCandidateList(currentWord);
-    if (candidates.length === 0) return;
 
     const words = _splitWords(textArea.value);
     candidateDiv.classList.remove('hidden');
     candidateDiv.innerHTML = '';
     let count = 0, i = 0;
-    while (count < 5 && i < candidates.length) {
+    while (count < 6 && i < candidates.length) {
         const item = candidates[i++];
         if (words.includes(item.word)) continue;
         const btn = document.createElement('button');
@@ -172,6 +173,7 @@ function sspp_showCandidateList() {
         candidateDiv.appendChild(btn);
         count++;
     }
+
 }
 
 // メニューボタンのセットアップ
@@ -261,7 +263,6 @@ function _addEventListener() {
         if (!btn) return;
         const tabName = btn.textContent.trim().toLowerCase();
         if (!_sspp_tabNames.includes(tabName)) return;
-        console.log(`Tab changed to: ${tabName}`);
         _sspp_currentTabName = tabName;
         _sspp_updateSizeDisplay();
     });
@@ -309,6 +310,14 @@ function _generateButton() {
     return document.getElementById(`${_sspp_currentTabName}_generate`);
 }
 
+
+
+function sspp_setPrompt(posiPrompt, negaPrompt) {
+    const posiPromptArea = _promptArea()
+    const negaPromptArea = _negaPromptArea()
+    if (posiPromptArea) posiPromptArea.value = posiPrompt
+    if (negaPromptArea) negaPromptArea.value = negaPrompt
+}
 
 // Size Selector
 function sspp_newSize(me) {
@@ -364,7 +373,7 @@ function sspp_setSize(width, height) {
 }
 
 function _sspp_updateSizeSelector() {
-    const sizeSelector = document.querySelector('#sspp-size-selector>.selector');
+    const sizeSelector = document.querySelector('#sspp-size-selector>.selector-board');
 
     // remove any existing generated selector items (those with an index)
     const sizeItems = sizeSelector.querySelectorAll('.selector-item[index]');
@@ -400,46 +409,17 @@ function _sspp_updateSizeDisplay() {
 
 
 // Clipboard Selector
-function sspp_newClip(me) {
-    const inputs = me.parentNode.querySelectorAll('input');
-    const name = inputs[0].value;
-    
-    if (!name) {
-        alert('Please fill in name field');
-        return;
-    }
-    
-    const textArea = _promptArea();
-    const negaTextArea = _negaPromptArea();
-    sspp_clipList.push([name, textArea.value, negaTextArea.value]);
-    
-    inputs[0].value = '';
-
-    _sspp_updateClipSelector();
-}
-
 function sspp_selectClip(me) {
-    const index = me.parentNode.getAttribute('index') - 1;
+    const index = me.getAttribute('index') - 1;
     const clipItem = sspp_clipList[index];
     if (clipItem) {
         sspp_setPrompt(clipItem[1], clipItem[2]);
-    }
-}
-
-function sspp_setPrompt(prompt, negaPrompt) {
-    const textArea = _promptArea();
-    const negaTextArea = _negaPromptArea();
-    if (textArea && negaTextArea) {
-        textArea.value = prompt;
-        textArea.dispatchEvent(new Event('input', { bubbles: true }));
-        negaTextArea.value = negaPrompt;
-        negaTextArea.dispatchEvent(new Event('input', { bubbles: true }));
-        document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select');
+        sspp_setSize(clipItem[3], clipItem[4]);
     }
 }
 
 function _sspp_updateClipSelector() {
-    const clipSelector = document.querySelector('#sspp-clip-selector>.selector');
+    const clipSelector = document.querySelector('#sspp-clip-selector>.selector-board');
     const clipItems = clipSelector.querySelectorAll('.selector-item[index]');
     clipItems.forEach(item => item.remove());
     

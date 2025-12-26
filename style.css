@@ -52,7 +52,8 @@
     background-position: top;
 }
 
-.sspp-panel .sspp-selector-background {
+/* selector */
+.sspp-panel .selector-background {
     display: none;
     pointer-events: auto;
     position: fixed;
@@ -62,21 +63,16 @@
     bottom: 0;
     right: 0;
     z-index: 99;
+    overflow-y: scroll;
 }
-.sspp-panel .selector {
+.sspp-panel .selector-board {
     display: flex;
     position: relative;
+    width: 100%;
     flex-direction: column;
     justify-content: center;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    align-items: normal;
     box-sizing: border-box;
-}
-.sspp-panel .selector.boxlist {
-    flex-direction: row !important;
-    flex-wrap: wrap; 
 }
 .sspp-panel .selector-item {
     pointer-events: auto;
@@ -119,9 +115,16 @@
     border-width: 0;
     background-position: center;
 }
+
+.sspp-panel .selector-board.boxlist {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem;
+}
 .sspp-panel .selector-box {
     pointer-events: auto;
-    flex: 0 0 33%;
+    flex: 0 0 22%;
     aspect-ratio: 1 / 1;
     display: flex;
     position: relative;
