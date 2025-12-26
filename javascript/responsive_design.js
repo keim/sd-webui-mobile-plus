@@ -315,8 +315,14 @@ function _generateButton() {
 function sspp_setPrompt(posiPrompt, negaPrompt) {
     const posiPromptArea = _promptArea()
     const negaPromptArea = _negaPromptArea()
-    if (posiPromptArea) posiPromptArea.value = posiPrompt
-    if (negaPromptArea) negaPromptArea.value = negaPrompt
+    if (posiPromptArea) {
+        posiPromptArea.value = posiPrompt
+        posiPromptArea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (negaPromptArea) {
+        negaPromptArea.value = negaPrompt
+        negaPromptArea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 }
 
 // Size Selector
