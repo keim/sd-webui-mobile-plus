@@ -1,33 +1,43 @@
 <div id="sd-smartphone-plus-panel" class="sspp-panel">
-    <div id="sspp-candidate" class="sspp-panel-column">
-    </div>
-    <div class="sspp-panel-column">
-        <button id="sspp-generate" class="helper">Generate</button>
-    </div>
-    <div class="sspp-panel-column">
-        <button id="sspp-prevword" class="helper">prev</button>
-        <button id="sspp-currword" class="helper">select</button>
-        <button id="sspp-nextword" class="helper">next</button>
-        <button id="sspp-parentheses" class="helper">emph</button>
-        <button id="sspp-ratedown" class="helper">-0.1</button>
-        <button id="sspp-rateup"   class="helper">+0.1</button>
-    </div>
-    <div class="sspp-panel-column">
-        <button id="sspp-inject-css" class="">
+    <div class="sspp-panel-column sspp-off-ui">
+        <button id="sspp-inject-css">
             <span class="sspp-button-label-off">InjectCSS</span>
+        </button>
+        <button id="sspp-inject-css-full">
+            <span class="sspp-button-label-off">InjectCSS & FullScreen</span>
+        </button>
+    </div>
+    <div class="sspp-panel-column sspp-on-ui" id="sspp-candidate">
+    </div>
+    <div class="sspp-panel-column sspp-on-ui">
+        <button id="sspp-generate">Generate</button>
+    </div>
+    <div class="sspp-panel-column sspp-on-ui">
+        <button id="sspp-prevword">prev</button>
+        <button id="sspp-currword">select</button>
+        <button id="sspp-nextword">next</button>
+        <button id="sspp-parentheses">emph</button>
+        <button id="sspp-ratedown">-0.1</button>
+        <button id="sspp-rateup">+0.1</button>
+    </div>
+    <div class="sspp-panel-column sspp-on-ui">
+        <button id="sspp-extract-css">
             <span class="sspp-button-label-on">ExtractCSS</span>
         </button>
-        <button id="sspp-nega-prompt" class="operator">
+        <button id="sspp-nega-prompt">
             <span class="sspp-button-label">Prompt</span>
         </button>
-        <button id="sspp-config" class="operator">
+        <button id="sspp-config">
             <span class="sspp-button-label">Props</span>
         </button>
-        <button id="sspp-size" class="operator">
+        <button id="sspp-size">
             <span class="sspp-button-label">Size</span>
         </button>
-        <button id="sspp-clip" class="operator">
+        <button id="sspp-clip">
             <span class="sspp-button-label">Clip</span>
+        </button>
+        <button id="menu-open">
+            <span class="sspp-button-label">Menu</span>
         </button>
         <div id="sspp-size-selector" class="selector-background" onclick="sspp_closeSelector(this)">
             <div class="selector-board">
@@ -47,6 +57,16 @@
             <div class="selector-board boxlist">
                 <div class="selector-box" index="1">
                 </div>
+            </div>
+        </div>
+        <div id="sspp-sidemenu" class="sidemenu-background" onclick="sspp_closeSelector(this)">
+            <div class="sidemenu-board">
+                <button id="sspp-size">
+                    <span class="sspp-button-label">Size</span>
+                </button>
+                <button id="sspp-clip">
+                    <span class="sspp-button-label">Clip</span>
+                </button>
             </div>
         </div>
     </div>

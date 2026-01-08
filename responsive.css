@@ -43,8 +43,8 @@
     margin: 0 !important;
 }
 #img2img_copy_to_img2img > button,
-#img2img_copy_to_sketch > button,
 #img2img_copy_to_inpaint > button,
+#img2img_copy_to_sketch > button,
 #img2img_copy_to_inpaint_sketch > button {
     flex: 1 1 0 !important;
     min-width: 0 !important;
@@ -102,7 +102,7 @@
 }
 .config-hidden #txt2img_seed_row,
 .config-hidden #txt2img_seed_extras,
-.config-hidden #resize_mode,
+/*.config-hidden #resize_mode,*/
 .config-hidden #soft_inpainting_enabled,
 /*.config-hidden #img2img_denoising_strength,*/
 .config-hidden #img2img_seed_row,
@@ -146,6 +146,12 @@
     background-color: #ccc !important;
 }
 .clip-select #sspp-clip-selector {
+    display: flex !important;
+}
+.menu-opened #menu-open {
+    background-color: #ccc !important;
+}
+.menu-opened #sspp-sidemenu {
     display: flex !important;
 }
 

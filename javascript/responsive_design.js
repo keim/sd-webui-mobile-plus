@@ -9,10 +9,12 @@ function insertPanel() {
     _sspp_updateSizeDisplay();
     _sspp_updateSizeSelector();
     _sspp_updateClipSelector();
-    _constructCandidateButtons("__first__")
+    sspp_candOps.updateCandidateButtons("__first__")
 
-    console.log("Responsive design CSS injector has been loaded.");
+    console.log("Mobile+: Responsive design CSS injector has been loaded.");
 }
+
+
 
 // グローバル変数
 const _sspp_tabNames = [];
@@ -22,9 +24,7 @@ let sspp_clipList = [];
 let sspp_sizeSelectorItem = null;
 let sspp_clipSelectorItem = null;
 let geminiapi = null;
-const sspp_wordDictionary = {};
-const sspp_candidateList = {};
-let sspp_currentWord = '';
+
 
 
 // 初期化処理
@@ -58,7 +58,7 @@ function _initialize() {
     import("./modules/geminiapi.js").then(module => {
         geminiapi = module.geminiapi();
     }).catch(err => {
-        console.error("Failed to load geminiapi module:", err);
+        console.error("[Mobile+] Failed to load geminiapi module:", err);
     });
 }
 
@@ -66,114 +66,8 @@ function _initialize() {
 function _initWordDictionary() {
     const promptHistoryBox = document.getElementById("sspp_prompt_history");
     sspp_clipList = JSON.parse(promptHistoryBox.querySelector("textarea, input").value);
-    sspp_wordDictionary['__first__'] = {}
-    sspp_clipList.reverse().forEach(([url, posi, nega]) => this._appendWordDictionaryByPrompt(posi));
-}
-
-function _splitWords(prompt) {
-    return prompt.split(/[\s,()]+|:\s*[\d.]+\s*\)/).map(w=>w.trim().toLowerCase()).filter(w=>w!=='');
-}
-
-function _appendWordDictionaryByPrompt(prompt) {
-    const words = _splitWords(prompt);
-
-    // 各単語とそのコンテキストを辞書に登録
-    words.forEach((word, i) => {
-        if (word && !(word in sspp_wordDictionary)) {
-            // 新しい単語の場合は辞書を初期化
-            sspp_wordDictionary[word] = {};
-        } else {
-            // 出現した単語の記録済みスコアを0.95倍する
-            Object.keys(sspp_wordDictionary[word]).forEach(context => {
-                sspp_wordDictionary[word][context] *= 0.95;
-            });
-        }
-        // コンテキスト単語を登録
-        for (let c=1; c<=4; c++) {
-            const context = words[i + c];
-            if (context && !(context in sspp_wordDictionary)) sspp_wordDictionary[context] = {};
-            if (context) {
-                if (!(context in sspp_wordDictionary[word])) sspp_wordDictionary[word][context] = 0;
-                sspp_wordDictionary[word][context] += 5-c;
-                if (!(word in sspp_wordDictionary[context])) sspp_wordDictionary[context][word] = 0;
-                sspp_wordDictionary[context][word] += 5-c;
-            }
-        }
-        sspp_candidateList[word] = null;
-    });
-    // 最初と最後の単語も特別に登録
-    if (words.length > 0) {
-        const cmax = Math.min(4, words.length);
-        for (let c=1; c<=cmax; c++) {
-            const firstWord = words[c - 1];
-            const lastWord = words[words.length - c];
-            if (!(firstWord in sspp_wordDictionary['__first__'])) sspp_wordDictionary['__first__'][firstWord] = 0;
-            sspp_wordDictionary['__first__'][firstWord] += 5-c;
-        }
-        sspp_candidateList['__first__'] = null;
-    }
-}
-
-function sspp_getCandidateList(word) {
-    const scores = sspp_wordDictionary[word];
-    if (!scores) return [];
-    if (!sspp_candidateList[word]) {
-        sspp_candidateList[word] = Object.keys(scores).map(word=>({ word, score: scores[word]})).sort((a, b) => b.score - a.score);
-    }
-    return sspp_candidateList[word];
-}
-
-function _onClickCandidate(word) {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    const cursor = sspp_wordOps._matchWordAtPosition(textArea.value, textArea.selectionEnd) || { end: textArea.selectionEnd };
-    const before = textArea.value.substring(0, cursor.end);
-    const after = textArea.value.substring(cursor.end);
-    if (before && !/\s$/.test(before)) word = ' ' + word;
-    if (after && !/^\s/.test(after)) word = word + ' ';
-    textArea.value = before + word + after;
-    textArea.dispatchEvent(new Event('input', { bubbles: true }));
-    const pos = before.length + word.length;
-    textArea.setSelectionRange(pos, pos);
-    textArea.focus();
-    sspp_showCandidateList();
-}
-
-function sspp_showCandidateList() {
-    const textArea = _promptArea();
-    if (!textArea) return;
-
-    const cursor = sspp_wordOps._matchWordAtPosition(textArea.value, textArea.selectionEnd, -1);
-    if (!cursor) return;
-    const currentWord = textArea.value.substring(cursor.start, cursor.end).trim().toLowerCase();
-    if (sspp_currentWord === currentWord) return;
-    sspp_currentWord = currentWord;
-    _constructCandidateButtons(currentWord)
-}
-
-function _constructCandidateButtons(targetWord) {
-    const textArea = _promptArea();
-    if (!textArea) return;
-    const candidates = sspp_getCandidateList(targetWord);
-    if (candidates.length === 0) return;
-    const candidateDiv = document.getElementById('sspp-candidate');
-    candidateDiv.classList.add('hidden');
-
-    const words = _splitWords(textArea.value);
-    candidateDiv.classList.remove('hidden');
-    candidateDiv.innerHTML = '';
-    let count = 0, i = 0;
-    while (count < 6 && i < candidates.length) {
-        const item = candidates[i++];
-        if (words.includes(item.word)) continue;
-        const btn = document.createElement('button');
-        btn.textContent = item.word;
-        btn.className = 'helper';
-        btn.addEventListener('click', () => _onClickCandidate(item.word));
-        candidateDiv.appendChild(btn);
-        count++;
-    }
-
+    sspp_candOps._wordDictionary['__first__'] = {};
+    sspp_clipList.reverse().forEach(([url, posi, nega]) => sspp_candOps.appendWordDictionaryByPrompt(posi));
 }
 
 // メニューボタンのセットアップ
@@ -184,11 +78,20 @@ function _setupMenuButtons() {
     }
 
     const panel = document.getElementById('sd-smartphone-plus-panel');
-    const root = document.getElementById('tabs').parentNode;
+    const root = document.getElementsByClassName('contain')[0];
     
     // CSS Injection ボタン
     onclick('sspp-inject-css', () => {
-        root.classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS());
+        root.classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
+    });
+    onclick('sspp-inject-css-full', () => {
+        root.classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
+        root.requestFullscreen();
+    });
+    // CSS Extraction ボタン
+    onclick('sspp-extract-css', () => {
+        root.classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(false));
+        if (document.fullscreenElement) document.exitFullscreen();
     });
     
     // [Negative Prompt]
@@ -198,6 +101,10 @@ function _setupMenuButtons() {
     // [Props]
     onclick('sspp-config', e => {
         root.classList.toggle("config-hidden");
+    });
+    // [Menu]
+    onclick('menu-open', e => {
+        panel.classList.toggle("menu-opened");
     });
     // [Size selector]
     onclick('sspp-size', e => {
@@ -212,18 +119,18 @@ function _setupMenuButtons() {
     // [Previous word]
     onclick('sspp-prevword', e => {
         sspp_wordOps.selectPrevWord(panel.classList.contains("word-select"));
-        sspp_showCandidateList();
+        sspp_candOps.show();
     });
     // [Current word]
     onclick('sspp-currword', e => {
         sspp_wordOps.selectWord(panel.classList.contains("word-select"));
         panel.classList.toggle("word-select");
-        sspp_showCandidateList();
+        sspp_candOps.show();
     });
     // [Next word]
     onclick('sspp-nextword', e => {
         sspp_wordOps.selectNextWord(panel.classList.contains("word-select"));
-        sspp_showCandidateList();
+        sspp_candOps.show();
     });
     // [Emphasize]
     onclick('sspp-parentheses', e => {
@@ -243,7 +150,7 @@ function _setupMenuButtons() {
         const generateButton = _generateButton();
         if (generateButton) generateButton.click();
         const textArea = _promptArea();
-        if (textArea) this._appendWordDictionaryByPrompt(textArea.value)
+        if (textArea) sspp_candOps.appendWordDictionaryByPrompt(textArea.value)
     });
 
     root.appendChild(panel);
@@ -269,7 +176,7 @@ function _addEventListener() {
 
     tabsElem.addEventListener('keyup', e => {
         const textarea = e.target.closest("textarea");
-        if (textarea === _promptArea()) sspp_showCandidateList();
+        if (textarea === _promptArea()) sspp_candOps.show();
     });
 }
 
@@ -306,7 +213,9 @@ function _sizeInputs() {
     ];
 }
 function _generateButton() {
-    if (_sspp_currentTabName !== 'txt2img' && _sspp_currentTabName !== 'img2img') return null;
+    if (_sspp_currentTabName !== 'txt2img' && 
+        _sspp_currentTabName !== 'img2img' &&
+        _sspp_currentTabName !== 'extras') return null;
     return document.getElementById(`${_sspp_currentTabName}_generate`);
 }
 
@@ -351,22 +260,24 @@ function sspp_selectSize(me) {
     const index = me.parentNode.getAttribute('index') - 1;
     const sizeItem = sspp_sizeList[index];
     if (sizeItem) {
-        sspp_setSize(sizeItem[1], sizeItem[2]);
+        sspp_setupSizeProps(sizeItem[1], sizeItem[2]);
     }
 }
 
 function sspp_removeSize(me) {
-    const sizeItem = me.parentNode;
-    const index = sizeItem.getAttribute('index') - 1;
+    const sizeItemElem = me.parentNode;
+    const index = sizeItemElem.getAttribute('index') - 1;
+    console.log(index)
     if (index > -1) {
         sspp_sizeList.splice(index, 1);
         localStorage.setItem('sspp_size_list', JSON.stringify(sspp_sizeList));
-        sizeItem.remove();
+        sizeItemElem.remove();
         _sspp_updateSizeSelector();
     }
 }
 
-function sspp_setSize(width, height) {
+
+function sspp_setupSizeProps(width, height) {
     const sizeUI = _sizeInputs();
     if (sizeUI) {
         sizeUI[0].value = width;
@@ -414,41 +325,168 @@ function _sspp_updateSizeDisplay() {
 
 
 
-// Clipboard Selector
-function sspp_selectClip(me) {
+// クリップ選択イベントハンドラー
+function sspp_onSelectClip(me) {
     const index = me.getAttribute('index') - 1;
     const clipItem = sspp_clipList[index];
     if (clipItem) {
         sspp_setPrompt(clipItem[1], clipItem[2]);
-        sspp_setSize(clipItem[3], clipItem[4]);
+        sspp_setupSizeProps(clipItem[3], clipItem[4]);
     }
 }
 
+// クリップ選択の更新
 function _sspp_updateClipSelector() {
     const clipSelector = document.querySelector('#sspp-clip-selector>.selector-board');
-    const clipItems = clipSelector.querySelectorAll('.selector-item[index]');
-    clipItems.forEach(item => item.remove());
+
+    // 既存のクリップアイテムを全削除
+    clipSelector.querySelectorAll('.selector-item[index]').forEach(item => item.remove());
     
     // 新しいクリップアイテムを追加
     if (sspp_clipSelectorItem) {
-        sspp_clipList.forEach((prompts, idx) => {
+        for (let idx = sspp_clipList.length - 1; idx >= 0; idx--) {
+            const prompts = sspp_clipList[idx];
             const clone = sspp_clipSelectorItem.cloneNode(true);
             clone.setAttribute('index', idx + 1);
             clone.setAttribute('style', `background-image:url(${prompts[0]});`);
-            clone.setAttribute('onclick', 'sspp_selectClip(this)');
+            clone.setAttribute('onclick', 'sspp_onSelectClip(this)');
             clipSelector.appendChild(clone);
-        });
+        }
     }
 }
 
 // セレクターを閉じる
 function sspp_closeSelector(me) {
-    document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select', 'size-select')    
+    console.log('close selector');
+    document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select', 'size-select', 'menu-opened');
 }
 
 
+class UIParts {
+    constructor() {}
+}
+const sspp_uiParts = new UIParts();
 
-// テキストエリア内の現在の単語を選択/解除する
+
+// 入力候補辞書操作
+class CandidateOperations {
+    constructor() {
+        this._wordDictionary = {};
+        this._candidateList = {};
+        this._currentWord = '';
+    }
+
+    appendWordDictionaryByPrompt(prompt) {
+        const words = this._splitWords(prompt);
+
+        // 各単語とそのコンテキストを辞書に登録
+        words.forEach((word, i) => {
+            if (word && !(word in this._wordDictionary)) {
+                // 新しい単語の場合は辞書を初期化
+                this._wordDictionary[word] = {};
+            } else {
+                // 出現した単語の記録済みスコアを0.95倍する
+                Object.keys(this._wordDictionary[word]).forEach(context => {
+                    this._wordDictionary[word][context] *= 0.95;
+                });
+            }
+            // コンテキスト単語を登録
+            for (let c=1; c<=4; c++) {
+                const context = words[i + c];
+                if (context && !(context in this._wordDictionary)) this._wordDictionary[context] = {};
+                if (context) {
+                    if (!(context in this._wordDictionary[word])) this._wordDictionary[word][context] = 0;
+                    this._wordDictionary[word][context] += 5-c;
+                    if (!(word in this._wordDictionary[context])) this._wordDictionary[context][word] = 0;
+                    this._wordDictionary[context][word] += 5-c;
+                }
+            }
+            this._candidateList[word] = null;
+        });
+        // 最初と最後の単語も特別に登録
+        if (words.length > 0) {
+            const cmax = Math.min(4, words.length);
+            for (let c=1; c<=cmax; c++) {
+                const firstWord = words[c - 1];
+                const lastWord = words[words.length - c];
+                if (!(firstWord in this._wordDictionary['__first__'])) this._wordDictionary['__first__'][firstWord] = 0;
+                this._wordDictionary['__first__'][firstWord] += 5-c;
+            }
+            this._candidateList['__first__'] = null;
+        }
+    }
+
+    _splitWords(prompt) {
+        return prompt.split(/[\s,()]+|:\s*[\d.]+\s*\)/).map(w=>w.trim().toLowerCase()).filter(w=>w!=='');
+    }
+
+    getCandidates(word) {
+        const scores = this._wordDictionary[word];
+        if (!scores) return [];
+        if (!this._candidateList[word]) {
+            this._candidateList[word] = Object.keys(scores).map(word=>({ word, score: scores[word]})).sort((a, b) => b.score - a.score);
+        }
+        return this._candidateList[word];
+    }
+
+    show() {
+        const textArea = _promptArea();
+        if (!textArea) return;
+
+        const cursor = sspp_wordOps._matchWordAtPosition(textArea.value, textArea.selectionEnd, -1);
+        if (!cursor) return;
+        const currentWord = textArea.value.substring(cursor.start, cursor.end).trim().toLowerCase();
+        if (this._currentWord === currentWord) return;
+        this._currentWord = currentWord;
+        this.updateCandidateButtons(currentWord)
+    }
+
+    // 入力候補ボタンの更新
+    updateCandidateButtons(targetWord) {
+        const _onClickCandidate = word => {
+            const textArea = _promptArea();
+            if (!textArea) return;
+            const cursor = sspp_wordOps._matchWordAtPosition(textArea.value, textArea.selectionEnd) || { end: textArea.selectionEnd };
+            const before = textArea.value.substring(0, cursor.end);
+            const after = textArea.value.substring(cursor.end);
+            if (before && !/\s$/.test(before)) word = ' ' + word;
+            if (after && !/^\s/.test(after)) word = word + ' ';
+            textArea.value = before + word + after;
+            textArea.dispatchEvent(new Event('input', { bubbles: true }));
+            const pos = before.length + word.length;
+            textArea.setSelectionRange(pos, pos);
+            textArea.focus();
+            setTimeout(() => this.show(), 200);
+        }
+
+        const textArea = _promptArea();
+        if (!textArea) return;
+        const candidates = this.getCandidates(targetWord);
+        if (candidates.length === 0) return;
+        const candidateDiv = document.getElementById('sspp-candidate');
+        candidateDiv.classList.add('hidden');
+
+        const words = this._splitWords(textArea.value);
+        candidateDiv.classList.remove('hidden');
+        candidateDiv.innerHTML = '';
+        let count = 0, i = 0;
+        while (count < 6 && i < candidates.length) {
+            const item = candidates[i++];
+            if (words.includes(item.word)) continue;
+            const btn = document.createElement('button');
+            btn.textContent = item.word;
+            btn.className = 'helper';
+            btn.addEventListener('click', () => _onClickCandidate(item.word));
+            candidateDiv.appendChild(btn);
+            count++;
+        }
+
+    }
+}
+const sspp_candOps = new CandidateOperations();
+
+
+// テキストエリア内の単語操作
 class WordOperations {
     selectWord(hold) {
         if (hold) this._unselectWord();
@@ -549,20 +587,21 @@ const sspp_wordOps = new WordOperations();
 
 
 // CSSのインジェクション/解除を切り替える
-function _sspp_toggleResponsiveCSS() {
+function _sspp_toggleResponsiveCSS(enabled) {
     const cssID = 'responsive-design-css';
     const existingLink = document.getElementById(cssID);
     
-    if (!existingLink) {
+    if (enabled && !existingLink) {
         const link = document.createElement('link');
         link.id = cssID;
         link.rel = 'stylesheet';
         link.type = 'text/css';
         link.href = `file=extensions/sd-webui-mobile-plus/responsive.css?n=${(Math.random()*10000)>>0}`;
         document.head.appendChild(link);
-        return true
-    } else {
+    } else 
+    if (!enabled && existingLink) {
         existingLink.remove();
-        return false
     }
+
+    return enabled
 }
