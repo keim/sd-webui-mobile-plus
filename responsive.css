@@ -159,5 +159,15 @@
     background-color: #ccc !important;
 }
 
+/* Allow vertical scrolling when entering fullscreen (Mobile & Desktop) */
+html:fullscreen, html:-webkit-full-screen,
+body:fullscreen, body:-webkit-full-screen,
+.contain:fullscreen, .contain:-webkit-full-screen,
+:fullscreen, :-webkit-full-screen {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    overscroll-behavior: auto !important;
+}
 
 
