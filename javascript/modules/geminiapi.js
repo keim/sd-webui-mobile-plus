@@ -4,8 +4,7 @@ export function geminiapi() {
     const apikeyBox = document.getElementById("sspp_gemini_api_key");
     const apikey = apikeyBox.querySelector("textarea, input").value;
     if (!apikey) {
-        console.error("Gemini API key is missing.");
-        return;
+        throw new Error("Gemini API key is not set.");
     }
     return new GoogleGenerativeAI(apikey);
 }

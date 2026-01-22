@@ -30,44 +30,51 @@
         <button id="sspp-config">
             <span class="sspp-button-label">Props</span>
         </button>
-        <button id="sspp-size">
-            <span class="sspp-button-label">Size</span>
+        <button id="sspp-config2">
+            <span class="sspp-button-label">Props</span>
         </button>
-        <button id="sspp-clip">
-            <span class="sspp-button-label">Clip</span>
+        <button id="sspp-config3">
+            <span class="sspp-button-label">Props</span>
         </button>
-        <button id="menu-open">
+        <button id="sspp-sidemenu-open">
             <span class="sspp-button-label">Menu</span>
         </button>
-        <div id="sspp-size-selector" class="selector-background" onclick="sspp_closeSelector(this)">
-            <div class="selector-board">
+    </div>
+    <div id="sspp-sidemenu">
+        <div id="sspp-sidemenu-content">
+            <div id="sspp-size-selector" class="sspp-sidemenu-content-item">
                 <div class="selector-item" index="1">
-                    <button class="selector-item-label" onclick="sspp_selectSize(this)" />
-                    <button class="sspp-close selector-item-button" onclick="sspp_removeSize(this)" />
+                    <button class="selector-item-label" />
+                    <button class="sspp-close selector-item-button" />
                 </div>
-                <div class="selector-item" id="sspp-size-new-item">
+                <div id="sspp-size-new-item" class="selector-item">
                     <input type="text" placeholder="name"/>
                     <input type="number" min="64" max="2048" step="32" placeholder="width"/>
                     <input type="number" min="64" max="2048" step="32" placeholder="height"/>
-                    <button id="sspp-size-register" class="selector-item-button" onclick="sspp_newSize(this)"/>
+                    <button id="sspp-size-new-item-register" class="selector-item-button"/>
+                </div>
+            </div>
+            <div id="sspp-clip-selector" class="sspp-sidemenu-content-item">
+                <div class="sspp-clip-item" index="1">
                 </div>
             </div>
         </div>
-        <div id="sspp-clip-selector" class="selector-background" onclick="sspp_closeSelector(this)">
-            <div class="selector-board boxlist">
-                <div class="selector-box" index="1">
-                </div>
-            </div>
+        <div id="sspp-sidemenu-selector">
+            <button id="sspp-size">
+                <span class="sspp-button-label">Size</span>
+            </button>
+            <button id="sspp-clip-t2i">
+                <span class="sspp-button-label">txt2img</span>
+            </button>
+            <button id="sspp-clip-i2i">
+                <span class="sspp-button-label">img2img</span>
+            </button>
+            <button id="sspp-clip-out">
+                <span class="sspp-button-label">outdir</span>
+            </button>
         </div>
-        <div id="sspp-sidemenu" class="sidemenu-background" onclick="sspp_closeSelector(this)">
-            <div class="sidemenu-board">
-                <button id="sspp-size">
-                    <span class="sspp-button-label">Size</span>
-                </button>
-                <button id="sspp-clip">
-                    <span class="sspp-button-label">Clip</span>
-                </button>
-            </div>
-        </div>
+        <button id="sspp-sidemenu-close">
+            <span class="sspp-button-label">Close</span>
+        </button>
     </div>
 </div>

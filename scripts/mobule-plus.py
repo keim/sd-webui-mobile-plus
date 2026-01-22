@@ -1,4 +1,5 @@
-from modules import script_callbacks, shared
+from modules import script_callbacks, shared, api
+from modules.api import models
 from PIL import Image
 import gradio as gr
 import os
@@ -6,6 +7,7 @@ import glob
 import re
 import json
 from urllib.parse import quote
+from fastapi import FastAPI, HTTPException, Query
 
 
 def on_ui_settings():
@@ -119,3 +121,57 @@ def process_latest_images():
     
     print(f"[Mobile+] Extracted {len(prompts)} prompts from latest images")
     return prompts
+
+
+def get_images_from_directory(dir_path: str, start: int = 0, count: int = 50) -> dict:
+    # 共通関数：指定ディレクトリから画像ファイルを取得してプロンプト情報を抽出
+    try:
+        webui_root = os.getcwd()
+        full_dir = os.path.join(webui_root, dir_path)
+
+        if not os.path.exists(full_dir):
+            print(f"[Mobile+] Image directory not found: {full_dir}")
+            return {"success": False, "prompts": []}
+        
+        # Get all PNG files sorted by modification time (newest first)
+        search_pattern = os.path.join(full_dir, "**", "*.png")
+        image_files = glob.glob(search_pattern, recursive=True)
+        image_files.sort(key=os.path.getmtime, reverse=True)
+
+        prompts = []
+        # query parameter で指定されたstartから開始してcount数だけ処理
+        for image_path in image_files[start:start + count]:
+            pnginfo = extract_pnginfo(image_path)
+            # convert image_path to image url link (relative to webui root) and URL-encode
+            rel_path = os.path.relpath(image_path, webui_root).replace(os.sep, '/')
+            url = f"/file={quote(rel_path)}"
+
+            if pnginfo:
+                # Trim whitespace and avoid duplicates
+                posiprompt = pnginfo[0].strip()
+                negaprompt = pnginfo[1].strip()
+                prompts.append([url, posiprompt, negaprompt, pnginfo[2], pnginfo[3]])
+
+        return {"success": True, "prompts": prompts}
+    except Exception as e:
+        print(f"[Mobile+] Error in get_images_from_directory: {e}")
+        return {"success": False, "prompts": []}
+
+
+# API routes
+def on_app_started(demo, app: FastAPI):
+    @app.get("/api/mobile-plus/txt2img")
+    async def txt2img(start: int = Query(0, ge=0), count: int = Query(50, ge=1, le=500)):
+        result = get_images_from_directory(shared.opts.outdir_txt2img_samples, start, count)
+        return result
+    
+    @app.get("/api/mobile-plus/img2img")
+    async def img2img(start: int = Query(0, ge=0), count: int = Query(50, ge=1, le=500)):
+        result = get_images_from_directory(shared.opts.outdir_img2img_samples, start, count)
+        return result
+    
+    @app.get("/api/mobile-plus/outdir")
+    async def outdir(start: int = Query(0, ge=0), count: int = Query(50, ge=1, le=500)):
+        result = get_images_from_directory(shared.opts.outdir_save, start, count)
+        return result
+script_callbacks.on_app_started(on_app_started)

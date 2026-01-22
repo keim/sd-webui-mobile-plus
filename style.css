@@ -37,8 +37,8 @@
     flex: 1 1 0;
     display: flex;
     justify-content: center;
-    min-height: 2.4rem;
-    padding: 1.6rem 0.6rem 0rem 0.6rem;
+    height: 2.8rem;
+    padding: 1.8rem 0rem 0rem 0rem;
     cursor: pointer;
     font-size: 0.6rem;
     font-weight: bold;
@@ -53,9 +53,9 @@
     background-position: top;
 }
 
+
 /* selector */
-.sspp-panel .selector-background,
-.sspp-panel .sidemenu-background {
+#sspp-sidemenu {
     display: none;
     pointer-events: auto;
     position: fixed;
@@ -67,17 +67,59 @@
     z-index: 99;
     overflow-y: scroll;
 }
-.sspp-panel .selector-board {
-    display: flex;
+#sspp-sidemenu .sspp-sidemenu-content-item {
+    display: none;
     position: relative;
     width: 100%;
+    box-sizing: border-box;
+}
+#sspp-sidemenu[type=size] #sspp-size-selector {
+    display: flex;
+}
+#sspp-sidemenu[type=size] #sspp-size {
+    background-color: #ccc !important;
+}
+#sspp-sidemenu[type=clip] #sspp-clip-selector {
+    display: flex;
+}
+#sspp-sidemenu[type=clip] #sspp-clip {
+    background-color: #ccc !important;
+}
+
+#sspp-sidemenu-selector {
+    display: flex;
+    width: 16.67%;
+    position: relative;
+    background-color: #ccf;
     flex-direction: column;
     justify-content: center;
     align-items: normal;
     box-sizing: border-box;
+    gap: 0.1rem;
+    padding: 0.1rem 0rem;
 }
-.sspp-panel .selector-item {
+#sspp-sidemenu-content {
+    display: flex;
+    width: 83.33%;
+    position: relative;
+    background-color: #fff;
+    flex-direction: column;
+    justify-content: center;
+    align-items: normal;
+    box-sizing: border-box;
+    overflow-y: scroll;
+}
+#sspp-sidemenu-close {
+    position: absolute;
+    width: 16.67%;
+    bottom: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+#sspp-sidemenu-content .selector-item {
     pointer-events: auto;
+    width: 83.33%;
     flex: 0 0 2rem;
     display: flex;
     position: relative;
@@ -93,7 +135,7 @@
     margin: 0.1rem 2rem;
     z-index: 100;
 }
-.sspp-panel .selector-item input {
+#sspp-sidemenu .selector-item input {
     height: 2rem;
     flex: 1 1 0;
     min-width: 0;
@@ -101,45 +143,43 @@
     border-width: 0 0 1px 0;
     border-color: #ccc;
 }
-.sspp-panel .selector-item input[type=text] {
+#sspp-sidemenu .selector-item input[type=text] {
     flex: 2 2 0;
 }
-.sspp-panel .selector-item .selector-item-label {
+#sspp-sidemenu .selector-item .selector-item-label {
     height: 2rem;
     flex: 1 1 0;
     border-width: 0;
     font-size: 1rem;
     padding: 0.5rem 0.6rem;
 }
-.sspp-panel .selector-item .selector-item-button {
+#sspp-sidemenu .selector-item .selector-item-button {
     height: 2rem;
     flex: 0 0 2rem;
     border-width: 0;
     background-position: center;
 }
 
-
-.sspp-panel .sidemenu-board {
-    display: flex;
-    position: absolute;
-    width: 16.67%;
-    bottom: 0;
-    right: 0;
+#sspp-size-selector {
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: normal;
-    box-sizing: border-box;
-}
-
-.sspp-panel .selector-board.boxlist {
-    flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.2rem;
 }
-.sspp-panel .selector-box {
+
+#sspp-clip-selector {
+    flex-direction: row;
+    justify-content: center;
+    align-items: normal;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem;
+}
+.sspp-clip-item {
     pointer-events: auto;
-    flex: 0 0 22%;
+    flex: 0 0 25%;
     aspect-ratio: 1 / 1;
     display: flex;
     position: relative;
@@ -173,18 +213,27 @@
 #sspp-nega-prompt {
     background-image: url('./svg/receipt-text-minus.svg');
 }
+#sspp-sidemenu-open {
+    background-image: url('./svg/menu-open.svg');
+}   
 #sspp-sampling {
     background-image: url('./svg/layers-triple.svg');
 }
 #sspp-size {
     background-image: url('./svg/resize.svg');
 }
+#sspp-clip-t2i {
+    background-image: url('./svg/clipboard-text-multiple.svg');
+}
+#sspp-clip-i2i {
+    background-image: url('./svg/clipboard-text-multiple.svg');
+}
+#sspp-clip-out {
+    background-image: url('./svg/clipboard-text-multiple.svg');
+}
 #sspp-clip {
     background-image: url('./svg/clipboard-text-multiple.svg');
 }
-#menu-open {
-    background-image: url('./svg/menu-open.svg');
-}   
 #sspp-prevword {
     background-image: url('./svg/arrow-expand-left.svg');
 }
@@ -203,6 +252,9 @@
 #sspp-rateup {
     background-image: url('./svg/pan-up.svg');
 }
+#sspp-sidemenu-close {
+    background-image: url('./svg/close.svg');    
+}
 #sspp-size-register {
     background-image: url('./svg/plus.svg');
 }
@@ -210,17 +262,22 @@
     background-image: url('./svg/close.svg');
 }
 
-
 #sspp-generate {
-    padding:0.6rem 0.6rem;
+    padding: 0.6rem 0.6rem;
     font-size: 1.2rem;
 }
 #sspp-candidate {
-    min-height: 2rem;
+    height: 2rem;
 }
 #sspp-candidate button {
-    padding:0.3rem 0;
-    font-size: 1rem;
+    padding: 0.3rem 0;
+    font-size: 0.8rem;
+    overflow-x: hidden;
+    height: 2rem;
+}
+
+#sspp-sidemenu button {
+    flex: 0 0 auto;
 }
 
 .sspp-opened .sspp-panel .sspp-off-ui,
@@ -235,4 +292,3 @@
 .sspp-opened #sspp-inject-css {
     background-color: #ccc;
 }
-
