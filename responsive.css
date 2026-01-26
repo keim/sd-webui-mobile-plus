@@ -1,4 +1,5 @@
 /* Responsive Design CSS for Smartphone Plus */
+/*--- tab navigations */
 .tab-nav {
     flex-wrap: nowrap !important;
     white-space: nowrap !important;
@@ -21,12 +22,12 @@
 .gradio-container, .tabitem {
     padding: 0.5rem 0.2rem !important;
 }
-
-/* t2i prompter */
+/*--- prompt area */
 #txt2img_prompt textarea,
 #img2img_prompt textarea {
     height: 12rem !important;
 }
+/*--- generate button */
 #txt2img_generate_box,
 #img2img_generate_box {
     display: none !important;
@@ -36,12 +37,12 @@
     border-color: var(--button-primary-border-color) !important;
     background: var(--button-primary-background-fill) !important;
 }
-
-/* t2i result screen */
+/*--- result screen */
 #txt2img_results,
 #img2img_results {
     margin: 0 !important;
 }
+/*--- i2i copy buttons */
 #img2img_copy_to_img2img > button,
 #img2img_copy_to_inpaint > button,
 #img2img_copy_to_sketch > button,
@@ -49,8 +50,7 @@
     flex: 1 1 0 !important;
     min-width: 0 !important;
 }
-
-/* checkpoint,lora cards */
+/*--- checkpoint and lora cards */
 #txt2img_lora_cards > .card,
 #txt2img_checkpoints_cards > .card, 
 #img2img_lora_cards > .card,
@@ -66,6 +66,7 @@
 #img2img_lora_dirs > button {
     height: 1.6rem;
 }
+/*--- i2i image inputbox */
 #img2img_image,
 #img2img_sketch,
 #img2maskimg, 
@@ -74,8 +75,7 @@
     aspect-ratio: 1 / 1;
     object-fit: contain;
 }
-
-/* Hide some UI parts */
+/*--- Hidden parts */
 #txt2img_extra_tabs > .tab-nav > button:nth-child(2),
 #txt2img_extra_tabs > .tab-nav > button:nth-child(3),
 #img2img_extra_tabs > .tab-nav > button:nth-child(2),
@@ -85,78 +85,143 @@
     display: none;
 }
 
-.nega-prompt-hidden #sspp-nega-prompt {
+
+
+
+/* UI switching */
+.contain[uitype="nega"] #sspp-switch-nega {
     background-color: #ccc !important;
 }
-.nega-prompt-hidden #txt2img_tools,
-.nega-prompt-hidden #txt2img_neg_prompt_row,
-.nega-prompt-hidden #txt2img_actions_column, 
-.nega-prompt-hidden #img2img_neg_prompt_row,
-.nega-prompt-hidden #img2img_actions_column {
+.contain[uitype="rendering"] #sspp-switch-rendering {
+    background-color: #ccc !important;
+}
+.contain[uitype="sampling"] #sspp-switch-sampling {
+    background-color: #ccc !important;
+}
+.contain[uitype="batch"] #sspp-switch-batch {   
+    background-color: #ccc !important;
+}
+
+/*
+#txt2img_settings,
+#img2img_settings,
+*/
+#txt2img_prompt_row,
+#img2img_prompt_row,
+#txt2img_results,
+#img2img_results,
+
+#txt2img_tools,
+#txt2img_neg_prompt_row,
+#txt2img_actions_column, 
+#img2img_neg_prompt_row,
+#img2img_actions_column,
+
+#txt2img_seed_row,
+#txt2img_cfg_scale,
+#resize_mode,
+#soft_inpainting_enabled,
+#img2img_denoising_strength,
+#mode_img2img,
+#img2img_seed_row,
+#img2img_cfg_scale,
+#img2img_mask_blur,
+#img2img_mask_alpha,
+#img2img_inpainting_fill,
+#img2img_inpaint_full_res,
+#img2img_inpaint_full_res_padding,
+
+#sampler_selection_txt2img,
+#txt2img_accordions,
+#txt2img_column_size,
+#txt2img_dimensions_row,
+#txt2img_column_batch,
+#txt2img_override_settings_row,
+#txt2img_script_container,
+#sampler_selection_img2img,
+#img2img_label_copy_to_img2img,
+#img2img_label_copy_to_sketch,
+#img2img_label_copy_to_inpaint,
+#img2img_label_copy_to_inpaint_sketch,
+#img2img_accordions,
+#img2img_column_size,
+#img2img_dimensions_row,
+#img2img_column_batch,
+#img2img_override_settings_row,
+#img2img_script_container {
     display: none;
 }
 
-.config-hidden #sspp-config {
-    background-color: #ccc !important;
+.contain[uitype="default"] #txt2img_results,
+.contain[uitype="default"] #img2img_results,
+.contain[uitype="default"] #txt2img_prompt_row,
+.contain[uitype="default"] #txt2img_cfg_scale,
+.contain[uitype="default"] #img2img_prompt_row,
+.contain[uitype="default"] #img2img_cfg_scale{
+    display: flex;
 }
-.config-hidden #txt2img_seed_row,
-.config-hidden #txt2img_seed_extras,
-/*.config-hidden #resize_mode,*/
-.config-hidden #soft_inpainting_enabled,
-/*.config-hidden #img2img_denoising_strength,*/
-.config-hidden #img2img_seed_row,
-.config-hidden #img2img_seed_extras,
-.config-hidden #img2img_mask_blur,
-.config-hidden #img2img_mask_alpha,
-.config-hidden #img2img_inpainting_fill,
-.config-hidden #img2img_inpaint_full_res,
-.config-hidden #img2img_inpaint_full_res_padding {
-    display: none;
-}
-.config-hidden #sampler_selection_txt2img,
-.config-hidden #txt2img_accordions,
-.config-hidden #txt2img_column_size,
-.config-hidden #txt2img_dimensions_row,
-.config-hidden #txt2img_column_batch,
-.config-hidden #txt2img_cfg_scale,
-.config-hidden #txt2img_override_settings_row,
-.config-hidden #txt2img_script_container,
-.config-hidden #sampler_selection_img2img,
-.config-hidden #img2img_label_copy_to_img2img,
-.config-hidden #img2img_label_copy_to_sketch,
-.config-hidden #img2img_label_copy_to_inpaint,
-.config-hidden #img2img_label_copy_to_inpaint_sketch,
-.config-hidden #img2img_accordions,
-.config-hidden #img2img_column_size,
-.config-hidden #img2img_dimensions_row,
-.config-hidden #img2img_column_batch,
-.config-hidden #img2img_cfg_scale,
-.config-hidden #img2img_override_settings_row,
-.config-hidden #img2img_script_container {
-    display: none;
-}
-.size-select #sspp-size {
-    background-color: #ccc !important;
-}
-.size-select #sspp-size-selector {
-    display: flex !important;
-}
-.clip-select #sspp-clip {
-    background-color: #ccc !important;
-}
-.clip-select #sspp-clip-selector {
-    display: flex !important;
-}
-.menu-opened #sspp-sidemenu-open {
-    background-color: #ccc !important;
-}
-.menu-opened #sspp-sidemenu {
-    display: flex !important;
+.contain[uitype="default"] #img2img_denoising_strength {
+    display: block;
 }
 
-.word-select #sspp-currword {
-    background-color: #ccc !important;
+.contain[uitype="nega"] #txt2img_results,
+.contain[uitype="nega"] #img2img_results,
+.contain[uitype="nega"] #txt2img_tools,
+.contain[uitype="nega"] #txt2img_neg_prompt_row,
+.contain[uitype="nega"] #txt2img_actions_column, 
+.contain[uitype="nega"] #img2img_neg_prompt_row,
+.contain[uitype="nega"] #img2img_actions_column {
+    display: flex;
 }
+
+.contain[uitype="rendering"] #txt2img_results,
+.contain[uitype="rendering"] #img2img_results,
+.contain[uitype="rendering"] #txt2img_seed_row,
+.contain[uitype="rendering"] #txt2img_cfg_scale,
+.contain[uitype="rendering"] #txt2img_column_size,
+.contain[uitype="rendering"] #txt2img_dimensions_row,
+.contain[uitype="rendering"] #resize_mode,
+.contain[uitype="rendering"] #soft_inpainting_enabled,
+.contain[uitype="rendering"] #img2img_seed_row,
+.contain[uitype="rendering"] #img2img_cfg_scale,
+.contain[uitype="rendering"] #img2img_column_size,
+.contain[uitype="rendering"] #img2img_dimensions_row,
+.contain[uitype="rendering"] #img2img_mask_blur,
+.contain[uitype="rendering"] #img2img_mask_alpha,
+.contain[uitype="rendering"] #img2img_inpainting_fill,
+.contain[uitype="rendering"] #img2img_inpaint_full_res,
+.contain[uitype="rendering"] #img2img_inpaint_full_res_padding,
+.contain[uitype="rendering"] #img2img_label_copy_to_img2img,
+.contain[uitype="rendering"] #img2img_label_copy_to_sketch,
+.contain[uitype="rendering"] #img2img_label_copy_to_inpaint,
+.contain[uitype="rendering"] #img2img_label_copy_to_inpaint_sketch {
+    display: flex;
+}
+.contain[uitype="rendering"] #mode_img2img,
+.contain[uitype="rendering"] #img2img_denoising_strength {
+    display: block;
+}
+
+.contain[uitype="sampling"] #txt2img_results,
+.contain[uitype="sampling"] #img2img_results,
+.contain[uitype="sampling"] #sampler_selection_txt2img,
+.contain[uitype="sampling"] #txt2img_accordions,
+.contain[uitype="sampling"] #txt2img_override_settings_row,
+.contain[uitype="sampling"] #txt2img_script_container,
+.contain[uitype="sampling"] #sampler_selection_img2img,
+.contain[uitype="sampling"] #img2img_accordions,
+.contain[uitype="sampling"] #img2img_override_settings_row,
+.contain[uitype="sampling"] #img2img_script_container {
+    display: flex;
+}
+
+.contain[uitype="batch"] #txt2img_results,
+.contain[uitype="batch"] #img2img_results,
+.contain[uitype="batch"] #img2img_column_batch,
+.contain[uitype="batch"] #txt2img_column_batch {
+    display: flex;
+}
+
 
 /* Allow vertical scrolling when entering fullscreen (Mobile & Desktop) */
 html:fullscreen, html:-webkit-full-screen,

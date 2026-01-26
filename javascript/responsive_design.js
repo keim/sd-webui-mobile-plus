@@ -3,7 +3,6 @@ function insertPanel() {
     _initialize();
     _initWordDictionary();
     _setupMenuButtons();
-    _addEventListener();
     _insertInteractiveWidget();
 
     sspp_sizeSelector.updateLabel();
@@ -24,6 +23,7 @@ let geminiapi = null;
 
 // 初期化処理
 function _initialize() {
+    ssppUI.initialize();
     sspp_sizeSelector.initialize();
     sspp_clipSelector.initialize();
   
@@ -52,31 +52,39 @@ function _setupMenuButtons() {
     }
 
     const panel = document.getElementById('sd-smartphone-plus-panel');
-    const menu = document.getElementById('sspp-sidemenu');
-    const root = document.getElementsByClassName('contain')[0];
     
     // CSS Injection ボタン
     onclick('sspp-inject-css', () => {
-        root.classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
+        ssppUI.root().classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
     });
     onclick('sspp-inject-css-full', () => {
-        root.classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
+        ssppUI.root().classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
         document.body.requestFullscreen();
     });
     // CSS Extraction ボタン
     onclick('sspp-extract-css', () => {
-        root.classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(false));
+        ssppUI.root().classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(false));
         if (document.fullscreenElement) document.exitFullscreen();
     });
 
     // [Negative Prompt]
-    onclick('sspp-nega-prompt', e => {
-        root.classList.toggle("nega-prompt-hidden");
+    onclick('sspp-switch-nega', e => {
+        ssppUI.changePanelUIType("nega");
     });
-    // [Props]
-    onclick('sspp-config', e => {
-        root.classList.toggle("config-hidden");
+    // [Rendering Props]
+    onclick('sspp-switch-rendering', e => {
+        ssppUI.changePanelUIType("rendering");
     });
+    // [Sampling Props]
+    onclick('sspp-switch-sampling', e => {
+        ssppUI.changePanelUIType("sampling");
+    });
+    // [Batch Props]
+    onclick('sspp-switch-batch', e => {
+        ssppUI.changePanelUIType("batch");
+    });
+    
+
     // [Menu]
     onclick('sspp-sidemenu-open', e => {
         panel.classList.toggle("menu-opened");
@@ -84,19 +92,19 @@ function _setupMenuButtons() {
     // [Size selector]
     onclick('sspp-size', e => {
         sspp_sizeSelector.updateLabel();
-        menu.setAttribute("type", "size");
+        panel.setAttribute("submenu", "size");
     });
     // [txt2img Clipboard selector]
     onclick('sspp-clip-t2i', e => {
-        menu.setAttribute("type", "clip");
+        panel.setAttribute("submenu", "clip");
     });
     // [img2img Clipboard selector]
     onclick('sspp-clip-i2i', e => {
-        menu.setAttribute("type", "clip");
+        panel.setAttribute("submenu", "clip");
     });
     // [Output Clipboard selector]
     onclick('sspp-clip-out', e => {
-        menu.setAttribute("type", "clip");
+        panel.setAttribute("submenu", "clip");
     });
 
     // [Previous word]
@@ -140,33 +148,13 @@ function _setupMenuButtons() {
         if (textArea) sspp_candOps.appendWordDictionaryByPrompt(textArea.value)
     });
 
-    root.appendChild(panel);
-    root.classList.add('config-hidden', 'nega-prompt-hidden');
+    ssppUI.root().appendChild(panel);
 }
 
 
 // イベントリスナーの追加
-const _sspp_tabNames = [];
-
 function _addEventListener() {
-    // タブ変更イベントの追加
-    const tabButtons = document.querySelectorAll('#tabs>.tab-nav>button');
-    tabButtons.forEach(btn => _sspp_tabNames.push(btn.textContent.trim().toLowerCase()));
-
-    const tabsElem = document.getElementById('tabs')
-
-    tabsElem.addEventListener("click", e => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        const tabName = btn.textContent.trim().toLowerCase();
-        if (!_sspp_tabNames.includes(tabName)) return;
-        sspp_sizeSelector.updateLabel();
-    });
-
-    tabsElem.addEventListener('keyup', e => {
-        const textarea = e.target.closest("textarea");
-        if (textarea === ssppUI.promptArea()) sspp_candOps.show();
-    });
+    ssppUI.addTabEventListeners();
 }
 
 
@@ -184,7 +172,9 @@ function _insertInteractiveWidget() {
 
 // セレクターを閉じる
 function sspp_closeSelector() {
-    document.getElementById('sd-smartphone-plus-panel').classList.remove('clip-select', 'size-select', 'menu-opened');
+    const panel = document.getElementById('sd-smartphone-plus-panel');
+    panel.classList.remove('menu-opened');
+    panel.removeAttribute("submenu");
 }
 
 
@@ -268,6 +258,56 @@ class UIController {
             'txt2img_refiner': '#txt2img_enable',
             'img2img_refiner': '#img2img_enable',
         }
+        this._tabNames = [];
+    }
+
+    updateValue(inputElem, value) {
+        if (inputElem && value !== undefined) {
+            inputElem.value = value;
+            inputElem.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    root() {
+        return document.getElementsByClassName('contain')[0];
+    }
+
+    changePanelUIType(type) {
+        this.root().setAttribute("uitype", this.root().getAttribute("uitype") === type ? "default" : type);
+    }
+
+    initialize() {
+        // タブ名の取得
+        this._tabNames = [];
+        const tabButtons = document.querySelectorAll('#tabs>.tab-nav>button');
+        tabButtons.forEach(btn => this._tabNames.push(btn.textContent.trim().toLowerCase()));
+
+        // タブ切り替え時のイベントリスナー登録
+        const tabsElem = document.getElementById('tabs')
+        tabsElem.addEventListener("click", e => {
+            const btn = e.target.closest("button");
+            if (!btn) return;
+            const tabName = btn.textContent.trim().toLowerCase();
+            if (!this._tabNames.includes(tabName)) return;
+            sspp_sizeSelector.updateLabel();
+        });
+
+        // テキストエリア入力時のイベントリスナー登録
+        tabsElem.addEventListener('keyup', e => {
+            const textarea = e.target.closest("textarea");
+            if (textarea === ssppUI.promptArea()) sspp_candOps.show();
+        });
+
+        // パネルUIタイプ初期化
+        this.root().setAttribute("uitype", "default");
+
+        /**/ // !! Be careful for rerendering issue !!
+        document.querySelector("#txt2img_styles input").setAttribute("readonly", "true");
+        document.querySelector("#txt2img_sampling input").setAttribute("readonly", "true");
+        document.querySelector("#txt2img_scheduler input").setAttribute("readonly", "true");
+        document.querySelector("#img2img_styles input").setAttribute("readonly", "true");
+        document.querySelector("#img2img_sampling input").setAttribute("readonly", "true");
+        document.querySelector("#img2img_scheduler input").setAttribute("readonly", "true");
     }
 
     extractPromptHistory() {
@@ -309,30 +349,20 @@ class UIController {
         return true;
     }
 
-
-
     // プロンプトを変更
     setupPrompt(posiPrompt, negaPrompt) {
         const posiPromptArea = this.promptArea();
         const negaPromptArea = this.negaPromptArea();
-        if (posiPromptArea) {
-            posiPromptArea.value = posiPrompt
-            posiPromptArea.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        if (negaPromptArea) {
-            negaPromptArea.value = negaPrompt
-            negaPromptArea.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+        this.updateValue(posiPromptArea, posiPrompt);
+        this.updateValue(negaPromptArea, negaPrompt);
     }
 
     // サイズプロパティを変更
     setupSizeProps(width, height) {
         const sizeUI = this.sizeInputs();
         if (sizeUI) {
-            sizeUI[0].value = width;
-            sizeUI[0].dispatchEvent(new Event('input', { bubbles: true }));
-            sizeUI[1].value = height;
-            sizeUI[1].dispatchEvent(new Event('input', { bubbles: true }));
+            this.updateValue(sizeUI[0], width);
+            this.updateValue(sizeUI[1], height);
             document.getElementById('sd-smartphone-plus-panel').classList.remove("size-select");
         }
     }
@@ -521,6 +551,7 @@ class ClipboardSelector {
     }
 }
 const sspp_clipSelector = new ClipboardSelector();
+
 
 // 入力候補辞書操作
 class CandidateOperations {
