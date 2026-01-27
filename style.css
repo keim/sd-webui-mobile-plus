@@ -88,19 +88,31 @@
     box-sizing: border-box;
     overflow-y: scroll;
 }
+#sd-smartphone-plus-panel[submenu=checkpoint] #sspp-checkpoint {
+    background-color: #ccc !important;
+}
+#sd-smartphone-plus-panel[submenu=lora] #sspp-lora {
+    background-color: #ccc !important;
+}
 #sd-smartphone-plus-panel[submenu=size] #sspp-size-selector {
     display: flex;
 }
 #sd-smartphone-plus-panel[submenu=size] #sspp-size {
     background-color: #ccc !important;
 }
-
-#sd-smartphone-plus-panel[submenu=clip] #sspp-clip-selector {
+#sd-smartphone-plus-panel[submenu=clip-t2i] #sspp-clip-selector {
     display: flex;
 }
-#sd-smartphone-plus-panel[submenu=clip] #sspp-clip {
+#sd-smartphone-plus-panel[submenu=clip-t2i] #sspp-clip-t2i {
     background-color: #ccc !important;
 }
+#sd-smartphone-plus-panel[submenu=clip-i2i] #sspp-clip-i2i {
+    background-color: #ccc !important;
+}
+#sd-smartphone-plus-panel[submenu=clip-out] #sspp-clip-out {
+    background-color: #ccc !important;
+}
+
 
 #sspp-sidemenu-close {
     position: absolute;
@@ -239,6 +251,12 @@
 #sspp-sidemenu-open {
     background-image: url('./svg/menu-open.svg');
 }   
+#sspp-checkpoint {
+    background-image: url('./svg/image-check.svg');
+}
+#sspp-lora {
+    background-image: url('./svg/image-multiple.svg');
+}
 #sspp-size {
     background-image: url('./svg/resize.svg');
 }

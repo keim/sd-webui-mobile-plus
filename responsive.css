@@ -76,16 +76,21 @@
     object-fit: contain;
 }
 /*--- Hidden parts */
-#txt2img_extra_tabs > .tab-nav > button:nth-child(2),
-#txt2img_extra_tabs > .tab-nav > button:nth-child(3),
-#img2img_extra_tabs > .tab-nav > button:nth-child(2),
-#img2img_extra_tabs > .tab-nav > button:nth-child(3),
+#txt2img_extra_tabs>.tab-nav,
+#img2img_extra_tabs>.tab-nav,
 #quicksettings,
 .extra-networks-controls-div {
     display: none;
 }
-
-
+#txt2img_extra_tabs>.tabitem,
+#img2img_extra_tabs>.tabitem {
+    padding: 0 !important;
+    border: none !important;
+}
+#tab_txt2img > .gap,
+#tab_img2img > .gap {
+    gap: 0;
+}
 
 
 /* UI switching */

@@ -89,6 +89,20 @@ function _setupMenuButtons() {
     onclick('sspp-sidemenu-open', e => {
         panel.classList.toggle("menu-opened");
     });
+    // [Checkpoint selector]
+    onclick('sspp-checkpoint', e => {
+        const newMenuName = panel.getAttribute("submenu") === "checkpoint" ? "generation" : "checkpoint";
+        panel.setAttribute("submenu", newMenuName);
+        const tab = ssppUI.extraTabs(newMenuName);
+        if (tab) tab.click();
+    });
+    // [Lora selector]
+    onclick('sspp-lora', e => {
+        const newMenuName = panel.getAttribute("submenu") === "lora" ? "generation" : "lora";
+        panel.setAttribute("submenu", newMenuName);
+        const tab = ssppUI.extraTabs(newMenuName);
+        if (tab) tab.click();
+    });
     // [Size selector]
     onclick('sspp-size', e => {
         sspp_sizeSelector.updateLabel();
@@ -96,15 +110,15 @@ function _setupMenuButtons() {
     });
     // [txt2img Clipboard selector]
     onclick('sspp-clip-t2i', e => {
-        panel.setAttribute("submenu", "clip");
+        panel.setAttribute("submenu", "clip-t2i");
     });
     // [img2img Clipboard selector]
     onclick('sspp-clip-i2i', e => {
-        panel.setAttribute("submenu", "clip");
+        panel.setAttribute("submenu", "clip-i2i");
     });
     // [Output Clipboard selector]
     onclick('sspp-clip-out', e => {
-        panel.setAttribute("submenu", "clip");
+        panel.setAttribute("submenu", "clip-out");
     });
 
     // [Previous word]
@@ -308,6 +322,8 @@ class UIController {
         document.querySelector("#img2img_styles input").setAttribute("readonly", "true");
         document.querySelector("#img2img_sampling input").setAttribute("readonly", "true");
         document.querySelector("#img2img_scheduler input").setAttribute("readonly", "true");
+
+        console.log(this.extraTabs("generation"));
     }
 
     extractPromptHistory() {
@@ -336,6 +352,16 @@ class UIController {
             document.querySelector(`#${tabName}_width input`),
             document.querySelector(`#${tabName}_height input`)
         ];
+    }
+    extraTabs(tab) {
+        const tabName = this.currentTabName();
+        if (tabName !== 'txt2img' && tabName !== 'img2img') return null;
+        const tabs = document.querySelectorAll(`#${tabName}_extra_tabs>.tab-nav>button`);
+        let tabElems = null;
+        tabs.forEach(btn => {
+            if (btn.textContent.trim().toLowerCase() === tab) tabElems = btn;
+        });
+        return tabElems;
     }
 
     generate() {
