@@ -88,37 +88,41 @@ function _setupMenuButtons() {
     // [Menu]
     onclick('sspp-sidemenu-open', e => {
         panel.classList.toggle("menu-opened");
+        sspp_sizeSelector.updateLabel();
     });
     // [Checkpoint selector]
     onclick('sspp-checkpoint', e => {
-        const newMenuName = panel.getAttribute("submenu") === "checkpoint" ? "generation" : "checkpoint";
-        panel.setAttribute("submenu", newMenuName);
-        const tab = ssppUI.extraTabs(newMenuName);
+        const uitype = ssppUI.changeSubMenuType("checkpoints");
+        ssppUI.changePanelUIType(uitype);
+        const tab = ssppUI.extraTabs(uitype === "default" ? "generation" : "checkpoints");
         if (tab) tab.click();
     });
     // [Lora selector]
     onclick('sspp-lora', e => {
-        const newMenuName = panel.getAttribute("submenu") === "lora" ? "generation" : "lora";
-        panel.setAttribute("submenu", newMenuName);
-        const tab = ssppUI.extraTabs(newMenuName);
+        const uitype = ssppUI.changeSubMenuType("lora");
+        ssppUI.changePanelUIType(uitype);
+        const tab = ssppUI.extraTabs(uitype === "default" ? "generation" : "lora");
         if (tab) tab.click();
     });
     // [Size selector]
     onclick('sspp-size', e => {
-        sspp_sizeSelector.updateLabel();
-        panel.setAttribute("submenu", "size");
+        const uitype = ssppUI.changeSubMenuType("size");
+        ssppUI.changePanelUIType(uitype);
     });
     // [txt2img Clipboard selector]
     onclick('sspp-clip-t2i', e => {
-        panel.setAttribute("submenu", "clip-t2i");
+        const uitype = ssppUI.changeSubMenuType("clip-t2i");
+        ssppUI.changePanelUIType("default");
     });
     // [img2img Clipboard selector]
     onclick('sspp-clip-i2i', e => {
-        panel.setAttribute("submenu", "clip-i2i");
+        const uitype = ssppUI.changeSubMenuType("clip-i2i");
+        ssppUI.changePanelUIType("default");
     });
     // [Output Clipboard selector]
     onclick('sspp-clip-out', e => {
-        panel.setAttribute("submenu", "clip-out");
+        const uitype = ssppUI.changeSubMenuType("clip-out");
+        ssppUI.changePanelUIType("default");
     });
 
     // [Previous word]
@@ -286,8 +290,20 @@ class UIController {
         return document.getElementsByClassName('contain')[0];
     }
 
+    panel() {
+        return document.getElementById('sd-smartphone-plus-panel');
+    }
+
     changePanelUIType(type) {
-        this.root().setAttribute("uitype", this.root().getAttribute("uitype") === type ? "default" : type);
+        const newType = this.root().getAttribute("uitype") === type ? "default" : type;
+        this.root().setAttribute("uitype", newType);
+        return newType;
+    }
+
+    changeSubMenuType(submenu) {
+        const newSubmenu = this.panel().getAttribute("submenu") === submenu ? "default" : submenu;
+        this.panel().setAttribute("submenu", newSubmenu);
+        return newSubmenu;
     }
 
     initialize() {
@@ -322,8 +338,6 @@ class UIController {
         document.querySelector("#img2img_styles input").setAttribute("readonly", "true");
         document.querySelector("#img2img_sampling input").setAttribute("readonly", "true");
         document.querySelector("#img2img_scheduler input").setAttribute("readonly", "true");
-
-        console.log(this.extraTabs("generation"));
     }
 
     extractPromptHistory() {

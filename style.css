@@ -88,7 +88,7 @@
     box-sizing: border-box;
     overflow-y: scroll;
 }
-#sd-smartphone-plus-panel[submenu=checkpoint] #sspp-checkpoint {
+#sd-smartphone-plus-panel[submenu=checkpoints] #sspp-checkpoint {
     background-color: #ccc !important;
 }
 #sd-smartphone-plus-panel[submenu=lora] #sspp-lora {

@@ -78,7 +78,6 @@
 /*--- Hidden parts */
 #txt2img_extra_tabs>.tab-nav,
 #img2img_extra_tabs>.tab-nav,
-#quicksettings,
 .extra-networks-controls-div {
     display: none;
 }
@@ -111,6 +110,7 @@
 #txt2img_settings,
 #img2img_settings,
 */
+#quicksettings,
 #txt2img_prompt_row,
 #img2img_prompt_row,
 #txt2img_results,
@@ -224,6 +224,15 @@
 .contain[uitype="batch"] #img2img_results,
 .contain[uitype="batch"] #img2img_column_batch,
 .contain[uitype="batch"] #txt2img_column_batch {
+    display: flex;
+}
+
+.contain[uitype="checkpoints"] #quicksettings {
+    display: flex;
+}
+.contain[uitype="lora"] #txt2img_prompt_row,
+.contain[uitype="lora"] #img2img_prompt_row,
+.contain[uitype="lora"] #quicksettings {
     display: flex;
 }
 
