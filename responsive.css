@@ -105,6 +105,12 @@
 .contain[uitype="batch"] #sspp-switch-batch {   
     background-color: #ccc !important;
 }
+.contain[uitype=checkpoints] #sspp-checkpoint {
+    background-color: #ccc !important;
+}
+.contain[uitype=lora] #sspp-lora {
+    background-color: #ccc !important;
+}
 
 /*
 #txt2img_settings,
@@ -207,6 +213,13 @@
     display: block;
 }
 
+.contain[uitype="size"] #txt2img_column_size,
+.contain[uitype="size"] #txt2img_dimensions_row,
+.contain[uitype="size"] #img2img_column_size, 
+.contain[uitype="size"] #img2img_dimensions_row {
+    display: flex;
+}
+
 .contain[uitype="sampling"] #txt2img_results,
 .contain[uitype="sampling"] #img2img_results,
 .contain[uitype="sampling"] #sampler_selection_txt2img,
@@ -230,9 +243,11 @@
 .contain[uitype="checkpoints"] #quicksettings {
     display: flex;
 }
+.contain[uitype="checkpoints"] #tabs>.tab-nav {
+    display: none;
+}
 .contain[uitype="lora"] #txt2img_prompt_row,
-.contain[uitype="lora"] #img2img_prompt_row,
-.contain[uitype="lora"] #quicksettings {
+.contain[uitype="lora"] #img2img_prompt_row {
     display: flex;
 }
 

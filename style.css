@@ -88,12 +88,6 @@
     box-sizing: border-box;
     overflow-y: scroll;
 }
-#sd-smartphone-plus-panel[submenu=checkpoints] #sspp-checkpoint {
-    background-color: #ccc !important;
-}
-#sd-smartphone-plus-panel[submenu=lora] #sspp-lora {
-    background-color: #ccc !important;
-}
 #sd-smartphone-plus-panel[submenu=size] #sspp-size-selector {
     display: flex;
 }
@@ -138,30 +132,6 @@
     background-color: #fff;
     margin: 0.1rem 2rem;
     z-index: 100;
-}
-#sspp-sidemenu .selector-item input {
-    height: 2rem;
-    flex: 1 1 0;
-    min-width: 0;
-    border-style: solid;
-    border-width: 0 0 1px 0;
-    border-color: #ccc;
-}
-#sspp-sidemenu .selector-item input[type=text] {
-    flex: 2 2 0;
-}
-#sspp-sidemenu .selector-item .selector-item-label {
-    height: 2rem;
-    flex: 1 1 0;
-    border-width: 0;
-    font-size: 1rem;
-    padding: 0.5rem 0.6rem;
-}
-#sspp-sidemenu .selector-item .selector-item-button {
-    height: 2rem;
-    flex: 0 0 2rem;
-    border-width: 0;
-    background-position: center;
 }
 
 #sspp-size-selector {

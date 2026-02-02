@@ -87,22 +87,17 @@ function _setupMenuButtons() {
 
     // [Menu]
     onclick('sspp-sidemenu-open', e => {
-        panel.classList.toggle("menu-opened");
-        sspp_sizeSelector.updateLabel();
+        ssppUI.openSubmenu();
     });
     // [Checkpoint selector]
     onclick('sspp-checkpoint', e => {
         const uitype = ssppUI.changeSubMenuType("checkpoints");
         ssppUI.changePanelUIType(uitype);
-        const tab = ssppUI.extraTabs(uitype === "default" ? "generation" : "checkpoints");
-        if (tab) tab.click();
     });
     // [Lora selector]
     onclick('sspp-lora', e => {
         const uitype = ssppUI.changeSubMenuType("lora");
         ssppUI.changePanelUIType(uitype);
-        const tab = ssppUI.extraTabs(uitype === "default" ? "generation" : "lora");
-        if (tab) tab.click();
     });
     // [Size selector]
     onclick('sspp-size', e => {
@@ -156,7 +151,7 @@ function _setupMenuButtons() {
 
     // [Close menu]
     onclick('sspp-sidemenu-close', e => {
-        sspp_closeSelector();
+        ssppUI.closeSubmenu();
     });
     
     // [Generate]
@@ -187,13 +182,6 @@ function _insertInteractiveWidget() {
     }
 }
 
-
-// セレクターを閉じる
-function sspp_closeSelector() {
-    const panel = document.getElementById('sd-smartphone-plus-panel');
-    panel.classList.remove('menu-opened');
-    panel.removeAttribute("submenu");
-}
 
 
 class FileInfoAPI {
@@ -297,6 +285,9 @@ class UIController {
     changePanelUIType(type) {
         const newType = this.root().getAttribute("uitype") === type ? "default" : type;
         this.root().setAttribute("uitype", newType);
+        const extraTabName = (type === "checkpoints" || type === "lora" && newType !== "default") ? type : "generation";
+        const tab = this.extraTabs(extraTabName);
+        if (tab) tab.click();
         return newType;
     }
 
@@ -304,6 +295,17 @@ class UIController {
         const newSubmenu = this.panel().getAttribute("submenu") === submenu ? "default" : submenu;
         this.panel().setAttribute("submenu", newSubmenu);
         return newSubmenu;
+    }
+
+    openSubmenu() {
+        this.panel().classList.add("menu-opened");
+        sspp_sizeSelector.updateLabel();
+    }
+
+    closeSubmenu() {
+        this.panel().classList.remove("menu-opened");
+        ssppUI.changeSubMenuType("default");
+        ssppUI.changePanelUIType("default");
     }
 
     initialize() {
@@ -403,7 +405,6 @@ class UIController {
         if (sizeUI) {
             this.updateValue(sizeUI[0], width);
             this.updateValue(sizeUI[1], height);
-            document.getElementById('sd-smartphone-plus-panel').classList.remove("size-select");
         }
     }
 }
