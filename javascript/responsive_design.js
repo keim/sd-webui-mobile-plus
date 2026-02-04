@@ -267,13 +267,6 @@ class UIController {
         this._tabNames = [];
     }
 
-    updateValue(inputElem, value) {
-        if (inputElem && value !== undefined) {
-            inputElem.value = value;
-            inputElem.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    }
-
     root() {
         return document.getElementsByClassName('contain')[0];
     }
@@ -348,19 +341,23 @@ class UIController {
         return JSON.parse(promptHistoryBox.querySelector("textarea, input").value);
     }
 
+    // 現在のタブ名を取得
     currentTabName() {
         return document.querySelector('#tabs button.selected').textContent.trim().toLowerCase();
     }
+    // "txt2img"と"img2img"のプロンプト入力要素を取得
     promptArea() {
         const tabName = this.currentTabName();
         if (tabName !== 'txt2img' && tabName !== 'img2img') return null;
         return document.querySelector(`#${tabName}_prompt textarea`);
     }
+    // "txt2img"と"img2img"のネガティブプロンプト入力要素を取得
     negaPromptArea() {
         const tabName = this.currentTabName();
         if (tabName !== 'txt2img' && tabName !== 'img2img') return null;
         return document.querySelector(`#${tabName}_neg_prompt textarea`);
     }
+    // "txt2img"と"img2img"のサイズ入力要素を取得
     sizeInputs() {
         const tabName = this.currentTabName();
         if (tabName !== 'txt2img' && tabName !== 'img2img') return null;
@@ -369,6 +366,7 @@ class UIController {
             document.querySelector(`#${tabName}_height input`)
         ];
     }
+    // "txt2img"と"img2img"の追加タブ要素を取得
     extraTabs(tab) {
         const tabName = this.currentTabName();
         if (tabName !== 'txt2img' && tabName !== 'img2img') return null;
@@ -380,6 +378,7 @@ class UIController {
         return tabElems;
     }
 
+    // ”txt2img”、”img2img”、”extras”タブで生成を実行
     generate() {
         const tabName = this.currentTabName();
         if (tabName !== 'txt2img' && 
@@ -391,20 +390,28 @@ class UIController {
         return true;
     }
 
-    // プロンプトを変更
+    // 現在のタブのプロンプトを変更
     setupPrompt(posiPrompt, negaPrompt) {
         const posiPromptArea = this.promptArea();
         const negaPromptArea = this.negaPromptArea();
-        this.updateValue(posiPromptArea, posiPrompt);
-        this.updateValue(negaPromptArea, negaPrompt);
+        if (!posiPromptArea || !negaPromptArea) return;
+        this._updateValue(posiPromptArea, posiPrompt);
+        this._updateValue(negaPromptArea, negaPrompt);
     }
 
-    // サイズプロパティを変更
+    // 現在のタブのサイズプロパティを変更
     setupSizeProps(width, height) {
         const sizeUI = this.sizeInputs();
-        if (sizeUI) {
-            this.updateValue(sizeUI[0], width);
-            this.updateValue(sizeUI[1], height);
+        if (!sizeUI) return;
+        this._updateValue(sizeUI[0], width);
+        this._updateValue(sizeUI[1], height);
+    }
+
+    // input,textarea要素の値を更新
+    _updateValue(inputElem, value) {
+        if (inputElem && value !== undefined) {
+            inputElem.value = value;
+            inputElem.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 }

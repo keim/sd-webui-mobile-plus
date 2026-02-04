@@ -124,15 +124,30 @@
     flex-direction: row;
     font-size: 1rem;
     padding: 0.2rem 0.6rem;
-    border-radius: 5px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: #999;
     color: #333;
-    background-color: #fff;
+    background-color: #eee;
+    border-radius: 5px;
     margin: 0.1rem 2rem;
     z-index: 100;
 }
+.selector-item>.selector-item-label {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+}
+.selector-item>input {
+    flex: 1 1 auto;
+    width: 33%;
+    margin-left: 0.4rem;
+}
+.selector-item>.selector-item-button {
+    flex: 0 0 auto;
+    width: 1.6rem;
+    margin-left: 0.4rem;
+    background-size: contain;
+    background-position: center;
+}
+
 
 #sspp-size-selector {
     flex-direction: column;
