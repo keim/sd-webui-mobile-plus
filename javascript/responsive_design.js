@@ -326,6 +326,11 @@ class UIController {
         // パネルUIタイプ初期化
         this.root().setAttribute("uitype", "default");
 
+        document.querySelectorAll("input[accept]").forEach(input => {
+            console.log(input);
+            input.removeAttribute("accept");
+        });
+
         /**/ // !! Be careful for rerendering issue !!
         document.querySelector("#txt2img_styles input").setAttribute("readonly", "true");
         document.querySelector("#txt2img_sampling input").setAttribute("readonly", "true");
