@@ -155,6 +155,8 @@ export class TextSelector {
             this.uiController._updateValue(targetArea, newValue);
             targetArea.focus();
             targetArea.setSelectionRange(matchStart, matchStart);
+            // Android: ソフトウェアキーボード表示を抑制
+            targetArea.blur();
             this.updateToggleStates();
             return;
         }
@@ -169,6 +171,8 @@ export class TextSelector {
         const nextCaret = selectionStart + insertText.length;
         targetArea.focus();
         targetArea.setSelectionRange(nextCaret, nextCaret);
+        // Android: ソフトウェアキーボード表示を抑制
+        targetArea.blur();
         this.updateToggleStates();
     }
 

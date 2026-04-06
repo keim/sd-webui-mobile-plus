@@ -209,10 +209,13 @@ export class UIController {
     // txt2img と img2img のサイズ入力要素を取得
     sizeInputs() {
         const tabName = this.currentTabName();
-        if (tabName !== "txt2img" && tabName !== "img2img") return null;
-        return [
+        if (tabName === "txt2img" || tabName === "img2img") return [
             document.querySelector(`#${tabName}_width input`),
             document.querySelector(`#${tabName}_height input`),
+        ];
+        if (tabName === "extras") return [
+            document.querySelector(`#extras_upscaling_resize_w input`),
+            document.querySelector(`#extras_upscaling_resize_h input`),
         ];
     }
 
