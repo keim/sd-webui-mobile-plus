@@ -92,15 +92,14 @@ export class UIController {
         return newSubmenu;
     }
 
-    openSubmenu() {
-        this.panel().classList.add("menu-opened");
-        this.updateSizeLabel();
-    }
-
-    closeSubmenu() {
-        this.panel().classList.remove("menu-opened");
-        this.changeSubMenuType("default");
-        this.changePanelUIType("default");
+    toggleSubmenu() {
+        this.panel().classList.toggle("menu-opened");
+        if (this.panel().classList.contains("menu-opened")) {
+            this.updateSizeLabel();
+        } else {
+            this.changeSubMenuType("default");
+            this.changePanelUIType("default");
+        }
     }
 
     initialize() {

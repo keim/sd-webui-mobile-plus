@@ -1,116 +1,119 @@
-<div id="sd-smartphone-plus-panel" class="sspp-panel">
-    <div class="sspp-panel-column sspp-off-ui">
-        <button id="sspp-inject-css">
-            <span class="sspp-button-label-off">InjectCSS</span>
-        </button>
-        <button id="sspp-inject-css-full">
-            <span class="sspp-button-label-off">InjectCSS & FullScreen</span>
-        </button>
+<div id="sd-smartphone-plus-panel">
+    <div id="sspp-off-ui" class="sspp-panel">
+        <div class="sspp-panel-column">
+            <button id="sspp-inject-css">
+                <span class="sspp-button-label-off">InjectCSS</span>
+            </button>
+            <button id="sspp-inject-css-full">
+                <span class="sspp-button-label-off">InjectCSS & FullScreen</span>
+            </button>
+        </div>
     </div>
-    <div class="sspp-panel-column sspp-on-ui" id="sspp-candidate">
-    </div>
-    <div class="sspp-panel-column sspp-on-ui">
-        <button id="sspp-generate">Generate</button>
-    </div>
-    <div class="sspp-panel-column sspp-on-ui">
-        <button id="sspp-prevword">prev</button>
-        <button id="sspp-currword">select</button>
-        <button id="sspp-nextword">next</button>
-        <button id="sspp-parentheses">emph</button>
-        <button id="sspp-ratedown">-0.1</button>
-        <button id="sspp-rateup">+0.1</button>
-    </div>
-    <div class="sspp-panel-column sspp-on-ui">
-        <button id="sspp-extract-css">
-            <span class="sspp-button-label-on">ExtractCSS</span>
-        </button>
-        <button id="sspp-switch-nega">
-            <span class="sspp-button-label">Negative</span>
-        </button>
-        <button id="sspp-switch-rendering">
-            <span class="sspp-button-label">Render</span>
-        </button>
-        <button id="sspp-switch-sampling">
-            <span class="sspp-button-label">Sampler</span>
-        </button>
-        <button id="sspp-switch-batch">
-            <span class="sspp-button-label">Batch</span>
-        </button>
-        <button id="sspp-sidemenu-open">
-            <span class="sspp-button-label">Menu</span>
-        </button>
-    </div>
-    <div id="sspp-size-selector" class="sspp-sidemenu-content">
-        <div class="sspp-size-input-row">
-            <div class="sspp-size-input-group">
-                <label for="sspp-width-select">Square width</label>
-                <select id="sspp-width-select">
-                    <option value="768">768px(SD1.5)</option>
-                    <option value="1024">1024px(SDXL)</option>
-                    <option value="1280" selected>1280px</option>
-                    <option value="1600">1600px</option>
-                </select>
+    <div id="sspp-on-ui" class="sspp-panel">
+        <div id="sspp-size-selector" class="sspp-submenu-content">
+            <div class="sspp-size-input-row">
+                <div class="sspp-size-input-group">
+                    <label for="sspp-width-select">Square width</label>
+                    <select id="sspp-width-select">
+                        <option value="768">768px(SD1.5)</option>
+                        <option value="1024">1024px(SDXL)</option>
+                        <option value="1280" selected>1280px</option>
+                        <option value="1600">1600px</option>
+                    </select>
+                </div>
+                <div class="sspp-size-input-group">
+                    <label for="sspp-block-input">Block size</label>
+                    <input type="number" id="sspp-block-input" value="64" min="1" />
+                </div>
             </div>
-            <div class="sspp-size-input-group">
-                <label for="sspp-block-input">Block size</label>
-                <input type="number" id="sspp-block-input" value="64" min="1" />
+            <div id="sspp-size-aspect-selector" class="sspp-size-input-row">
+                <div class="sspp-size-aspect-grid">
+                    <button type="button" id="sspp-aspect-1-1" class="sspp-aspect-button" data-aspect="aspect1-1">1:1</button>
+                    <button type="button" id="sspp-aspect-5-4" class="sspp-aspect-button" data-aspect="aspect5-4">5:4</button>
+                    <button type="button" id="sspp-aspect-4-3" class="sspp-aspect-button" data-aspect="aspect4-3">4:3<br>Standard</button>
+                    <button type="button" id="sspp-aspect-3-2" class="sspp-aspect-button" data-aspect="aspect3-2">3:2<br>Film</button>
+                    <button type="button" id="sspp-aspect-16-9" class="sspp-aspect-button" data-aspect="aspect16-9">16:9<br>Full HD</button>
+                    <button type="button" id="sspp-aspect-21-9" class="sspp-aspect-button" data-aspect="aspect21-9">21:9<br>Cinema</button>
+                    <button type="button" id="sspp-aspect-4-5" class="sspp-aspect-button" data-aspect="aspect4-5">4:5<br>Instagram</button>
+                    <button type="button" id="sspp-aspect-3-4" class="sspp-aspect-button" data-aspect="aspect3-4">3:4</button>
+                    <button type="button" id="sspp-aspect-2-3" class="sspp-aspect-button" data-aspect="aspect2-3">2:3</button>
+                    <button type="button" id="sspp-aspect-9-16" class="sspp-aspect-button" data-aspect="aspect9-16">9:16</button>
+                    <button type="button" id="sspp-aspect-9-21" class="sspp-aspect-button" data-aspect="aspect9-21">9:21</button>
+                    <canvas id="sspp-aspect-canvas" width="512" height="512"></canvas>
+                </div>
             </div>
         </div>
-        <div id="sspp-size-aspect-selector" class="sspp-size-input-row">
-            <div class="sspp-size-aspect-grid">
-                <button type="button" class="sspp-aspect-button sspp-aspect-1-1" data-aspect="aspect1-1">1:1</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-5-4" data-aspect="aspect5-4">5:4</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-4-3" data-aspect="aspect4-3">4:3<br>Standard</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-3-2" data-aspect="aspect3-2">3:2<br>Film</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-16-9" data-aspect="aspect16-9">16:9<br>Full HD</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-21-9" data-aspect="aspect21-9">21:9<br>Cinema</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-4-5" data-aspect="aspect4-5">4:5<br>Instagram</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-3-4" data-aspect="aspect3-4">3:4</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-2-3" data-aspect="aspect2-3">2:3</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-9-16" data-aspect="aspect9-16">9:16</button>
-                <button type="button" class="sspp-aspect-button sspp-aspect-9-21" data-aspect="aspect9-21">9:21</button>
-                <canvas id="sspp-size-aspect-canvas" width="512" height="512"></canvas>
+        <div id="sspp-text-selector" class="sspp-submenu-content">
+            <div class="sspp-text-item" index="1">
+                <span class="sspp-text-item-label">Prompt</span>
+                <button class="sspp-text-item-edit"></button>
             </div>
         </div>
-    </div>
-    <div id="sspp-text-selector" class="sspp-sidemenu-content">
-        <div class="sspp-text-item" index="1">
-            <span class="sspp-text-item-label">Prompt</span>
-            <button class="sspp-text-item-edit"></button>
+        <div id="sspp-clip-selector" class="sspp-submenu-content">
+            <div class="sspp-clip-checkbox">
+                <input type="checkbox" id="sspp-apply-seed" checked />
+                <label for="sspp-apply-seed">Apply Seed Value</label>
+            </div>
+            <div class="sspp-clip-item" index="1">
+            </div>
         </div>
-    </div>
-    <div id="sspp-clip-selector" class="sspp-sidemenu-content">
-        <div class="sspp-clip-checkbox">
-            <input type="checkbox" id="sspp-apply-seed" checked />
-            <label for="sspp-apply-seed">Apply Seed Value</label>
+        <div id="sspp-submenu" class="sspp-panel-column sspp-submenu">
+            <button id="sspp-text">
+                <span class="sspp-button-label">text</span>
+            </button>
+            <button id="sspp-clip-t2i">
+                <span class="sspp-button-label">txt2img</span>
+            </button>
+            <button id="sspp-clip-i2i">
+                <span class="sspp-button-label">img2img</span>
+            </button>
+            <button id="sspp-clip-out">
+                <span class="sspp-button-label">saved</span>
+            </button>
         </div>
-        <div class="sspp-clip-item" index="1">
+        <div id="sspp-switch-page2" class="sspp-panel-column sspp-submenu">
+            <button id="sspp-checkpoint">
+                <span class="sspp-button-label">Checkpoints</span>
+            </button>
+            <button id="sspp-lora">
+                <span class="sspp-button-label">Lora</span>
+            </button>
+            <button id="sspp-size">
+                <span class="sspp-button-label">Size</span>
+            </button>
         </div>
-    </div>
-    <div id="sspp-sidemenu">
-        <button id="sspp-checkpoint">
-            <span class="sspp-button-label">Checkpoints</span>
-        </button>
-        <button id="sspp-lora">
-            <span class="sspp-button-label">Lora</span>
-        </button>
-        <button id="sspp-size">
-            <span class="sspp-button-label">Size</span>
-        </button>
-        <button id="sspp-text">
-            <span class="sspp-button-label">text</span>
-        </button>
-        <button id="sspp-clip-t2i">
-            <span class="sspp-button-label">txt2img</span>
-        </button>
-        <button id="sspp-clip-i2i">
-            <span class="sspp-button-label">img2img</span>
-        </button>
-        <button id="sspp-clip-out">
-            <span class="sspp-button-label">saved</span>
-        </button>
-        <button id="sspp-sidemenu-close">
-            <span class="sspp-button-label">Close</span>
-        </button>
+        <div id="sspp-candidate" class="sspp-panel-column sspp-texteditor">
+        </div>
+        <div id="sspp-word-operators" class="sspp-panel-column sspp-texteditor">
+            <button id="sspp-prevword">prev</button>
+            <button id="sspp-currword">select</button>
+            <button id="sspp-nextword">next</button>
+            <button id="sspp-parentheses">emph</button>
+            <button id="sspp-ratedown">-0.1</button>
+            <button id="sspp-rateup">+0.1</button>
+        </div>
+        <div id="sspp-generate-button" class="sspp-panel-column sspp-texteditor">
+            <button id="sspp-generate">Generate</button>
+        </div>
+        <div id="sspp-switch-page" class="sspp-panel-column">
+            <button id="sspp-extract-css">
+                <span class="sspp-button-label-on">ExtractCSS</span>
+            </button>
+            <button id="sspp-switch-nega">
+                <span class="sspp-button-label">Negative</span>
+            </button>
+            <button id="sspp-switch-rendering">
+                <span class="sspp-button-label">Render</span>
+            </button>
+            <button id="sspp-switch-sampling">
+                <span class="sspp-button-label">Sampler</span>
+            </button>
+            <button id="sspp-switch-batch">
+                <span class="sspp-button-label">Batch</span>
+            </button>
+            <button id="sspp-submenu-open">
+                <span class="sspp-button-label">Switch</span>
+            </button>
+        </div>
     </div>
 </div>

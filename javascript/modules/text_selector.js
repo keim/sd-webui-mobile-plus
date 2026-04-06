@@ -40,7 +40,7 @@ export class TextSelector {
 
             const labelBtn = clone.querySelector(".sspp-text-item-label");
             if (labelBtn) {
-                labelBtn.textContent = text || "";
+                labelBtn.textContent = text || "　";
                 labelBtn.addEventListener("click", () => this._onSelectText(index));
             }
 
@@ -133,7 +133,9 @@ export class TextSelector {
     _onSelectText(index) {
         // インデックスに対応するテキストを取得
         const text = this._list[index];
+        console.log("いんでっくすクリック:", text === "");
         if (text === "") {
+            console.log("空文字クリック")
             this._onEditText(index);
             return;
         }

@@ -21,6 +21,10 @@
     bottom: 0px;
     z-index: 10000;
 }
+.sspp-panel {
+    display: flex;
+    flex-direction: column;
+}
 .sspp-panel > .sspp-panel-column {
     display: flex;
     flex-direction: row;
@@ -54,33 +58,11 @@
 }
 
 
-/* sidemenu */
-#sspp-sidemenu {
-    display: none;
-    pointer-events: auto;
-    position: fixed;
-    background-color: rgba(255,255,255,0.5);
-    z-index: 99;
-    width: 16.67%;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccf;
-    flex-direction: column;
-    justify-content: center;
-    align-items: normal;
-    box-sizing: border-box;
-    gap: 0.1rem;
-    padding: 0.1rem 0rem;
-}
-.sspp-sidemenu-content {
+/* submenu */
+.sspp-submenu-content {
     display: none;
     box-sizing: border-box;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 83.33%;
+    width: 100%;
     background-color: rgba(255,255,255,0.75);
     flex-direction: column;
     justify-content: center;
@@ -119,20 +101,13 @@
 #sd-smartphone-plus-panel[submenu=clip-out] #sspp-clip-selector {
     display: flex;
 }
-.menu-opened #sspp-sidemenu-open {
+.menu-opened #sspp-submenu-open {
     background-color: #ccc !important;
 }
-.menu-opened #sspp-sidemenu {
-    display: flex !important;
-}
-#sspp-sidemenu-close {
-    position: absolute;
-    width: 100%;
-    bottom: 0;
-    z-index: 1000;
-}
 
-.sspp-sidemenu-content .sspp-text-item {
+
+/* text selector */
+#sspp-text-selector .sspp-text-item {
     pointer-events: auto;
     width: 100%;
     flex: 0 0 2rem;
@@ -146,13 +121,13 @@
     margin: 0.1rem 0rem;
     z-index: 100;
 }
-.sspp-text-item>.sspp-text-item-label {
+#sspp-text-selector .sspp-text-item>.sspp-text-item-label {
     flex: 1 1 auto;
     display: flex;
     align-items: center;
     font-size: 0.8rem;
 }
-.sspp-text-item>.sspp-text-item-button {
+#sspp-text-selector .sspp-text-item>.sspp-text-item-button {
     flex: 0 0 auto;
     width: 1.6rem;
     margin-left: 0.4rem;
@@ -161,7 +136,15 @@
 }
 
 
-.sspp-size-input-row {
+/* size selector */
+#sspp-size-selector {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem;
+}
+#sspp-size-selector .sspp-size-input-row {
     pointer-events: auto;
     display: flex;
     flex-direction: row;
@@ -171,20 +154,21 @@
     border-bottom: 1px solid #ccc;
     background-color: rgba(255,255,255,0.5);
 }
-.sspp-size-input-group {
+#sspp-size-selector .sspp-size-input-group {
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
     flex: 1 1 0;
 }
-.sspp-size-input-group label {
+#sspp-size-selector .sspp-size-input-group label {
     font-size: 0.7rem;
     color: #555;
     font-weight: bold;
 }
-.sspp-size-input-group select,
-.sspp-size-input-group input[type="number"] {
+#sspp-size-selector .sspp-size-input-group select,
+#sspp-size-selector .sspp-size-input-group input[type="number"] {
     pointer-events: auto;
+    box-sizing: border-box;
     width: 100%;
     height: 2rem;
     font-size: 0.8rem;
@@ -192,7 +176,7 @@
     border-radius: 5px;
     padding: 0 0.4rem;
     background-color: #fff;
-    box-sizing: border-box;
+    color: #333;
 }
 
 #sspp-size-aspect-selector {
@@ -223,18 +207,18 @@
     background-color: #fff;
     color: #333;
 }
-#sspp-size-aspect-selector .sspp-aspect-1-1  { grid-column: 1; grid-row: 1; }
-#sspp-size-aspect-selector .sspp-aspect-5-4  { grid-column: 2; grid-row: 1; }
-#sspp-size-aspect-selector .sspp-aspect-4-3  { grid-column: 3; grid-row: 1; }
-#sspp-size-aspect-selector .sspp-aspect-3-2  { grid-column: 4; grid-row: 1; }
-#sspp-size-aspect-selector .sspp-aspect-16-9 { grid-column: 5; grid-row: 1; }
-#sspp-size-aspect-selector .sspp-aspect-21-9 { grid-column: 6; grid-row: 1; }
-#sspp-size-aspect-selector .sspp-aspect-4-5  { grid-column: 1; grid-row: 2; }
-#sspp-size-aspect-selector .sspp-aspect-3-4  { grid-column: 1; grid-row: 3; }
-#sspp-size-aspect-selector .sspp-aspect-2-3  { grid-column: 1; grid-row: 4; }
-#sspp-size-aspect-selector .sspp-aspect-9-16 { grid-column: 1; grid-row: 5; }
-#sspp-size-aspect-selector .sspp-aspect-9-21 { grid-column: 1; grid-row: 6; }
-#sspp-size-aspect-canvas {
+#sspp-aspect-1-1  { grid-column: 1; grid-row: 1; }
+#sspp-aspect-5-4  { grid-column: 2; grid-row: 1; }
+#sspp-aspect-4-3  { grid-column: 3; grid-row: 1; }
+#sspp-aspect-3-2  { grid-column: 4; grid-row: 1; }
+#sspp-aspect-16-9 { grid-column: 5; grid-row: 1; }
+#sspp-aspect-21-9 { grid-column: 6; grid-row: 1; }
+#sspp-aspect-4-5  { grid-column: 1; grid-row: 2; }
+#sspp-aspect-3-4  { grid-column: 1; grid-row: 3; }
+#sspp-aspect-2-3  { grid-column: 1; grid-row: 4; }
+#sspp-aspect-9-16 { grid-column: 1; grid-row: 5; }
+#sspp-aspect-9-21 { grid-column: 1; grid-row: 6; }
+#sspp-aspect-canvas {
     pointer-events: auto;
     grid-column: 2 / 7;
     grid-row: 2 / 7;
@@ -247,14 +231,8 @@
     box-sizing: border-box;
 }
 
-#sspp-size-selector {
-    flex-direction: row;
-    justify-content: center;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.2rem;
-}
 
+/* clip selector */
 #sspp-clip-selector {
     flex-direction: row;
     justify-content: center;
@@ -427,7 +405,7 @@
 #sspp-switch-batch {
     background-image: url('./svg/layers-triple.svg');
 }
-#sspp-sidemenu-open {
+#sspp-submenu-open {
     background-image: url('./svg/menu-open.svg');
 }   
 #sspp-checkpoint {
@@ -469,9 +447,6 @@
 #sspp-rateup {
     background-image: url('./svg/pan-up.svg');
 }
-#sspp-sidemenu-close {
-    background-image: url('./svg/close.svg');    
-}
 #sspp-size-register {
     background-image: url('./svg/plus.svg');
 }
@@ -493,19 +468,26 @@ button.sspp-text-item-edit {
     height: 2rem;
 }
 
-#sspp-sidemenu button {
-    flex: 0 0 auto;
-}
-
-.sspp-opened .sspp-panel .sspp-off-ui,
-.sspp-panel .sspp-on-ui {
+.sspp-injected #sspp-off-ui, #sspp-on-ui {
     display: none;
 }
-.sspp-panel .sspp-off-ui,
-.sspp-opened .sspp-panel .sspp-on-ui {
+.sspp-injected #sspp-on-ui, #sspp-off-ui {
     display: flex;
 }
-
-.sspp-opened #sspp-inject-css {
+.sspp-injected #sspp-inject-css {
     background-color: #ccc;
+}
+
+
+.menu-opened .sspp-submenu {
+    display: flex !important;
+}
+.sspp-submenu {
+    display: none !important;
+}
+.menu-opened .sspp-texteditor {
+    display: none !important;
+}
+.sspp-texteditormenu {
+    display: flex !important;
 }

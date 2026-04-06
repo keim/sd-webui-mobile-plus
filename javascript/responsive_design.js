@@ -98,19 +98,19 @@ function _setupMenuButtons() {
         document.getElementById(id).addEventListener('click', onClick);
     }
 
-    const panel = document.getElementById('sd-smartphone-plus-panel');
+    const panel = ssppUI.panel();
     
     // CSS Injection ボタン
     onclick('sspp-inject-css', () => {
-        ssppUI.root().classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
+        ssppUI.root().classList.toggle('sspp-injected', _sspp_toggleResponsiveCSS(true));
     });
     onclick('sspp-inject-css-full', () => {
-        ssppUI.root().classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(true));
+        ssppUI.root().classList.toggle('sspp-injected', _sspp_toggleResponsiveCSS(true));
         document.body.requestFullscreen();
     });
     // CSS Extraction ボタン
     onclick('sspp-extract-css', () => {
-        ssppUI.root().classList.toggle('sspp-opened', _sspp_toggleResponsiveCSS(false));
+        ssppUI.root().classList.toggle('sspp-injected', _sspp_toggleResponsiveCSS(false));
         if (document.fullscreenElement) document.exitFullscreen();
     });
 
@@ -133,8 +133,8 @@ function _setupMenuButtons() {
     
 
     // [Menu]
-    onclick('sspp-sidemenu-open', e => {
-        ssppUI.openSubmenu();
+    onclick('sspp-submenu-open', e => {
+        ssppUI.toggleSubmenu();
     });
     // [Checkpoint selector]
     onclick('sspp-checkpoint', e => {
@@ -205,11 +205,6 @@ function _setupMenuButtons() {
     // [rate up]
     onclick('sspp-rateup', e => {
         sspp_wordOps.changeRate(0.1);
-    });
-
-    // [Close menu]
-    onclick('sspp-sidemenu-close', e => {
-        ssppUI.closeSubmenu();
     });
     
     // [Generate]

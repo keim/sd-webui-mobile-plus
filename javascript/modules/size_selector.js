@@ -17,7 +17,7 @@ export class SizeSelector {
 
         this._widthSelect = document.getElementById("sspp-width-select");
         this._blockInput = document.getElementById("sspp-block-input");
-        this._aspectCanvas = document.getElementById("sspp-size-aspect-canvas");
+        this._aspectCanvas = document.getElementById("sspp-aspect-canvas");
         this._aspectButtons = Array.from(this._el.querySelectorAll("button.sspp-aspect-button"));
 
         if (this._widthSelect) {
