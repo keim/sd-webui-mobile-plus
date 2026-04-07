@@ -34,7 +34,7 @@ async function _initialize() {
     sspp_textSelector.initialize();
     sspp_clipSelector.initialize();
 
-    ssppUI.addEventListener("textarea", "keyup", () => sspp_candOps.show());
+    ssppUI.addSafeEventListener("textarea", "keyup", () => sspp_candOps.show());
 
     _initWordDictionary();
     _setupMenuButtons();
@@ -102,15 +102,15 @@ function _setupMenuButtons() {
     
     // CSS Injection ボタン
     onclick('sspp-inject-css', () => {
-        ssppUI.root().classList.toggle('sspp-injected', _sspp_toggleResponsiveCSS(true));
+        ssppUI.togglePanel(_sspp_toggleResponsiveCSS(true));
     });
     onclick('sspp-inject-css-full', () => {
-        ssppUI.root().classList.toggle('sspp-injected', _sspp_toggleResponsiveCSS(true));
+        ssppUI.togglePanel(_sspp_toggleResponsiveCSS(true));
         document.body.requestFullscreen();
     });
     // CSS Extraction ボタン
     onclick('sspp-extract-css', () => {
-        ssppUI.root().classList.toggle('sspp-injected', _sspp_toggleResponsiveCSS(false));
+        ssppUI.togglePanel(_sspp_toggleResponsiveCSS(false));
         if (document.fullscreenElement) document.exitFullscreen();
     });
 
@@ -265,6 +265,7 @@ function _sspp_toggleResponsiveCSS(enabled) {
     const existingLink = document.getElementById(cssID);
     
     if (enabled && !existingLink) {
+        // 既にインジェクションされていなければCSSを追加
         const link = document.createElement('link');
         link.id = cssID;
         link.rel = 'stylesheet';
@@ -273,6 +274,7 @@ function _sspp_toggleResponsiveCSS(enabled) {
         document.head.appendChild(link);
     } else 
     if (!enabled && existingLink) {
+        // インジェクションされていればCSSを削除
         existingLink.remove();
     }
 

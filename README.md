@@ -1,263 +1,165 @@
 # SD WebUI Mobile Plus
 
-<div align="center">
+[![JP](https://img.shields.io/badge/lang-JP-22a565.svg)](README.md) [![EN](https://img.shields.io/badge/lang-EN-1f6feb.svg)](README.en.md)
 
-**A comprehensive mobile optimization extension for AUTOMATIC1111's Stable Diffusion WebUI**
+AUTOMATIC1111 Stable Diffusion WebUI をスマートフォン向けに最適化する拡張です。
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+## 概要
 
-</div>
+- 画面が狭い環境で作業しやすいようにカスタマイズされたスタイルシートを挿入
+- 機能別にUIを整理して、表示する機能を切り替える事で、限られた画面における作業を効率化
+- 過去のプロンプトを参照して、距離の近いワードを候補として表示、1クリックで挿入
+- txt2img、img2img、saved の履歴ファイルからのパラメータ復元
+- シンプルなテキストスニペットを登録して、１クリックで挿入・除去
+- ワード単位での前後移動・範囲選択機能、選択範囲をカッコで囲う機能、強調パラメータの増減機能
+- 基準となるピクセルサイズ・ブロックサイズ・アスペクト比から、最適な画角を計算して設定する機能
+- 画面を効率よく利用するためにフルスクリーンモードを維持する機能（実験的）
+- セッションを維持できないモバイルブラウザ向けに、txt2img / img2img 主要パラメータの自動保存、復元に対応
+- その他、ソフトウェアキーボードの出現を抑制や、OSによる参照フォルダ制限の回避など
 
----
+## インストール
 
-## 📱 Overview
+### URL から導入
 
-**SD WebUI Mobile Plus** transforms the Stable Diffusion WebUI into a mobile-friendly interface, providing an optimized experience for smartphones and tablets. With responsive design, touch-friendly controls, and a powerful mobile control panel, you can generate high-quality images on the go.
+1. WebUI の Extensions を開く
+2. Install from URL を選択
+3. 下記 URL を入力
 
-### Key Highlights
-
-- 🎯 **Responsive Design** - Automatically adapts to screens under 768px width
-- 🎮 **Mobile Control Panel** - Quick-access toolbar for common operations
-- ✏️ **Advanced Text Editing** - Word-level navigation and prompt manipulation
-- 📋 **Prompt History** - Automatic extraction from generated images
-- 🔧 **UI Optimization** - Streamlined interface with toggle-able sections
-- 🤖 **Gemini API Integration** - AI-assisted features (in development)
-
----
-
-## 🚀 Installation
-
-### Method 1: Install from URL (Recommended)
-
-1. Open your Stable Diffusion WebUI
-2. Navigate to the **Extensions** tab
-3. Select the **Install from URL** sub-tab
-4. Paste the following URL into the repository field:
-   ```
-   https://github.com/keim/sd-webui-mobile-plus
-   ```
-5. Click **Install**
-6. Restart the WebUI
-
-### Method 2: Manual Installation
-
-1. Clone this repository into your `extensions` directory:
-   ```bash
-   cd stable-diffusion-webui/extensions
-   git clone https://github.com/keim/sd-webui-mobile-plus
-   ```
-2. Restart the WebUI
-
-### Verification
-
-After installation, the **InjectCSS** button will appear at the bottom of the page when accessing from a mobile device (viewport width < 768px).
-
----
-
-## 📖 Usage Guide
-
-### Activating Mobile Mode
-
-1. **Access from Mobile Device** - Open the WebUI on your smartphone or tablet
-2. **Click InjectCSS Button** - Located at the bottom of the page
-3. **Responsive Mode Activated** - The button label changes to **ExtractCSS**
-4. **Toggle Anytime** - Click again to deactivate and return to desktop layout
-
-> **💡 Tip**: Desktop users can test mobile mode using browser developer tools (F12) to simulate mobile viewport dimensions.
-
-### Mobile Control Panel (SP+)
-
-Once activated, a floating control panel appears at the top of the interface with the following features:
-
-#### 🎨 Quick Actions
-- **Generate** - Instant access to image generation button
-- **Clipboard** - Manage and recall prompt snippets
-
-#### ✏️ Text Editing Tools
-| Button | Function |
-|--------|----------|
-| **prev** | Select previous word in prompt |
-| **select** | Select/deselect word under cursor |
-| **next** | Select next word in prompt |
-| **emph** | Wrap selected text in parentheses `()` for emphasis |
-| **-0.1** | Decrease emphasis weight by 0.1 |
-| **+0.1** | Increase emphasis weight by 0.1 |
-
-#### 🎚️ UI Toggles
-- **Negative** - Show/hide negative prompt textarea
-- **Props** - Show/hide advanced settings panel (sampler, CFG scale, seed, dimensions, batch settings)
-- **Size** - Quick access to image size presets
-- **Clip** - Open clipboard manager for saved prompts
-
-### 📋 Prompt History
-
-The extension automatically extracts prompts from your generated images (up to 500 most recent), making it easy to:
-- Review previous prompts
-- Reuse successful settings
-- Track your generation history
-- Learn from past results
-
-Access prompt history through the **Mobile+** tab in the WebUI interface.
-
----
-
-## ⚙️ Configuration
-
-### Settings Panel
-
-Navigate to **Settings** → **Mobile+** in the WebUI to configure:
-
-| Option | Description |
-|--------|-------------|
-| **Gemini API Key** | (Optional) Enter your Google Gemini API key for AI-assisted features |
-
-### Supported Tabs
-
-The extension provides optimized experiences for:
-- ✅ **txt2img** - Text-to-image generation
-- ✅ **img2img** - Image-to-image transformation
-
-Controls automatically adapt based on the active tab.
-
----
-
-## 📁 Project Structure
-
+```text
+https://github.com/keim/sd-webui-mobile-plus
 ```
+
+4. Install を実行
+5. WebUI を再起動
+
+### 手動導入
+
+```bash
+cd stable-diffusion-webui/extensions
+git clone https://github.com/keim/sd-webui-mobile-plus
+```
+
+導入後に WebUI を再起動してください。
+
+## 使い方
+
+### 1. モバイルUIの有効化
+
+- 画面幅が768px以下の場合、InjectCSS ボタンと InjectCSS & FullScreen ボタンが画面下部に表示されます。
+- ボタンクリックで操作パネルが出現します。
+
+### 2. SP+ パネルの主な機能
+
+- Generate: 現在タブで生成実行（生成前に現在設定を保存）
+- Switch / メニュー切替（文字入力支援モード、設定支援モード）
+- Negative / Render / Sampler / Batch / Checkpoints / Lora: 表示UIの切替
+- txt2img / img2img / saved: 履歴ファイルの参照・設定復元
+- prev / select / next / emph / -0.1 / +0.1: 単語選択と強調編集
+- Text: テキストスニペット一覧表示
+- Size: 基準ピクセルサイズ・ブロックサイズ・アスペクト比からサイズを設定
+- ExtractCSS: モバイルUIモードの解除
+
+### 3. 表示UI切り替え機能
+
+- `Negative`:
+   ネガティブプロンプト入力欄を中心にした表示に切り替えます。
+- `Render`:
+   解像度やimg2img元画像など画像設定に切り替えます。
+- `Sampler`:
+   Sampler / Schedule Type / Steps / CFG / Seed などの生成用設定に切り替えます。
+- `Batch`:
+   バッチ系設定（count / size など）に切り替えます。
+- `Checkpoints` / `Lora`:
+   追加タブ (`checkpoints` / `lora`) の表示状態に切り替えます。
+- `Switch`:
+   メニュー項目を「文字入力支援モード」「設定支援モード」に切り替えます。
+
+### 4. 単語操作機能
+
+- `prev` / `next`:
+   前後の単語へ移動します。
+- `select`:
+   選択状態を維持しながら単語移動します。
+- `emph`:
+   選択中の語句を `( ... )` で囲み、重み表現を整形します。
+- `-0.1` / `+0.1`:
+   カーソル位置より後で最初に出現するを重み表現を 0.1 単位で増減します（例: `(word:1.2)`）。
+- 候補表示:
+   プロンプト履歴から算出した単語間の距離の近い順に、最大6件の候補を表示して挿入できます。
+
+### 5. 履歴呼び出し機能
+
+- 参照元は 3 種類です。
+   - `txt2img`: txt2img 出力履歴
+   - `img2img`: img2img 出力履歴
+   - `saved`: outdir_save 配下の保存履歴
+- 画像メタ情報（Prompt / Size / Steps / Sampler / CFG / Seed / Schedule Type / Denoising など）を読み取り、UIへ反映します。
+- クリップ一覧は無限スクロール方式で、1ページ 30 件ずつ追加読み込みします。
+- `Apply Seed Value` のチェックを OFF にすると、履歴適用時に Seed は適用せず生成ごとに再抽選できます。
+
+### 6. テキストスニペットの登録・挿入・除去機能
+
+- スニペットは `sspp_text_list` として LocalStorage に保存されます。
+- `Text` メニューで一覧を表示し、ラベルクリックで現在のプロンプトへ挿入します。
+- 同一文言（重み表現の数字と連続する空白文字は対象外）が既に含まれる場合はトグル動作で除去します。
+- 各行の編集ボタンから、編集・削除（空文字入力）を行えます。
+
+### 7. パラメータ保存と復元
+
+- `Generate` 実行時に LocalStorage へ現在設定を保存します。
+   - 保存先: `sspp_sdWebUIParameters`
+   - 保存対象:
+      - model
+      - txt2img/img2img の width, height, steps, sampler, cfg_scale, seed, schedule_type
+      - img2img の denoising_strength
+      - img2img の画像URL
+- InjectCSS 有効中は、10秒ごとに現在タブの positive prompt を自動バックアップします。
+   - 保存先: `sspp_txt2img_prompt`, `sspp_img2img_prompt`
+- InjectCSS 有効化時に `restoreBackupParameters()` が実行され、
+   現在の txt2img/img2img prompt とバックアップが異なる場合のみ確認ダイアログを表示します。
+- ダイアログで OK を選ぶと `loadCurrentParameters()` を実行し、保存済み設定を一括復元します。
+
+
+## 対応タブ
+
+- txt2img
+- img2img
+- extras（Generate ボタン実行の対象として対応）
+
+## プロジェクト構成
+
+```text
 sd-webui-mobile-plus/
-├── scripts/
-│   ├── mobule-plus.py              # Main extension script
-│   └── panel.html                  # Control panel HTML template
-├── javascript/
-│   ├── responsive_design.js        # Core mobile functionality
-│   └── modules/
-│       └── geminiapi.js           # Gemini API integration
-├── svg/                            # UI icon assets
-│   ├── arrow-expand-horizontal.svg
-│   ├── clipboard-text-multiple.svg
-│   ├── code-parentheses.svg
-│   └── ... (additional icons)
-├── responsive.css                  # Mobile-optimized styles
-├── style.css                       # Additional UI styles
-├── LICENSE                         # MIT License
-└── README.md                       # This file
+   scripts/
+      mobile-plus.py
+      panel.html
+   javascript/
+      responsive_design.js
+      modules/
+         candidate_operations.js
+         clipboard_selector.js
+         file_info_api.js
+         geminiapi.js
+         sd_generated_image.js
+         size_selector.js
+         text_selector.js
+         ui_controller.js
+         word_operations.js
+   responsive.css
+   style.css
+   svg/
+   LICENSE
+   README.md
 ```
 
----
+## 補足
 
-## 🎯 Features in Detail
+- PNG 解析による履歴取得上限は `scripts/mobile-plus.py` の `MAX_IMAGES`（現状 200）
+- WebUI 側の DOM 構造変更によって、一部セレクタ調整が必要になる場合があります
 
-### Responsive Design
-- **Adaptive Layout** - Interface automatically adjusts for screens < 768px
-- **Optimized Navigation** - Horizontal scrolling tabs for easy access
-- **Compact Elements** - Streamlined UI components for better space utilization
-- **Touch-Friendly** - Larger tap targets and gesture-friendly controls
+## ライセンス
 
-### Mobile Optimizations
-- 📦 **Compact Cards** - Checkpoint and LoRA selectors optimized for mobile
-- 📝 **Streamlined Prompts** - Fixed height textareas (12rem) for better screen usage
-- 🎨 **Image Display** - Proper aspect ratio handling for generated images
-- 🔝 **Fixed Navigation** - Tab bar remains accessible at the top
-- 👁️ **Smart Hiding** - Unnecessary UI elements automatically hidden on mobile
-
-### Text Editing Capabilities
-- **Word-Level Navigation** - Jump between prompt words efficiently
-- **Quick Selection** - Select words with a single tap
-- **Emphasis Controls** - Add/modify emphasis weights without typing
-- **Batch Editing** - Apply changes to multiple selected words
-
-### AI Integration (In Development)
-- 🤖 **Gemini API** - Planned features for AI-assisted prompt generation
-- 💡 **Smart Suggestions** - Context-aware prompt improvements
-- 🔄 **Auto-Enhancement** - Intelligent prompt refinement
-
----
-
-## 💡 Mobile Usage Tips
-
-1. **Maximize Screen Space** - Use the **Props** toggle to hide settings you rarely adjust
-2. **Quick Workflow** - Keep the **Negative** prompt hidden when not needed
-3. **Save Presets** - Create size presets for your most-used dimensions
-4. **Clipboard Manager** - Store frequently used prompt fragments for quick access
-5. **Word Selection** - Use prev/next/select for precise editing without a keyboard
-6. **Emphasis Fine-Tuning** - Use ±0.1 buttons for quick weight adjustments
-7. **Prompt History** - Review your successful prompts from the Mobile+ tab
-
----
-
-## 🔧 Technical Details
-
-### How It Works
-
-1. **CSS Injection System**
-   - Dynamically injects responsive CSS rules for mobile devices
-   - Overrides default WebUI styles when viewport < 768px
-   - Toggleable on-demand without page refresh
-
-2. **Control Panel Integration**
-   - Floating panel inserted into the DOM structure
-   - Event-driven architecture for responsive interactions
-   - Tab-aware functionality that adapts to context
-
-3. **JavaScript Event System**
-   - Monitors tab changes and user interactions
-   - Provides seamless mobile navigation experience
-   - Viewport optimization with proper meta tags
-
-4. **Image Processing**
-   - Scans output directory for PNG files
-   - Extracts metadata and prompts from image EXIF data
-   - Maintains history of up to 500 recent generations
-
----
-
-## 🌐 Compatibility
-
-### Requirements
-- **AUTOMATIC1111's Stable Diffusion WebUI** (latest version recommended)
-- **Python** 3.8 or higher
-- **Gradio** (included with SD WebUI)
-
-### Tested Platforms
-- ✅ iOS (Safari, Chrome)
-- ✅ Android (Chrome, Firefox, Samsung Internet)
-- ✅ iPad/Tablets
-- ✅ Desktop browsers (with mobile viewport simulation)
-
-### Extension Compatibility
-Compatible with most SD WebUI extensions. Tested alongside:
-- ControlNet
-- Dynamic Prompts
-- Additional Networks
-- And many others
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how you can help:
-
-1. **Report Issues** - Found a bug? [Open an issue](https://github.com/keim/sd-webui-mobile-plus/issues)
-2. **Suggest Features** - Have ideas? Share them in discussions
-3. **Submit PRs** - Code improvements and fixes are appreciated
-4. **Documentation** - Help improve guides and examples
-5. **Testing** - Test on different devices and report compatibility
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Credits
-
-Developed with ❤️ for the Stable Diffusion community to enhance mobile accessibility and improve the creative workflow on mobile devices.
-
-**Special Thanks:**
-- AUTOMATIC1111 and contributors for the amazing Stable Diffusion WebUI
-- The entire SD community for inspiration and feedback
+MIT License
 
 ---
 

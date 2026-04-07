@@ -13,10 +13,14 @@ export class UIController {
             txt2img_neg_prompt: "#txt2img_neg_prompt textarea",
             img2img_prompt: "#img2img_prompt textarea",
             img2img_neg_prompt: "#img2img_neg_prompt textarea",
+            txt2img_edit_style_prompt: "#txt2img_edit_style_prompt textarea",
+            txt2img_edit_style_neg_prompt: "#txt2img_edit_style_neg_prompt textarea",
+            img2img_edit_style_prompt: "#img2img_edit_style_prompt textarea",
+            img2img_edit_style_neg_prompt: "#img2img_edit_style_neg_prompt textarea",
         };
         this.inputs = {
-            txt2img_sampling: "#txt2img_sampling input",
-            txt2img_scheduler: "#txt2img_scheduler input",
+            txt2img_sampler: "#txt2img_sampling input",
+            txt2img_schedule_type: "#txt2img_scheduler input",
             txt2img_steps: "#txt2img_steps input",
             txt2img_width: "#txt2img_width input",
             txt2img_height: "#txt2img_height input",
@@ -29,6 +33,8 @@ export class UIController {
             txt2img_subseed_strength: "#txt2img_subseed_strength input",
             txt2img_seed_resize_from_w: "#txt2img_seed_resize_from_w input",
             txt2img_seed_resize_from_h: "#txt2img_seed_resize_from_h input",
+            txt2img_styles: "#txt2img_styles input",
+            txt2img_styles_edit_select: "#txt2img_styles_edit_select input",
             txt2img_script_list: "#txt2img_script_container #script_list input",
 
             img2img_inpaint_full_res_padding: "#img2img_inpaint_full_res_padding input",
@@ -39,8 +45,8 @@ export class UIController {
 
             img2img_mask_blur: "#img2img_mask_blur input",
             img2img_mask_alpha: "#img2img_mask_alpha input",
-            img2img_sampling: "#img2img_sampling input",
-            img2img_scheduler: "#img2img_scheduler input",
+            img2img_sampler: "#img2img_sampling input",
+            img2img_schedule_type: "#img2img_scheduler input",
             img2img_steps: "#img2img_steps input",
             img2img_width: "#img2img_width input",
             img2img_height: "#img2img_height input",
@@ -48,12 +54,15 @@ export class UIController {
             img2img_batch_count: "#img2img_batch_count input",
             img2img_batch_size: "#img2img_batch_size input",
             img2img_cfg_scale: "#img2img_cfg_scale input",
+            img2img_denoising_strength: "#img2img_denoising_strength input",
             img2img_seed: "#img2img_seed input",
             img2img_subseed_show: "#img2img_subseed_show input",
             img2img_subseed: "#img2img_subseed input",
             img2img_subseed_strength: "#img2img_subseed_strength input",
             img2img_seed_resize_from_w: "#img2img_seed_resize_from_w input",
             img2img_seed_resize_from_h: "#img2img_seed_resize_from_h input",
+            img2img_styles: "#img2img_styles input",
+            img2img_styles_edit_select: "#img2img_styles_edit_select input",
             img2img_script_list: "#img2img_script_container #script_list input",
         };
         this.uis = {
@@ -61,10 +70,24 @@ export class UIController {
             txt2img_refiner: "#txt2img_enable",
             img2img_refiner: "#img2img_enable",
         };
+        this.models = {
+            checkpoint: "#setting_sd_model_checkpoint input",
+        };
+        this.fileinput = {
+            img2img: "#img2img_img2img_tab input[type=\"file\"]",
+            sketch: "#img2img_img2img_sketch_tab input[type=\"file\"]",
+            inpaint: "#img2img_inpaint_tab input[type=\"file\"]",
+            "inpaint sketch": "#img2img_inpaint_sketch_tab input[type=\"file\"]",
+            "inpaint upload": "#img2img_inpaint_upload_tab input[type=\"file\"]",
+        };
+        this.fileimg = {
+            img2img: "#img2img_img2img_tab img",
+        };
 
         this._tabNames = [];
         this._lastPromptArea = null;
         this._eventReciever = null;
+        this._backupPromptCronId = null;
 
         this.fileInfoAPI = fileInfoAPI;
     }
@@ -76,6 +99,36 @@ export class UIController {
     panel() {
         return document.getElementById("sd-smartphone-plus-panel");
     }
+
+    togglePanel(enabled) {
+        this.root().classList.toggle('sspp-injected', enabled);
+        if (enabled) {
+            this.restoreBackupParameters().then(restored => {
+                if (restored) alert("設定が復元されました。");
+            });
+            this.startBackupCron();
+        } else {
+            this.stopBackupCron();
+        }
+    }
+
+    async restoreBackupParameters() {
+        const txt2imgPromptArea = document.querySelector(this.textareas.txt2img_prompt);
+        const img2imgPromptArea = document.querySelector(this.textareas.img2img_prompt);
+        const txt2imgBackup = localStorage.getItem("sspp_txt2img_prompt");
+        const img2imgBackup = localStorage.getItem("sspp_img2img_prompt");
+
+        const hasTxt2imgDiff = txt2imgBackup !== null && (txt2imgPromptArea?.value || "") !== txt2imgBackup;
+        const hasImg2imgDiff = img2imgBackup !== null && (img2imgPromptArea?.value || "") !== img2imgBackup;
+
+        if (!hasTxt2imgDiff && !hasImg2imgDiff) return false;
+
+        const shouldRestore = window.confirm("保存された設定のバックアップが現在の内容と異なります。復元しますか？");
+        if (!shouldRestore) return false;
+
+        return await this.loadCurrentParameters();
+    }
+            
 
     changePanelUIType(type) {
         const newType = this.root().getAttribute("uitype") === type ? "default" : type;
@@ -103,7 +156,7 @@ export class UIController {
     }
 
     initialize() {
-        // タブ名の取得
+        // 全タブの名前を取得
         this._tabNames = [];
         const tabButtons = document.querySelectorAll("#tabs>.tab-nav>button");
         tabButtons.forEach((btn) => this._tabNames.push(btn.textContent.trim().toLowerCase()));
@@ -112,12 +165,13 @@ export class UIController {
         this._eventReciever = document; // document.getElementById("tabs");
 
         // タブ切り替え時のイベントリスナー登録
-        this.addEventListener("#tabs>.tab-nav>button", "click", () => {
+        this.addSafeEventListener("#tabs>.tab-nav>button", "click", () => {
             this.updateSizeLabel();
         });
 
-        // プロンプトエリアへのフォーカス追跡
-        const promptAreas = document.querySelectorAll("#txt2img_prompt textarea, #txt2img_neg_prompt textarea, #img2img_prompt textarea, #img2img_neg_prompt textarea");
+        // プロンプトエリアへのフォーカス追跡（textareasマップを利用）
+        const promptSelectors = Object.values(this.textareas).join(", ");
+        const promptAreas = document.querySelectorAll(promptSelectors);
         promptAreas.forEach((textarea) => {
             textarea.addEventListener("focusin", () => {
                 this._lastPromptArea = textarea;
@@ -132,17 +186,32 @@ export class UIController {
             input.removeAttribute("accept");
         });
 
-        // ドロップダウンUIにreadonly属性を付与して、ソフトウェアキーボード出現を抑制
-        document.querySelector("#txt2img_styles input").setAttribute("readonly", "true");
-        document.querySelector("#txt2img_sampling input").setAttribute("readonly", "true");
-        document.querySelector("#txt2img_scheduler input").setAttribute("readonly", "true");
-        document.querySelector("#img2img_styles input").setAttribute("readonly", "true");
-        document.querySelector("#img2img_sampling input").setAttribute("readonly", "true");
-        document.querySelector("#img2img_scheduler input").setAttribute("readonly", "true");
+        // ドロップダウンUIにreadonly属性を付与 (ソフトウェアキーボードの出現を抑制)
+        const dropdownInputKeys = [
+            "txt2img_sampler",
+            "txt2img_schedule_type",
+            "txt2img_styles",
+            "txt2img_styles_edit_select",
+            "txt2img_script_list",
+            "img2img_sampler",
+            "img2img_schedule_type",
+            "img2img_styles",
+            "img2img_styles_edit_select",
+            "img2img_script_list",
+        ];
+        dropdownInputKeys.forEach((key) => {
+            const selector = this.inputs[key];
+            if (selector) {
+                const elem = document.querySelector(selector);
+                if (elem) {
+                    elem.setAttribute("readonly", "true");
+                }
+            }
+        });
     }
 
     // UIController 経由でイベントリスナーを登録
-    addEventListener(query, event, handler) {
+    addSafeEventListener(query, event, handler) {
         if (this._eventReciever) {
             this._eventReciever.addEventListener(event, (e => {
                 const target = e.target.closest(query);
@@ -161,6 +230,11 @@ export class UIController {
     // 現在のタブ名を取得
     currentTabName() {
         return document.querySelector("#tabs button.selected").textContent.trim().toLowerCase();
+    }
+
+    // 現在のimg2imgタブ名を取得
+    currentImg2ImgTabName() {
+        return document.querySelector("#mode_img2img button.selected").textContent.trim().toLowerCase();
     }
 
     // txt2img と img2img のプロンプト入力要素を取得
@@ -239,23 +313,66 @@ export class UIController {
         return tabElems;
     }
 
-    // img2img のファイル入力要素を取得
-    img2imgFileInput() {
-        const selectors = [
-            "#img2img_image input[type=\"file\"]",
-            "#img2img_img2img_tab input[type=\"file\"]",
-            "#img2img input[type=\"file\"]",
-        ];
-        for (const selector of selectors) {
-            const input = document.querySelector(selector);
-            if (input) return input;
-        }
-        return null;
+    // txt2img、img2img、extras タブで生成を実行
+    generate() {
+        // 生成可能なタブか確認
+        const tabName = this.currentTabName();
+        if (tabName !== "txt2img" && tabName !== "img2img" && tabName !== "extras") return false;
+        // 生成前に現在の設定値を保存
+        this.saveCurrentParameters();
+        // 生成ボタンをクリック
+        const generateButton = document.getElementById(`${tabName}_generate`);
+        if (!generateButton) return false;
+        generateButton.click();
+        return true;
+    }
+
+    // 現在のタブのプロンプトを変更
+    setupPrompt(posiPrompt, negaPrompt) {
+        const posiPromptArea = this.promptArea();
+        const negaPromptArea = this.negaPromptArea();
+        if (!posiPromptArea || !negaPromptArea) return;
+        this._updateValue(posiPromptArea, posiPrompt);
+        this._updateValue(negaPromptArea, negaPrompt);
+    }
+
+    // 10秒ごとに現在タブのプロンプトをバックアップ
+    startBackupCron() {
+        if (this._backupPromptCronId !== null) return false;
+        this._backupPromptCronId = window.setInterval(() => {
+            this._backupPrompt();
+        }, 10000);
+        return true;
+    }
+
+    // プロンプトバックアップの定期実行を停止
+    stopBackupCron() {
+        if (this._backupPromptCronId === null) return false;
+        window.clearInterval(this._backupPromptCronId);
+        this._backupPromptCronId = null;
+        return true;
+    }
+
+    // 現在タブのプロンプトをlocalstorageに退避
+    _backupPrompt() {
+        const tabName = this.currentTabName();
+        if (tabName !== "txt2img" && tabName !== "img2img") return false;
+        const promptArea = this.promptArea();
+        localStorage.setItem(`sspp_${tabName}_prompt`, promptArea?.value || "");
+        return true;
+    }
+
+    // 現在のタブのサイズプロパティを変更
+    setupSizeProps(width, height) {
+        const sizeUI = this.sizeInputs();
+        if (!sizeUI) return;
+        this._updateValue(sizeUI[0], width);
+        this._updateValue(sizeUI[1], height);
     }
 
     // URL画像をimg2imgのファイル入力に登録
-    async setImg2ImgImageFromUrl(imageUrl) {
-        const fileInput = this.img2imgFileInput();
+    async setupImg2ImgImageFromUrl(imageUrl) {
+        const fileInput = document.querySelector(this.fileinput['img2img']);
         if (!fileInput || !imageUrl) return false;
 
         const isSameOrigin = (url) => {
@@ -296,31 +413,19 @@ export class UIController {
         return true;
     }
 
-    // txt2img、img2img、extras タブで生成を実行
-    generate() {
-        const tabName = this.currentTabName();
-        if (tabName !== "txt2img" && tabName !== "img2img" && tabName !== "extras") return false;
-        const generateButton = document.getElementById(`${tabName}_generate`);
-        if (!generateButton) return false;
-        generateButton.click();
-        return true;
+    // img2img タブの画像ソースURLを取得
+    getImg2ImgImageSource(tab) {
+        const imgElem = document.querySelector(this.fileimg['img2img']);
+        if (!imgElem) return null;
+        return imgElem.getAttribute("src");
     }
 
-    // 現在のタブのプロンプトを変更
-    setupPrompt(posiPrompt, negaPrompt) {
-        const posiPromptArea = this.promptArea();
-        const negaPromptArea = this.negaPromptArea();
-        if (!posiPromptArea || !negaPromptArea) return;
-        this._updateValue(posiPromptArea, posiPrompt);
-        this._updateValue(negaPromptArea, negaPrompt);
-    }
-
-    // 現在のタブのサイズプロパティを変更
-    setupSizeProps(width, height) {
-        const sizeUI = this.sizeInputs();
-        if (!sizeUI) return;
-        this._updateValue(sizeUI[0], width);
-        this._updateValue(sizeUI[1], height);
+    // inputs オブジェクト内のキーを指定してパラメータを設定
+    _setInputValue(key, value) {
+        const selector = this.inputs[key];
+        if (!selector) return;
+        const elem = document.querySelector(selector);
+        this._updateValue(elem, value);
     }
 
     // input,textarea要素の値を更新
@@ -335,23 +440,24 @@ export class UIController {
     async applyImageData(image) {
         if (!image) return;
 
-        if (image.positive_prompt && image.negative_prompt) {
-            this.setupPrompt(image.positive_prompt, image.negative_prompt);
-        }
-        if (image.width && image.height) {
-            this.setupSizeProps(image.width, image.height);
-        }
+        // プロンプトとサイズを反映
+        this.setupPrompt(image.positive_prompt || "", image.negative_prompt || "");
+        this.setupSizeProps(image.width || 1024, image.height || 1024);
 
+        // その他のパラメータを反映
         const tabName = this.currentTabName();
         if (tabName !== "txt2img" && tabName !== "img2img") return;
 
         const parameterMap = [
             { key: `${tabName}_steps`, value: image.steps },
-            { key: `${tabName}_sampling`, value: image.sampler },
+            { key: `${tabName}_sampler`, value: image.sampler },
             { key: `${tabName}_cfg_scale`, value: image.cfg_scale },
             { key: `${tabName}_seed`, value: image.seed },
-            { key: `${tabName}_scheduler`, value: image.schedule_type },
+            { key: `${tabName}_schedule_type`, value: image.schedule_type },
         ];
+        if (tabName === "img2img") {
+            parameterMap.push({ key: `${tabName}_scale`, value: image.denoising_strength });
+        }
 
         parameterMap.forEach(({ key, value }) => {
             if (value !== null && value !== undefined) {
@@ -359,16 +465,169 @@ export class UIController {
             }
         });
 
+        // img2img タブでURLがある場合は画像をセット
         if (tabName === "img2img" && image.url) {
-            await this.setImg2ImgImageFromUrl(image.url);
+            await this.setupImg2ImgImageFromUrl(image.url);
+        }
+
+        this.updateSizeLabel();
+    }
+
+    // 現在のパラメータ設定値をlocalstorageに保存
+    saveCurrentParameters() {
+        const txt2imgParams = this._getCurrentTabParameters("txt2img");
+        const img2imgParams = this._getCurrentTabParameters("img2img", true);
+        
+        // プロンプトを別キーで保存
+        if (txt2imgParams.positive_prompt) {
+            localStorage.setItem('sspp_txt2img_prompt', txt2imgParams.positive_prompt);
+            delete txt2imgParams.positive_prompt;
+        }
+        if (img2imgParams.positive_prompt) {
+            localStorage.setItem('sspp_img2img_prompt', img2imgParams.positive_prompt);
+            delete img2imgParams.positive_prompt;
+        }
+        
+        // img2imgの画像URLも保存
+        const parameters = {
+            model: this._getCurrentModel(),
+            txt2img: txt2imgParams,
+            img2img: img2imgParams,
+            img2imgURL: this.getImg2ImgImageSource()
+        };
+        localStorage.setItem('sspp_sdWebUIParameters', JSON.stringify(parameters));
+    }
+
+    // localstorageからパラメータを読み込んで適用
+    async loadCurrentParameters() {
+        const saved = localStorage.getItem('sspp_sdWebUIParameters');
+        if (!saved) return false;
+
+        try {
+            const parameters = JSON.parse(saved);
+            
+            // モデルを適用
+            if (parameters.model) this._setModel(parameters.model);
+            
+            // プロンプトを別キーから読み込んで統合
+            const txt2imgParams = parameters.txt2img || {};
+            txt2imgParams.positive_prompt = localStorage.getItem('sspp_txt2img_prompt') || "";
+            this._applyTabParameters("txt2img", txt2imgParams);
+            
+            const img2imgParams = parameters.img2img || {};
+            img2imgParams.positive_prompt = localStorage.getItem('sspp_img2img_prompt') || "";
+            this._applyTabParameters("img2img", img2imgParams, true);
+
+            // img2img fileURLの再設定
+            if (parameters.img2imgURL) {
+                await this.setupImg2ImgImageFromUrl(parameters.img2imgURL);
+            }
+
+            return true;
+        } catch (e) {
+            console.error('パラメータの読み込みに失敗しました:', e);
+            return false;
         }
     }
 
-    // inputs オブジェクト内のキーを指定してパラメータを設定
-    _setInputValue(inputKey, value) {
-        const selector = this.inputs[inputKey];
-        if (!selector) return;
+    // 現在のモデル(checkpoint)を取得
+    _getCurrentModel() {
+        const elem = document.querySelector(this.models.checkpoint);
+        return elem ? elem.value : null;
+    }
+
+    // 指定タブの現在パラメータを取得
+    _getCurrentTabParameters(tabName, includeDenoising = false) {
+        const params = {};
+
+        // textareasから取得
+        const textareaFieldMapping = {
+            positive_prompt: `${tabName}_prompt`,
+            negative_prompt: `${tabName}_neg_prompt`,
+        };
+
+        Object.entries(textareaFieldMapping).forEach(([key, fieldName]) => {
+            const selector = this.textareas[fieldName];
+            if (selector) {
+                const elem = document.querySelector(selector);
+                if (elem) params[key] = elem.value;
+            }
+        });
+
+        // inputsから取得
+        const inputFieldMapping = {
+            width: `${tabName}_width`,
+            height: `${tabName}_height`,
+            steps: `${tabName}_steps`,
+            sampler: `${tabName}_sampler`,
+            cfg_scale: `${tabName}_cfg_scale`,
+            seed: `${tabName}_seed`,
+            schedule_type: `${tabName}_schedule_type`,
+        };
+
+        if (includeDenoising) {
+            inputFieldMapping.denoising_strength = `${tabName}_denoising_strength`;
+        }
+        
+        Object.entries(inputFieldMapping).forEach(([key, fieldName]) => {
+            const selector = this.inputs[fieldName];
+            if (selector) {
+                const elem = document.querySelector(selector);
+                if (elem) params[key] = elem.value;
+            }
+        });
+        
+        return params;
+    }
+
+    // モデル(checkpoint)を設定
+    _setModel(modelName) {
+        const selector = this.models.checkpoint;
         const elem = document.querySelector(selector);
-        this._updateValue(elem, value);
+        if (elem) {
+            this._updateValue(elem, modelName);
+            // ドロップダウン選択肢を反映させるためのイベント
+            elem.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    }
+
+    // 指定タブのパラメータを適用
+    _applyTabParameters(tabName, params, includeDenoising = false) {
+        // textareasへの適用
+        const textareaFieldMapping = {
+            positive_prompt: `${tabName}_prompt`,
+            negative_prompt: `${tabName}_neg_prompt`,
+        };
+
+        Object.entries(textareaFieldMapping).forEach(([key, fieldName]) => {
+            const selector = this.textareas[fieldName];
+            if (selector && params[key] !== undefined) {
+                const elem = document.querySelector(selector);
+                this._updateValue(elem, params[key]);
+            }
+        });
+
+        // inputsへの適用
+        const inputFieldMapping = {
+            width: `${tabName}_width`,
+            height: `${tabName}_height`,
+            steps: `${tabName}_steps`,
+            sampler: `${tabName}_sampler`,
+            cfg_scale: `${tabName}_cfg_scale`,
+            seed: `${tabName}_seed`,
+            schedule_type: `${tabName}_schedule_type`,
+        };
+
+        if (includeDenoising) {
+            inputFieldMapping.denoising_strength = `${tabName}_denoising_strength`;
+        }
+
+        Object.entries(inputFieldMapping).forEach(([key, fieldName]) => {
+            const selector = this.inputs[fieldName];
+            if (selector && params[key] !== undefined) {
+                const elem = document.querySelector(selector);
+                this._updateValue(elem, params[key]);
+            }
+        });
     }
 }

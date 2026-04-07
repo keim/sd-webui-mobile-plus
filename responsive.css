@@ -275,13 +275,15 @@
     display: none;
 }
 .contain[uitype="lora"] #txt2img_prompt_row,
-.contain[uitype="lora"] #img2img_prompt_row {
-    display: flex;
-}
-.contain[uitype="text"] #txt2img_results,
-.contain[uitype="text"] #img2img_results,
+.contain[uitype="lora"] #img2img_prompt_row
 .contain[uitype="text"] #txt2img_prompt_row,
-.contain[uitype="text"] #img2img_prompt_row {
+.contain[uitype="text"] #img2img_prompt_row,
+.contain[uitype="clip-t2i"] #txt2img_prompt_row,
+.contain[uitype="clip-t2i"] #img2img_prompt_row,
+.contain[uitype="clip-i2i"] #txt2img_prompt_row,
+.contain[uitype="clip-i2i"] #img2img_prompt_row,
+.contain[uitype="clip-out"] #txt2img_prompt_row,
+.contain[uitype="clip-out"] #img2img_prompt_row {
     display: flex;
 }
 
