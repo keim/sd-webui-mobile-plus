@@ -13,7 +13,7 @@ export class ClipboardSelector {
         this._nextStart = 0;
         this._isLoading = false;
         this._hasMore = true;
-        this._pageSize = 30;
+        this._pageSize = 20;
         this._scrollListener = null;
     }
 
@@ -47,7 +47,7 @@ export class ClipboardSelector {
             return;
         }
 
-        // 初回読み込み：30件を取得
+        // 初回読み込み：20件を取得
         await this._loadNextPage(currentRequestId);
         
         // スクロールリスナーをセットアップ

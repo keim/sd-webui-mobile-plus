@@ -268,8 +268,9 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem;
-    border-bottom: 1px solid #ccc;
+    color: #333;
     background-color: #fff;
+    border-bottom: 1px solid #ccc;
     pointer-events: auto;
     z-index: 101;
     position: relative;

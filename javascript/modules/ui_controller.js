@@ -112,6 +112,7 @@ export class UIController {
         }
     }
 
+    // localstorageのバックアップと現在のプロンプト内容を比較して、復元するか確認してから復元する
     async restoreBackupParameters() {
         const txt2imgPromptArea = document.querySelector(this.textareas.txt2img_prompt);
         const img2imgPromptArea = document.querySelector(this.textareas.img2img_prompt);
@@ -129,7 +130,6 @@ export class UIController {
         return await this.loadCurrentParameters();
     }
             
-
     changePanelUIType(type) {
         const newType = this.root().getAttribute("uitype") === type ? "default" : type;
         this.root().setAttribute("uitype", newType);
@@ -213,10 +213,11 @@ export class UIController {
     // UIController 経由でイベントリスナーを登録
     addSafeEventListener(query, event, handler) {
         if (this._eventReciever) {
-            this._eventReciever.addEventListener(event, (e => {
+            this._eventReciever.addEventListener(event, (e) => {
                 const target = e.target.closest(query);
+                console.log(`event: query=${query}, event=${event}, target=${Boolean(target)}`);
                 if (target) handler(e, target);
-            }));
+            });
         }
     }
 

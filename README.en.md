@@ -2,37 +2,37 @@
 
 [![JP](https://img.shields.io/badge/lang-JP-22a565.svg)](README.md) [![EN](https://img.shields.io/badge/lang-EN-1f6feb.svg)](README.en.md)
 
-An extension that optimizes AUTOMATIC1111 Stable Diffusion WebUI for smartphones.
+An extension that optimizes AUTOMATIC1111 Stable Diffusion WebUI for mobile devices. Beyond layout adjustments, it minimizes text input with various input assistance features, reducing the inconvenience of software keyboards.
 
 ## Overview
 
-- Injects a customized stylesheet to improve usability on small screens.
-- Organizes UI by feature and lets you switch visible controls for efficient mobile workflows.
-- Suggests related words based on prompt history and inserts them with one tap.
-- Restores parameters from txt2img, img2img, and saved history entries.
-- Lets you register simple text snippets and insert/remove them with one tap.
-- Supports word-level navigation, range selection, wrapping with parentheses, and emphasis rate adjustments.
-- Calculates and sets optimized size from base pixel size, block size, and aspect ratio.
-- Keeps fullscreen mode for better screen usage (experimental).
-- Auto-saves/restores key txt2img and img2img parameters for mobile browsers with unstable sessions.
-- Includes additional mobile-focused tweaks (software keyboard suppression, file picker behavior improvements, etc.).
+- Injects customized stylesheets optimized for narrow screens
+- Organizes the interface with feature-based screen switching for efficient workflows
+- Displays candidate words with similar distances from prompt history; insert with one tap
+- Restores parameters from txt2img, img2img, and saved history files
+- Simple text snippet functionality: register frequently used strings and insert/remove with one click
+- Word-level cursor movement, range selection, wrapping phrases in parentheses, emphasis rate adjustments
+- Calculates optimal image dimensions from base pixel size, block size, and aspect ratio
+- Fullscreen mode support to maximize screen usage (experimental)
+- Auto-save/restore of key parameters for mobile browsers with unstable sessions
+- Additional tweaks: software keyboard suppression, workarounds for OS file picker restrictions, etc.
 
 ## Installation
 
 ### Install from URL
 
-1. Open Extensions in WebUI.
-2. Select Install from URL.
-3. Enter the repository URL below:
+1. Open Extensions in WebUI
+2. Select "Install from URL"
+3. Enter the URL below:
 
 ```text
 https://github.com/keim/sd-webui-mobile-plus
 ```
 
-4. Click Install.
-5. Restart WebUI.
+4. Click Install
+5. Restart WebUI
 
-### Manual installation
+### Manual Installation
 
 ```bash
 cd stable-diffusion-webui/extensions
@@ -43,81 +43,81 @@ Restart WebUI after installation.
 
 ## Usage
 
-### 1. Enable mobile UI
+### 1. Enable Mobile UI
 
-- When viewport width is 768px or less, InjectCSS and InjectCSS & FullScreen buttons appear at the bottom.
-- Clicking either button opens the control panel.
+- When viewport width is 768px or less, "InjectCSS" and "InjectCSS & FullScreen" buttons appear at the bottom of the screen.
+- Click either button to open the control panel.
 
-### 2. Main features in SP+ panel
+### 2. Main features of the SP+ panel
 
-- Generate: runs generation in the current tab (and saves current settings before generation).
-- Switch / menu mode toggle (text-input support mode and settings support mode).
-- Negative / Render / Sampler / Batch / Checkpoints / Lora: switch displayed UI groups.
-- txt2img / img2img / saved: browse history and restore settings.
-- prev / select / next / emph / -0.1 / +0.1: word selection and emphasis editing.
-- Text: shows text snippet list.
-- Size: sets size from base pixel size, block size, and aspect ratio.
-- ExtractCSS: disables mobile UI mode.
+- **Generate**: Executes generation in the current tab (saves current settings before generation)
+- **Switch / Menu toggle**: Switch between text-input support mode and settings support mode
+- **Negative / Render / Sampler / Batch / Checkpoints / Lora**: Switches displayed UI groups
+- **txt2img / img2img / saved**: Browse history files and restore parameters
+- **prev / select / next / emph / -0.1 / +0.1**: Word selection and emphasis editing
+- **Snippet**: Display text snippet list
+- **Size**: Set size from base pixel size, block size, and aspect ratio
+- **ExtractCSS**: Disable mobile UI mode
 
-### 3. UI switching details
+### 3. UI switching features
 
-- Negative:
-  Switches to a view focused on the negative prompt area.
-- Render:
+- **Negative**:
+  Switches to a view focused on the negative prompt input area.
+- **Render**:
   Switches to image-related settings such as resolution and img2img source image.
-- Sampler:
-  Switches to generation settings such as Sampler / Schedule Type / Steps / CFG / Seed.
-- Batch:
+- **Sampler**:
+  Switches to generation settings like Sampler / Schedule Type / Steps / CFG / Seed.
+- **Batch**:
   Switches to batch settings (count / size, etc.).
-- Checkpoints / Lora:
-  Switches extra panel tabs to checkpoints/lora views.
-- Switch:
-  Toggles the menu groups between text-support controls and settings-support controls.
+- **Checkpoints / Lora**:
+  Switches extra tabs (checkpoints / lora) display state.
+- **Switch**:
+  Toggles menu items between text-input support mode and settings support mode.
 
 ### 4. Word operation features
 
-- prev / next:
+- **prev / next**:
   Move to previous/next word.
-- select:
-  Moves across words while keeping selection state.
-- emph:
+- **select**:
+  Move across words while maintaining selection state.
+- **emph**:
   Wraps selected text with `( ... )` and normalizes emphasis notation.
-- -0.1 / +0.1:
-  Decreases/increases emphasis value by 0.1 (example: `(word:1.2)`).
-- Candidate suggestions:
-  Shows up to 6 candidate words sorted by proximity learned from prompt history.
+- **-0.1 / +0.1**:
+  Adjusts the first emphasis value after cursor position by 0.1 units (e.g., `(word:1.2)`).
+- **Candidate display**:
+  Shows up to 6 candidate words sorted by proximity from prompt history and allows insertion.
 
 ### 5. History recall features
 
-- Three data sources:
-  - txt2img: txt2img output history
-  - img2img: img2img output history
-  - saved: files under outdir_save
-- Reads image metadata (Prompt / Size / Steps / Sampler / CFG / Seed / Schedule Type / Denoising, etc.) and applies it to UI.
-- Clipboard list uses infinite scroll and loads 30 items per page.
-- If Apply Seed Value is OFF, seed is not applied from history and is re-randomized.
+- Three sources available:
+  - `txt2img`: txt2img output history
+  - `img2img`: img2img output history
+  - `saved`: Files under outdir_save
+- Reads image metadata (Prompt / Size / Steps / Sampler / CFG / Seed / Schedule Type / Denoising, etc.) and applies to UI.
+- Clipboard list uses infinite scroll loading 30 items per page.
+- If "Apply Seed Value" is unchecked, seed is not applied from history and is re-randomized for each generation.
 
-### 6. Text snippet register/insert/remove features
+### 6. Text snippet registration, insertion, and removal features
 
-- Snippets are stored in LocalStorage as `sspp_text_list`.
-- Open Text menu and click labels to insert into the current prompt area.
-- If equivalent text already exists (ignoring emphasis number and repeated spaces), it is removed as a toggle action.
-- Each row supports edit/delete (delete by setting empty text).
+- Snippets are saved in LocalStorage as `sspp_text_list`.
+- Open Text menu to view the list; click labels to insert into current prompt.
+- If equivalent text already exists (numbers in emphasis notation and consecutive spaces are excluded), it removes it as a toggle action.
+- Edit and delete (by entering empty text) available via the edit button for each row.
 
-### 7. Parameter save and restore
+### 7. Parameter saving and restoration
 
-- On Generate, current settings are saved to LocalStorage.
-  - Key: `sspp_sdWebUIParameters`
-  - Includes:
+- Settings are saved to LocalStorage on Generate execution.
+  - Storage key: `sspp_sdWebUIParameters`
+  - Saved items:
     - model
     - txt2img/img2img width, height, steps, sampler, cfg_scale, seed, schedule_type
     - img2img denoising_strength
     - img2img image URL
-- While InjectCSS mode is active, positive prompt of current tab is auto-backed up every 10 seconds.
-  - Keys: `sspp_txt2img_prompt`, `sspp_img2img_prompt`
-- On InjectCSS activation, `restoreBackupParameters()` runs.
-  If current prompt differs from backup, a confirmation dialog is shown.
-- If you press OK, `loadCurrentParameters()` restores saved settings.
+- While InjectCSS is active, the positive prompt of the current tab is automatically backed up every 10 seconds.
+  - Storage keys: `sspp_txt2img_prompt`, `sspp_img2img_prompt`
+- On InjectCSS activation, `restoreBackupParameters()` is executed.
+  A confirmation dialog appears only if the current txt2img/img2img prompt differs from the backup.
+- Clicking OK executes `loadCurrentParameters()` to restore saved settings in bulk.
 
 ## Supported tabs
 
@@ -154,8 +154,8 @@ sd-webui-mobile-plus/
 
 ## Notes
 
-- PNG history extraction limit is `MAX_IMAGES` in `scripts/mobile-plus.py` (currently 200).
-- If WebUI DOM structure changes, some selectors may need updates.
+- PNG history extraction limit is `MAX_IMAGES` in `scripts/mobile-plus.py` (currently 200)
+- DOM structure changes in WebUI may require selector adjustments
 
 ## License
 
@@ -163,7 +163,17 @@ MIT License
 
 ---
 
-## Support
+## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/keim/sd-webui-mobile-plus/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/keim/sd-webui-mobile-plus/discussions)
+
+---
+
+<div align="center">
+
+**Made with passion for mobile AI art generation**
+
+⭐ Star this repository if you find it useful!
+
+</div>
