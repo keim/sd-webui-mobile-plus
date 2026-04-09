@@ -130,52 +130,43 @@ function _setupMenuButtons() {
     onclick('sspp-switch-batch', e => {
         ssppUI.changePanelUIType("batch");
     });
-    
-
     // [Menu]
     onclick('sspp-submenu-open', e => {
-        ssppUI.toggleSubmenu();
+        ssppUI.changePanelUIType("submenu");
+        ssppUI.updateSizeLabel();
     });
+
     // [Checkpoint selector]
     onclick('sspp-checkpoint', e => {
-        const uitype = ssppUI.changeSubMenuType("checkpoints");
-        ssppUI.changePanelUIType(uitype);
+        ssppUI.changePanelUIType("checkpoint");
     });
     // [Lora selector]
     onclick('sspp-lora', e => {
-        const uitype = ssppUI.changeSubMenuType("lora");
-        ssppUI.changePanelUIType(uitype);
+        ssppUI.changePanelUIType("lora");
     });
     // [Size selector]
     onclick('sspp-size', e => {
-        const uitype = ssppUI.changeSubMenuType("size");
-        ssppUI.changePanelUIType(uitype);
+        ssppUI.changePanelUIType("size");
     });
-    // [text selector]
-    onclick('sspp-text', e => {
-        const uitype = ssppUI.changeSubMenuType("text");
-        ssppUI.changePanelUIType(uitype);
-        if (uitype === "text") {
-            sspp_textSelector?.updateToggleStates();
-        }
+    // [text snippet selector]
+    onclick('sspp-textsnippet', e => {
+        ssppUI.changePanelUIType("textsnippet");
+        sspp_textSelector?.updateToggleStates();
     });
     // [txt2img Clipboard selector]
     onclick('sspp-clip-t2i', async e => {
-        const uitype = ssppUI.changeSubMenuType("clip-t2i");
-        ssppUI.changePanelUIType(uitype);
-        await sspp_clipSelector.loadBySubmenu(uitype);
+        ssppUI.changePanelUIType("clip-t2i");
+        await sspp_clipSelector?.loadBySubmenu("clip-t2i");
     });
     // [img2img Clipboard selector]
     onclick('sspp-clip-i2i', async e => {
-        const uitype = ssppUI.changeSubMenuType("clip-i2i");
-        ssppUI.changePanelUIType(uitype);
-        await sspp_clipSelector.loadBySubmenu(uitype);
+        ssppUI.changePanelUIType("clip-i2i");
+        await sspp_clipSelector?.loadBySubmenu("clip-i2i");
     });
     // [Output Clipboard selector]
     onclick('sspp-clip-out', async e => {
-        const uitype = ssppUI.changeSubMenuType("clip-out");
-        ssppUI.changePanelUIType(uitype);
-        await sspp_clipSelector.loadBySubmenu(uitype);
+        ssppUI.changePanelUIType("clip-out");
+        await sspp_clipSelector?.loadBySubmenu("clip-out");
     });
 
     // [Previous word]

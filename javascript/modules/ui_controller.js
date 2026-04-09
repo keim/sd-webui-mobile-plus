@@ -131,28 +131,15 @@ export class UIController {
     }
             
     changePanelUIType(type) {
+        // トグル式にUIタイプを切り替える（同じタイプが指定された場合はデフォルトに戻す）
+        // /**/ Todo： submenu では submenu 上のメニューすべてで default UI に戻す
         const newType = this.root().getAttribute("uitype") === type ? "default" : type;
         this.root().setAttribute("uitype", newType);
-        const extraTabName = newType === "checkpoints" || newType === "lora" ? newType : "generation";
+        // extraTabNameは、checkpoint/lora タブがあればその名前を、なければ generation タブを指定
+        const extraTabName = newType === "checkpoint" || newType === "lora" ? newType : "generation";
         const tab = this.extraTabs(extraTabName);
         if (tab) tab.click();
         return newType;
-    }
-
-    changeSubMenuType(submenu) {
-        const newSubmenu = this.panel().getAttribute("submenu") === submenu ? "default" : submenu;
-        this.panel().setAttribute("submenu", newSubmenu);
-        return newSubmenu;
-    }
-
-    toggleSubmenu() {
-        this.panel().classList.toggle("menu-opened");
-        if (this.panel().classList.contains("menu-opened")) {
-            this.updateSizeLabel();
-        } else {
-            this.changeSubMenuType("default");
-            this.changePanelUIType("default");
-        }
     }
 
     initialize() {

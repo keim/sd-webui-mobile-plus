@@ -84,17 +84,17 @@
 
 /*--- checkpoint and lora cards */
 #txt2img_lora_cards > .card,
-#txt2img_checkpoints_cards > .card, 
+#txt2img_checkpoint_cards > .card, 
 #img2img_lora_cards > .card,
-#img2img_checkpoints_cards > .card {
+#img2img_checkpoint_cards > .card {
     height: 6rem;
     width: 100%;
     margin: 0 !important;
     font-size: 75% !important;
 }
-#txt2img_checkpoints_dirs > button,
+#txt2img_checkpoint_dirs > button,
 #txt2img_lora_dirs > button,
-#img2img_checkpoints_dirs > button,
+#img2img_checkpoint_dirs > button,
 #img2img_lora_dirs > button {
     height: 1.6rem;
 }
@@ -134,15 +134,82 @@
 .contain[uitype="sampling"] #sspp-switch-sampling {
     background-color: #ccc !important;
 }
+.contain[uitype="textsnippet"] #sspp-textsnippet {
+    background-color: #ccc !important;
+}
+
+.contain[uitype="checkpoint"] #sspp-checkpoint {
+    background-color: #ccc !important;
+}
+.contain[uitype="lora"] #sspp-lora {
+    background-color: #ccc !important;
+}
 .contain[uitype="batch"] #sspp-switch-batch {   
     background-color: #ccc !important;
 }
-.contain[uitype=checkpoints] #sspp-checkpoint {
+.contain[uitype="size"] #sspp-size {
     background-color: #ccc !important;
 }
-.contain[uitype=lora] #sspp-lora {
+.contain[uitype="clip-t2i"] #sspp-clip-t2i {
     background-color: #ccc !important;
 }
+.contain[uitype="clip-i2i"] #sspp-clip-i2i {
+    background-color: #ccc !important;
+}
+.contain[uitype="clip-out"] #sspp-clip-out {
+    background-color: #ccc !important;
+}
+
+/* Show/Hide elements based on UI type */
+.contain[uitype="size"] #sspp-size-selector {
+    display: flex;
+}
+.contain[uitype="textsnippet"] #sspp-text-selector {
+    display: flex;
+}
+.contain[uitype="clip-t2i"] #sspp-clip-selector {
+    display: flex;
+}
+.contain[uitype="clip-i2i"] #sspp-clip-selector {
+    display: flex;
+}
+.contain[uitype="clip-out"] #sspp-clip-selector {
+    display: flex;
+}
+
+
+.sspp-submenu {
+    display: none !important;
+}
+.contain[uitype="submenu"] .sspp-submenu,
+.contain[uitype="checkpoint"] .sspp-submenu,
+.contain[uitype="lora"] .sspp-submenu,
+.contain[uitype="batch"] .sspp-submenu,
+.contain[uitype="size"] .sspp-submenu,
+.contain[uitype="clip-t2i"] .sspp-submenu,
+.contain[uitype="clip-i2i"] .sspp-submenu,
+.contain[uitype="clip-out"] .sspp-submenu {
+    display: flex !important;
+}
+.contain[uitype="submenu"] #sspp-submenu-open,
+.contain[uitype="checkpoint"] #sspp-submenu-open,
+.contain[uitype="lora"] #sspp-submenu-open,
+.contain[uitype="batch"] #sspp-submenu-open,
+.contain[uitype="size"] #sspp-submenu-open,
+.contain[uitype="clip-t2i"] #sspp-submenu-open,
+.contain[uitype="clip-i2i"] #sspp-submenu-open,
+.contain[uitype="clip-out"] #sspp-submenu-open {
+    background-color: #ccc !important;
+}
+
+.sspp-texteditor {
+    display: none !important;
+}
+.contain[uitype="default"] .sspp-texteditor,
+.contain[uitype="nega"] .sspp-texteditor {
+    display: flex !important;
+}
+
 
 /*
 #txt2img_settings,
@@ -268,16 +335,18 @@
     display: flex;
 }
 
-.contain[uitype="checkpoints"] #quicksettings {
+.contain[uitype="checkpoint"] #quicksettings {
     display: flex;
 }
-.contain[uitype="checkpoints"] #tabs>.tab-nav {
+.contain[uitype="checkpoint"] #tabs>.tab-nav {
     display: none;
 }
+.contain[uitype="submenu"] #txt2img_prompt_row,
+.contain[uitype="submenu"] #img2img_prompt_row,
 .contain[uitype="lora"] #txt2img_prompt_row,
 .contain[uitype="lora"] #img2img_prompt_row,
-.contain[uitype="text"] #txt2img_prompt_row,
-.contain[uitype="text"] #img2img_prompt_row,
+.contain[uitype="textsnippet"] #txt2img_prompt_row,
+.contain[uitype="textsnippet"] #img2img_prompt_row,
 .contain[uitype="clip-t2i"] #txt2img_prompt_row,
 .contain[uitype="clip-t2i"] #img2img_prompt_row,
 .contain[uitype="clip-i2i"] #txt2img_prompt_row,
