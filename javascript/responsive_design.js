@@ -137,8 +137,8 @@ function _setupMenuButtons() {
     });
 
     // [Checkpoint selector]
-    onclick('sspp-checkpoint', e => {
-        ssppUI.changePanelUIType("checkpoint");
+    onclick('sspp-checkpoints', e => {
+        ssppUI.changePanelUIType("checkpoints");
     });
     // [Lora selector]
     onclick('sspp-lora', e => {

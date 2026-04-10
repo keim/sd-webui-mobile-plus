@@ -71,7 +71,7 @@ export class UIController {
             img2img_refiner: "#img2img_enable",
         };
         this.models = {
-            checkpoint: "#setting_sd_model_checkpoint input",
+            checkpoints: "#setting_sd_model_checkpoint input",
         };
         this.fileinput = {
             img2img: "#img2img_img2img_tab input[type=\"file\"]",
@@ -135,8 +135,8 @@ export class UIController {
         // /**/ Todo： submenu では submenu 上のメニューすべてで default UI に戻す
         const newType = this.root().getAttribute("uitype") === type ? "default" : type;
         this.root().setAttribute("uitype", newType);
-        // extraTabNameは、checkpoint/lora タブがあればその名前を、なければ generation タブを指定
-        const extraTabName = newType === "checkpoint" || newType === "lora" ? newType : "generation";
+        // extraTabNameは、checkpoints/lora タブがあればその名前を、なければ generation タブを指定
+        const extraTabName = newType === "checkpoints" || newType === "lora" ? newType : "generation";
         const tab = this.extraTabs(extraTabName);
         if (tab) tab.click();
         return newType;
@@ -150,11 +150,6 @@ export class UIController {
 
         // イベント受け取り要素(gradioで再レンダリングの影響を受けない要素)の取得
         this._eventReciever = document; // document.getElementById("tabs");
-
-        // タブ切り替え時のイベントリスナー登録
-        this.addSafeEventListener("#tabs>.tab-nav>button", "click", () => {
-            this.updateSizeLabel();
-        });
 
         // プロンプトエリアへのフォーカス追跡（textareasマップを利用）
         const promptSelectors = Object.values(this.textareas).join(", ");
@@ -198,11 +193,11 @@ export class UIController {
     }
 
     // UIController 経由でイベントリスナーを登録
+    // gradio では、イベント発行時に remove されるため、親要素を含めた query は指定できない。
     addSafeEventListener(query, event, handler) {
         if (this._eventReciever) {
             this._eventReciever.addEventListener(event, (e) => {
                 const target = e.target.closest(query);
-                console.log(`event: query=${query}, event=${event}, target=${Boolean(target)}`);
                 if (target) handler(e, target);
             });
         }
@@ -518,9 +513,9 @@ export class UIController {
         }
     }
 
-    // 現在のモデル(checkpoint)を取得
+    // 現在のモデル(checkpoints)を取得
     _getCurrentModel() {
-        const elem = document.querySelector(this.models.checkpoint);
+        const elem = document.querySelector(this.models.checkpoints);
         return elem ? elem.value : null;
     }
 
@@ -568,9 +563,9 @@ export class UIController {
         return params;
     }
 
-    // モデル(checkpoint)を設定
+    // モデル(checkpoints)を設定
     _setModel(modelName) {
-        const selector = this.models.checkpoint;
+        const selector = this.models.checkpoints;
         const elem = document.querySelector(selector);
         if (elem) {
             this._updateValue(elem, modelName);

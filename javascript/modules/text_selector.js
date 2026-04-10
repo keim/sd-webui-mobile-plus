@@ -133,7 +133,6 @@ export class TextSelector {
     _onSelectText(index) {
         // インデックスに対応するテキストを取得
         const text = this._list[index];
-        console.log("いんでっくすクリック:", text === "");
         if (text === "") {
             console.log("空文字クリック")
             this._onEditText(index);

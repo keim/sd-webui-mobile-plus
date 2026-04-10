@@ -138,7 +138,7 @@
     background-color: #ccc !important;
 }
 
-.contain[uitype="checkpoint"] #sspp-checkpoint {
+.contain[uitype="checkpoints"] #sspp-checkpoints {
     background-color: #ccc !important;
 }
 .contain[uitype="lora"] #sspp-lora {
@@ -182,7 +182,7 @@
     display: none !important;
 }
 .contain[uitype="submenu"] .sspp-submenu,
-.contain[uitype="checkpoint"] .sspp-submenu,
+.contain[uitype="checkpoints"] .sspp-submenu,
 .contain[uitype="lora"] .sspp-submenu,
 .contain[uitype="batch"] .sspp-submenu,
 .contain[uitype="size"] .sspp-submenu,
@@ -192,7 +192,7 @@
     display: flex !important;
 }
 .contain[uitype="submenu"] #sspp-submenu-open,
-.contain[uitype="checkpoint"] #sspp-submenu-open,
+.contain[uitype="checkpoints"] #sspp-submenu-open,
 .contain[uitype="lora"] #sspp-submenu-open,
 .contain[uitype="batch"] #sspp-submenu-open,
 .contain[uitype="size"] #sspp-submenu-open,
@@ -335,10 +335,10 @@
     display: flex;
 }
 
-.contain[uitype="checkpoint"] #quicksettings {
+.contain[uitype="checkpoints"] #quicksettings {
     display: flex;
 }
-.contain[uitype="checkpoint"] #tabs>.tab-nav {
+.contain[uitype="checkpoints"] #tabs>.tab-nav {
     display: none;
 }
 .contain[uitype="submenu"] #txt2img_prompt_row,
