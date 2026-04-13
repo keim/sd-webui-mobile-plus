@@ -134,7 +134,6 @@ export class TextSelector {
         // インデックスに対応するテキストを取得
         const text = this._list[index];
         if (text === "") {
-            console.log("空文字クリック")
             this._onEditText(index);
             return;
         }

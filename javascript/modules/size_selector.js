@@ -38,6 +38,11 @@ export class SizeSelector {
         }
     }
 
+    clearCanvas(){
+        const context = this._aspectCanvas?.getContext("2d");
+        if (!context) return;
+        context.clearRect(0, 0, this._aspectCanvas.width, this._aspectCanvas.height);
+    }
 
     _onAspectButtonClick(button) {
         this._setActiveAspectButton(button);

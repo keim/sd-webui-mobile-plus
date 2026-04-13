@@ -126,9 +126,10 @@ function _setupMenuButtons() {
     onclick('sspp-switch-sampling', e => {
         ssppUI.changePanelUIType("sampling");
     });
-    // [Batch Props]
-    onclick('sspp-switch-batch', e => {
-        ssppUI.changePanelUIType("batch");
+    // [text snippet selector]
+    onclick('sspp-textsnippet', e => {
+        ssppUI.changePanelUIType("textsnippet");
+        sspp_textSelector?.updateToggleStates();
     });
     // [Menu]
     onclick('sspp-submenu-open', e => {
@@ -148,10 +149,9 @@ function _setupMenuButtons() {
     onclick('sspp-size', e => {
         ssppUI.changePanelUIType("size");
     });
-    // [text snippet selector]
-    onclick('sspp-textsnippet', e => {
-        ssppUI.changePanelUIType("textsnippet");
-        sspp_textSelector?.updateToggleStates();
+    // [Batch Props]
+    onclick('sspp-switch-batch', e => {
+        ssppUI.changePanelUIType("batch");
     });
     // [txt2img Clipboard selector]
     onclick('sspp-clip-t2i', async e => {

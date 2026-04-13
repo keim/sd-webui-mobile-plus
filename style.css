@@ -425,8 +425,9 @@ button.sspp-text-item-edit {
 }
 
 #sspp-generate {
-    padding: 0.6rem 0.6rem;
+    padding: 0rem 0.6rem;
     font-size: 1.2rem;
+    height: 2rem;
 }
 #sspp-candidate {
     height: 2rem;

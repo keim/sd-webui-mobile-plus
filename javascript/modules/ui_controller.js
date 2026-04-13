@@ -64,6 +64,9 @@ export class UIController {
             img2img_styles: "#img2img_styles input",
             img2img_styles_edit_select: "#img2img_styles_edit_select input",
             img2img_script_list: "#img2img_script_container #script_list input",
+            extras_upscaler_1: "#extras_upscaler_1 input",
+            extras_upscaler_2: "#extras_upscaler_2 input",
+            extras_upscaler_2_visibility: "#extras_upscaler_2_visibility input",
         };
         this.uis = {
             txt2img_hires: "#txt2img_hr",
@@ -79,6 +82,8 @@ export class UIController {
             inpaint: "#img2img_inpaint_tab input[type=\"file\"]",
             "inpaint sketch": "#img2img_inpaint_sketch_tab input[type=\"file\"]",
             "inpaint upload": "#img2img_inpaint_upload_tab input[type=\"file\"]",
+            extras_image: "#extras_image input[type=\"file\"]",
+            pnginfo_image: "#pnginfo_image input[type=\"file\"]",
         };
         this.fileimg = {
             img2img: "#img2img_img2img_tab img",
@@ -88,7 +93,8 @@ export class UIController {
         this._lastPromptArea = null;
         this._eventReciever = null;
         this._backupPromptCronId = null;
-
+        this._submenuTabNames = ["checkpoints", "lora", "batch", "size", "clip-t2i", "clip-i2i", "clip-out"];
+        this._submenuTab = "size";
         this.fileInfoAPI = fileInfoAPI;
     }
 
@@ -131,25 +137,46 @@ export class UIController {
     }
             
     changePanelUIType(type) {
-        // トグル式にUIタイプを切り替える（同じタイプが指定された場合はデフォルトに戻す）
-        // /**/ Todo： submenu では submenu 上のメニューすべてで default UI に戻す
-        const newType = this.root().getAttribute("uitype") === type ? "default" : type;
-        this.root().setAttribute("uitype", newType);
+        // submenu ボタン：現在が submenu内の機能(_submenuTabNames) であれば default に、そうでなければ submenu内の機能に切り替え
+        // submenu内の機能：選択された機能パネルに切り替える
+        // submenu外の機能：トグル形式で"default"と相互に切り替える
+        const newType = type => {
+            const current = this.root().getAttribute("uitype");
+            if (type === "submenu") return this._submenuTabNames.includes(current) ? "default" : this._submenuTab;
+            if (this._submenuTabNames.includes(type)) return this._submenuTab = type;
+            return current === type ? "default" : type;
+        }
+        const uiType = newType(type);
+        this.root().setAttribute("uitype", uiType);
         // extraTabNameは、checkpoints/lora タブがあればその名前を、なければ generation タブを指定
-        const extraTabName = newType === "checkpoints" || newType === "lora" ? newType : "generation";
+        const extraTabName = uiType === "checkpoints" || uiType === "lora" ? uiType : "generation";
         const tab = this.extraTabs(extraTabName);
         if (tab) tab.click();
-        return newType;
+        return uiType;
     }
 
     initialize() {
         // 全タブの名前を取得
         this._tabNames = [];
+        this._tabClassName = "";
         const tabButtons = document.querySelectorAll("#tabs>.tab-nav>button");
-        tabButtons.forEach((btn) => this._tabNames.push(btn.textContent.trim().toLowerCase()));
+        tabButtons.forEach((btn) => {
+            this._tabNames.push(btn.textContent.trim().toLowerCase())
+        });
 
         // イベント受け取り要素(gradioで再レンダリングの影響を受けない要素)の取得
         this._eventReciever = document; // document.getElementById("tabs");
+
+        // ボタンクリックでタブ切り替えを検出してサイズラベルを更新
+        this.addSafeEventListener("button", "click", (e, target) => {
+            const buttonFaceText = target.textContent.trim().toLowerCase();
+            console.log(buttonFaceText);
+            // タブ切り替えの検出
+            if (this._tabNames.includes(buttonFaceText)) {
+                ssppUI.updateSizeLabel();
+                sspp_sizeSelector.clearCanvas();
+            }
+        });
 
         // プロンプトエリアへのフォーカス追跡（textareasマップを利用）
         const promptSelectors = Object.values(this.textareas).join(", ");
@@ -180,6 +207,8 @@ export class UIController {
             "img2img_styles",
             "img2img_styles_edit_select",
             "img2img_script_list",
+            "extras_upscaler_1",
+            "extras_upscaler_2",
         ];
         dropdownInputKeys.forEach((key) => {
             const selector = this.inputs[key];
@@ -505,6 +534,9 @@ export class UIController {
             if (parameters.img2imgURL) {
                 await this.setupImg2ImgImageFromUrl(parameters.img2imgURL);
             }
+
+            // サイズラベルの更新
+            this.updateSizeLabel();
 
             return true;
         } catch (e) {
