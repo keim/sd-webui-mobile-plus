@@ -11,35 +11,38 @@
     </div>
     <div id="sspp-on-ui" class="sspp-panel">
         <div id="sspp-size-selector" class="sspp-menu-content">
+            <div id="sspp-size-aspect-selector" class="sspp-size-input-row">
+                <div class="sspp-size-aspect-grid">
+                    <button type="button" id="sspp-aspect-1-1" class="sspp-aspect-button" data-aspect="1:1">1:1</button>
+                    <button type="button" id="sspp-aspect-5-4" class="sspp-aspect-button" data-aspect="5:4">5:4</button>
+                    <button type="button" id="sspp-aspect-4-3" class="sspp-aspect-button" data-aspect="4:3">4:3<br>Standard</button>
+                    <button type="button" id="sspp-aspect-3-2" class="sspp-aspect-button" data-aspect="3:2">3:2<br>Film</button>
+                    <button type="button" id="sspp-aspect-16-9" class="sspp-aspect-button" data-aspect="16:9">16:9<br>Full HD</button>
+                    <button type="button" id="sspp-aspect-21-9" class="sspp-aspect-button" data-aspect="21:9">21:9<br>Cinema</button>
+                    <button type="button" id="sspp-aspect-4-5" class="sspp-aspect-button" data-aspect="4:5">4:5<br>Instagram</button>
+                    <button type="button" id="sspp-aspect-3-4" class="sspp-aspect-button" data-aspect="3:4">3:4</button>
+                    <button type="button" id="sspp-aspect-2-3" class="sspp-aspect-button" data-aspect="2:3">2:3</button>
+                    <button type="button" id="sspp-aspect-9-16" class="sspp-aspect-button" data-aspect="9:16">9:16</button>
+                    <button type="button" id="sspp-aspect-9-21" class="sspp-aspect-button" data-aspect="9:21">9:21<br>SmartPhone</button>
+                    <canvas id="sspp-aspect-canvas" width="512" height="512"></canvas>
+                </div>
+            </div>
             <div class="sspp-size-input-row">
                 <div class="sspp-size-input-group">
                     <label for="sspp-width-select">Square width</label>
                     <select id="sspp-width-select">
-                        <option value="768">768px(SD1.5)</option>
-                        <option value="1024">1024px(SDXL)</option>
-                        <option value="1280" selected>1280px</option>
-                        <option value="1600">1600px</option>
+                        <option value="512,64">512px(SD1.5)</option>
+                        <option value="768,64">768px</option>
+                        <option value="960,40">960px(HD)</option>
+                        <option value="1024,64">1024px(SDXL)</option>
+                        <option value="1280,64" selected>1280px</option>
+                        <option value="1440,40">1440px(FullHD)</option>
+                        <option value="1600,40">1600px</option>
                     </select>
                 </div>
                 <div class="sspp-size-input-group">
                     <label for="sspp-block-input">Block size</label>
                     <input type="number" id="sspp-block-input" value="64" min="1" />
-                </div>
-            </div>
-            <div id="sspp-size-aspect-selector" class="sspp-size-input-row">
-                <div class="sspp-size-aspect-grid">
-                    <button type="button" id="sspp-aspect-1-1" class="sspp-aspect-button" data-aspect="aspect1-1">1:1</button>
-                    <button type="button" id="sspp-aspect-5-4" class="sspp-aspect-button" data-aspect="aspect5-4">5:4</button>
-                    <button type="button" id="sspp-aspect-4-3" class="sspp-aspect-button" data-aspect="aspect4-3">4:3<br>Standard</button>
-                    <button type="button" id="sspp-aspect-3-2" class="sspp-aspect-button" data-aspect="aspect3-2">3:2<br>Film</button>
-                    <button type="button" id="sspp-aspect-16-9" class="sspp-aspect-button" data-aspect="aspect16-9">16:9<br>Full HD</button>
-                    <button type="button" id="sspp-aspect-21-9" class="sspp-aspect-button" data-aspect="aspect21-9">21:9<br>Cinema</button>
-                    <button type="button" id="sspp-aspect-4-5" class="sspp-aspect-button" data-aspect="aspect4-5">4:5<br>Instagram</button>
-                    <button type="button" id="sspp-aspect-3-4" class="sspp-aspect-button" data-aspect="aspect3-4">3:4</button>
-                    <button type="button" id="sspp-aspect-2-3" class="sspp-aspect-button" data-aspect="aspect2-3">2:3</button>
-                    <button type="button" id="sspp-aspect-9-16" class="sspp-aspect-button" data-aspect="aspect9-16">9:16</button>
-                    <button type="button" id="sspp-aspect-9-21" class="sspp-aspect-button" data-aspect="aspect9-21">9:21</button>
-                    <canvas id="sspp-aspect-canvas" width="512" height="512"></canvas>
                 </div>
             </div>
         </div>
@@ -58,17 +61,6 @@
             </div>
         </div>
         <div id="sspp-clip-menu" class="sspp-panel-column sspp-submenu">
-            <button id="sspp-clip-t2i">
-                <span class="sspp-button-label">txt2img</span>
-            </button>
-            <button id="sspp-clip-i2i">
-                <span class="sspp-button-label">img2img</span>
-            </button>
-            <button id="sspp-clip-out">
-                <span class="sspp-button-label">saved</span>
-            </button>
-        </div>
-        <div id="sspp-2nd-menu" class="sspp-panel-column sspp-submenu">
             <button id="sspp-checkpoints">
                 <span class="sspp-button-label">Checkpoints</span>
             </button>
@@ -78,8 +70,14 @@
             <button id="sspp-switch-batch">
                 <span class="sspp-button-label">Batch</span>
             </button>
-            <button id="sspp-size">
-                <span class="sspp-button-label">Size</span>
+            <button id="sspp-clip-t2i">
+                <span class="sspp-button-label">txt2img</span>
+            </button>
+            <button id="sspp-clip-i2i">
+                <span class="sspp-button-label">img2img</span>
+            </button>
+            <button id="sspp-clip-out">
+                <span class="sspp-button-label">saved</span>
             </button>
         </div>
         <div id="sspp-candidate" class="sspp-panel-column sspp-texteditor">
@@ -92,28 +90,17 @@
             <button id="sspp-ratedown">-0.1</button>
             <button id="sspp-rateup">+0.1</button>
         </div>
-        <div id="sspp-generate-button" class="sspp-panel-column">
-            <button id="sspp-generate">Generate</button>
+        <div id="sspp-generators" class="sspp-panel-column">
+            <button id="sspp-generate" style="flex-grow: 3;">Generate</button>
+            <button id="sspp-size" style="flex-grow: 1;"></button>
         </div>
         <div id="sspp-switch-page" class="sspp-panel-column">
-            <button id="sspp-extract-css">
-                <span class="sspp-button-label-on">ExtractCSS</span>
-            </button>
-            <button id="sspp-switch-nega">
-                <span class="sspp-button-label">Negative</span>
-            </button>
-            <button id="sspp-switch-rendering">
-                <span class="sspp-button-label">Render</span>
-            </button>
-            <button id="sspp-switch-sampling">
-                <span class="sspp-button-label">Sampler</span>
-            </button>
-            <button id="sspp-textsnippet">
-                <span class="sspp-button-label">Snippet</span>
-            </button>
-            <button id="sspp-submenu-open">
-                <span class="sspp-button-label">Switch</span>
-            </button>
+            <button id="sspp-extract-css">ExtractCSS</button>
+            <button id="sspp-switch-nega">Negative</button>
+            <button id="sspp-switch-rendering">Render</button>
+            <button id="sspp-switch-sampling">Sampler</button>
+            <button id="sspp-textsnippet">Snippet</button>
+            <button id="sspp-submenu-open">Switch</button>
         </div>
     </div>
 </div>

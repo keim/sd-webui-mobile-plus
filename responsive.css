@@ -29,13 +29,9 @@
 }
 /*--- generate button */
 #txt2img_generate_box,
-#img2img_generate_box {
+#img2img_generate_box,
+#extras_generate_box {
     display: none !important;
-}
-#sspp-generate {
-    color: var(--button-primary-text-color) !important;
-    border-color: var(--button-primary-border-color) !important;
-    background: var(--button-primary-background-fill) !important;
 }
 /*--- result screen */
 #txt2img_results,
@@ -185,7 +181,6 @@
 .contain[uitype="checkpoints"] .sspp-submenu,
 .contain[uitype="lora"] .sspp-submenu,
 .contain[uitype="batch"] .sspp-submenu,
-.contain[uitype="size"] .sspp-submenu,
 .contain[uitype="clip-t2i"] .sspp-submenu,
 .contain[uitype="clip-i2i"] .sspp-submenu,
 .contain[uitype="clip-out"] .sspp-submenu {
@@ -195,7 +190,6 @@
 .contain[uitype="checkpoints"] #sspp-submenu-open,
 .contain[uitype="lora"] #sspp-submenu-open,
 .contain[uitype="batch"] #sspp-submenu-open,
-.contain[uitype="size"] #sspp-submenu-open,
 .contain[uitype="clip-t2i"] #sspp-submenu-open,
 .contain[uitype="clip-i2i"] #sspp-submenu-open,
 .contain[uitype="clip-out"] #sspp-submenu-open {

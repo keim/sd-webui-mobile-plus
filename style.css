@@ -41,6 +41,7 @@
     flex: 1 1 0;
     display: flex;
     justify-content: center;
+    align-items: center;
     height: 2.8rem;
     padding: 1.8rem 0rem 0rem 0rem;
     cursor: pointer;
@@ -173,6 +174,9 @@
     background-image: none;
     background-color: #fff;
     color: #333;
+}
+#sspp-size-aspect-selector .sspp-aspect-button.selected {
+    background-color: #ccc !important;
 }
 #sspp-aspect-1-1  { grid-column: 1; grid-row: 1; }
 #sspp-aspect-5-4  { grid-column: 2; grid-row: 1; }
@@ -384,9 +388,11 @@
 #sspp-lora {
     background-image: url('./svg/image-multiple.svg');
 }
+/*
 #sspp-size {
     background-image: url('./svg/resize.svg');
 }
+*/
 #sspp-textsnippet {
     background-image: url('./svg/clipboard-text-multiple.svg');
 }
@@ -423,13 +429,19 @@
 button.sspp-text-item-edit {
     background-image: url('./svg/pencil.svg');
 }
-
 #sspp-generate {
-    padding: 0rem 0.6rem;
+    color: var(--button-primary-text-color) !important;
+    border-color: var(--button-primary-border-color) !important;
+    background: var(--button-primary-background-fill) !important;
+    padding: 0;
     font-size: 1.2rem;
-    height: 2rem;
+}
+#sspp-size {
+    padding: 0;
+    font-size: 0.9rem;
 }
 #sspp-candidate {
+    padding: 0;
     height: 2rem;
 }
 #sspp-candidate button {

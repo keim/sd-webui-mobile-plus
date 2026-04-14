@@ -8,6 +8,8 @@ export class SizeSelector {
         this._aspectButtons = [];
         this._selectedAspectButton = null;
         this._aspectCanvas = null;
+        this._squareWidth = 1280;
+        this._blockSize = 64;
     }
 
     initialize() {
@@ -21,43 +23,64 @@ export class SizeSelector {
         this._aspectButtons = Array.from(this._el.querySelectorAll("button.sspp-aspect-button"));
 
         if (this._widthSelect) {
-            this._widthSelect.addEventListener("change", () => this._onAspectInputChange());
+            this._widthSelect.addEventListener("change", () => this._onWidthSelectChange());
         }
         if (this._blockInput) {
-            this._blockInput.addEventListener("input", () => this._onAspectInputChange());
+            this._blockInput.addEventListener("input", () => this._onBlockSizeInput());
         }
 
         this._aspectButtons.forEach((button) => {
             button.addEventListener("click", () => this._onAspectButtonClick(button));
         });
 
-        const defaultAspectButton = this._el.querySelector(".sspp-aspect-1-1");
+        const defaultAspectButton = this._el.querySelector("#sspp-aspect-1-1");
         if (defaultAspectButton) {
             this._setActiveAspectButton(defaultAspectButton);
             this._renderAspectPreview(this._getSelectedAspectRatio());
         }
     }
 
-    clearCanvas(){
+    clearSelection(){
         const context = this._aspectCanvas?.getContext("2d");
         if (!context) return;
         context.clearRect(0, 0, this._aspectCanvas.width, this._aspectCanvas.height);
+        this._setActiveAspectButton(null);
     }
 
     _onAspectButtonClick(button) {
         this._setActiveAspectButton(button);
+        this._updateSquareWidthAndBlockSize();
+        this._updateBlockSize();
         this._applyAspectSelection();
     }
 
-    _onAspectInputChange() {
-        if (!this._selectedAspectButton) return;
+    _onWidthSelectChange() {
+        if (!this._selectedAspectButton || !this._blockInput) return;
+        this._updateSquareWidthAndBlockSize();
+        this._blockInput.value = this._blockSize;
         this._applyAspectSelection();
+    }
+
+    _onBlockSizeInput() {
+        if (!this._selectedAspectButton || !this._blockInput) return;
+        this._updateBlockSize();
+        this._applyAspectSelection();
+    }
+
+    _updateSquareWidthAndBlockSize() {
+        const [squareWidth, blockSize] = (this._widthSelect?.value ?? "0,1").split(",").map(Number);
+        this._squareWidth = squareWidth;
+        this._blockSize = blockSize;
+    }
+
+    _updateBlockSize() {
+        this._blockSize = Number.parseInt(this._blockInput?.value ?? "", 10);
     }
 
     _applyAspectSelection() {
         const ratio = this._getSelectedAspectRatio();
-        const squareWidth = Number.parseInt(this._widthSelect?.value ?? "", 10);
-        const blockSize = Number.parseInt(this._blockInput?.value ?? "", 10);
+        const squareWidth = this._squareWidth;
+        const blockSize = this._blockSize;
 
         if (!ratio || !Number.isFinite(squareWidth) || squareWidth <= 0 || !Number.isFinite(blockSize) || blockSize <= 0) {
             return;
@@ -81,10 +104,9 @@ export class SizeSelector {
     }
 
     _getSelectedAspectRatio() {
-        const aspectName = this._selectedAspectButton?.dataset.aspect ?? "";
-        const matches = aspectName.match(/^aspect(\d+)-(\d+)$/);
-        if (!matches) return null;
-        return [Number.parseInt(matches[1], 10), Number.parseInt(matches[2], 10)];
+        const [width, height] = (this._selectedAspectButton?.dataset.aspect ?? "1:1").split(":").map(Number);
+        if (!Number.isFinite(width) || !Number.isFinite(height)) return [1, 1];
+        return [width, height];
     }
 
     _calculateAspectSize(squareWidth, blockSize, widthRatio, heightRatio) {

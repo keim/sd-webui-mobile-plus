@@ -93,8 +93,8 @@ export class UIController {
         this._lastPromptArea = null;
         this._eventReciever = null;
         this._backupPromptCronId = null;
-        this._submenuTabNames = ["checkpoints", "lora", "batch", "size", "clip-t2i", "clip-i2i", "clip-out"];
-        this._submenuTab = "size";
+        this._submenuTabNames = ["checkpoints", "lora", "batch", "clip-t2i", "clip-i2i", "clip-out"];
+        this._submenuTab = "checkpoints";
         this.fileInfoAPI = fileInfoAPI;
     }
 
@@ -170,11 +170,10 @@ export class UIController {
         // ボタンクリックでタブ切り替えを検出してサイズラベルを更新
         this.addSafeEventListener("button", "click", (e, target) => {
             const buttonFaceText = target.textContent.trim().toLowerCase();
-            console.log(buttonFaceText);
             // タブ切り替えの検出
             if (this._tabNames.includes(buttonFaceText)) {
                 ssppUI.updateSizeLabel();
-                sspp_sizeSelector.clearCanvas();
+                sspp_sizeSelector.clearSelection();
             }
         });
 
@@ -309,8 +308,8 @@ export class UIController {
     updateSizeLabel() {
         const size = this.sizeInputs();
         if (!size) return;
-        const sizeLabel = document.querySelector("#sspp-size>span.sspp-button-label");
-        if (sizeLabel) sizeLabel.textContent = `${size[0].value}x${size[1].value}`;
+        const sizeLabel = document.querySelector("#sspp-size");
+        if (sizeLabel) sizeLabel.textContent = `${size[0].value} x ${size[1].value}`;
     }
 
     // txt2img と img2img の追加タブ要素を取得
