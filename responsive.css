@@ -38,6 +38,32 @@
 #img2img_results {
     margin: 0 !important;
 }
+
+/*--- i2i original image */
+.contain[uitype="default"] #mode_img2img>.tab-nav {
+    display: none !important;
+}
+.contain[uitype="default"] #mode_img2img>.tabitem>.gap {
+    flex-direction: row !important ;
+}
+.contain[uitype="default"] #mode_img2img>.tabitem>.gap {
+    flex-direction: row !important ;
+}
+#img2img_image,
+#img2img_sketch,
+#img2maskimg, 
+#inpaint_sketch {
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+}
+.contain[uitype="default"] #img2img_image,
+.contain[uitype="default"] #img2img_sketch,
+.contain[uitype="default"] #img2maskimg, 
+.contain[uitype="default"] #inpaint_sketch {
+    min-width: min(120px, 100%) !important;
+    width: 120px !important;
+}
 /*--- i2i copy buttons */
 #img2img_copy_to_img2img > button,
 #img2img_copy_to_inpaint > button,
@@ -45,8 +71,49 @@
 #img2img_copy_to_inpaint_sketch > button {
     flex: 1 1 0 !important;
     min-width: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
 }
+/*--- i2i copy buttons */
+.contain[uitype="default"] #img2img_copy_to_img2img,
+.contain[uitype="default"] #img2img_copy_to_inpaint,
+.contain[uitype="default"] #img2img_copy_to_sketch,
+.contain[uitype="default"] #img2img_copy_to_inpaint_sketch{
+    flex-direction: column !important ;
+    gap: 0.2rem !important;
+}
+
 /*--- i2i resize mode buttons */
+#img2img_settings fieldset {
+    display: flex;
+    flex-flow: row wrap !important;
+}
+#img2img_settings fieldset > .wrap {
+    width: 100%;
+    gap: 0.2rem;
+}
+#img2img_settings fieldset > .wrap > label {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--button-small-text-size) !important;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+#img2img_settings fieldset > .wrap > label.selected {
+    background: var(--button-secondary-background-fill) !important;
+}
+#img2img_settings fieldset > .wrap > label > input {
+    display: none !important;
+}
+/*
 #resize_mode > .wrap {
     width: 100%;
     gap: 0.2rem;
@@ -58,9 +125,7 @@
     font-size: var(--button-large-text-size) !important;
     text-align: center;
 }
-#resize_mode > .wrap > label.selected {
-    background: var(--button-secondary-background-fill) !important;
-}
+*/
 #resize_mode > .wrap > label:nth-child(1)::after {
     content: "Resize";
 }
@@ -73,7 +138,6 @@
 #resize_mode > .wrap > label:nth-child(4)::after {
     content: "Upscale";
 }
-#resize_mode > .wrap > label > input,
 #resize_mode > .wrap > label > span {
     display: none !important;
 }
@@ -93,15 +157,6 @@
 #img2img_checkpoints_dirs > button,
 #img2img_lora_dirs > button {
     height: 1.6rem;
-}
-/*--- i2i image inputbox */
-#img2img_image,
-#img2img_sketch,
-#img2maskimg, 
-#inpaint_sketch {
-    height: auto !important;
-    aspect-ratio: 1 / 1;
-    object-fit: contain;
 }
 /*--- Hidden parts */
 #txt2img_extra_tabs>.tab-nav,
@@ -231,8 +286,8 @@
 #img2img_cfg_scale,
 #img2img_mask_blur,
 #img2img_mask_alpha,
-#img2img_inpainting_fill,
-#img2img_inpaint_full_res,
+#img2img_settings fieldset#img2img_inpainting_fill,
+#img2img_settings fieldset#img2img_inpaint_full_res,
 #img2img_inpaint_full_res_padding,
 
 #sampler_selection_txt2img,
@@ -261,9 +316,10 @@
 .contain[uitype="default"] #txt2img_prompt_row,
 .contain[uitype="default"] #txt2img_cfg_scale,
 .contain[uitype="default"] #img2img_prompt_row,
-.contain[uitype="default"] #img2img_cfg_scale{
+.contain[uitype="default"] #img2img_cfg_scale {
     display: flex;
 }
+.contain[uitype="default"] #mode_img2img,
 .contain[uitype="default"] #img2img_denoising_strength {
     display: block;
 }
@@ -292,8 +348,8 @@
 .contain[uitype="rendering"] #img2img_dimensions_row,
 .contain[uitype="rendering"] #img2img_mask_blur,
 .contain[uitype="rendering"] #img2img_mask_alpha,
-.contain[uitype="rendering"] #img2img_inpainting_fill,
-.contain[uitype="rendering"] #img2img_inpaint_full_res,
+.contain[uitype="rendering"] #img2img_settings fieldset#img2img_inpainting_fill,
+.contain[uitype="rendering"] #img2img_settings fieldset#img2img_inpaint_full_res,
 .contain[uitype="rendering"] #img2img_inpaint_full_res_padding {
     display: flex;
 }
@@ -349,7 +405,6 @@
 .contain[uitype="clip-out"] #img2img_prompt_row {
     display: flex;
 }
-
 
 /* Allow vertical scrolling when entering fullscreen (Mobile & Desktop) */
 html:fullscreen, html:-webkit-full-screen,

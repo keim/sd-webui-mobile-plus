@@ -335,6 +335,8 @@ export class UIController {
         const generateButton = document.getElementById(`${tabName}_generate`);
         if (!generateButton) return false;
         generateButton.click();
+        // defaultタブに切り替える
+        this.changePanelUIType("default");
         return true;
     }
 
