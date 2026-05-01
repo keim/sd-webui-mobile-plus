@@ -176,7 +176,7 @@ export class UIController {
                 sspp_sizeSelector.clearSelection();
             }
         });
-
+        
         // プロンプトエリアへのフォーカス追跡（textareasマップを利用）
         const promptSelectors = Object.values(this.textareas).join(", ");
         const promptAreas = document.querySelectorAll(promptSelectors);
@@ -184,6 +184,15 @@ export class UIController {
             textarea.addEventListener("focusin", () => {
                 this._lastPromptArea = textarea;
             });
+        });
+
+        // input[type=range]が変更されたら、現在フォーカスが当たっているUIのフォーカスを外す
+        // （スマホでスライダー操作後にキーボードが消えない問題の対策）
+        this.addSafeEventListener("input[type=range]", "change", () => {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.tagName === "INPUT" && activeElement.type === "range") {
+                activeElement.blur();                // フォーカスが外れた後に、最後にフォーカスが当たっていたプロンプトエリアも念のためフォーカスを外す（これもスマホでスライダー操作後にキーボードが消えない問題の対策）
+            }
         });
 
         // パネルUIタイプ初期化
@@ -461,6 +470,7 @@ export class UIController {
         const tabName = this.currentTabName();
         if (tabName !== "txt2img" && tabName !== "img2img") return;
 
+        // 反映するパラメータのマッピングを定義
         const parameterMap = [
             { key: `${tabName}_steps`, value: image.steps },
             { key: `${tabName}_sampler`, value: image.sampler },
@@ -472,24 +482,30 @@ export class UIController {
             parameterMap.push({ key: `${tabName}_scale`, value: image.denoising_strength });
         }
 
+        // パラメータを適用
         parameterMap.forEach(({ key, value }) => {
             if (value !== null && value !== undefined) {
                 this._setInputValue(key, value);
             }
         });
 
-        // img2img タブでURLがある場合は画像をセット
+        // img2img タブで URL がある場合は画像をセット
         if (tabName === "img2img" && image.url) {
             await this.setupImg2ImgImageFromUrl(image.url);
         }
 
+        // 変更後のパラメータを保存
+        this.saveCurrentParameters();
+        
+        // サイズラベルの更新
         this.updateSizeLabel();
     }
 
     // 現在のパラメータ設定値をlocalstorageに保存
     saveCurrentParameters() {
-        const txt2imgParams = this._getCurrentTabParameters("txt2img");
-        const img2imgParams = this._getCurrentTabParameters("img2img", true);
+        // txt2img と img2img のパラメータを取得
+        const txt2imgParams = this._getParametersByTabName("txt2img");
+        const img2imgParams = this._getParametersByTabName("img2img", true);
         
         // プロンプトを別キーで保存
         if (txt2imgParams.positive_prompt) {
@@ -501,7 +517,7 @@ export class UIController {
             delete img2imgParams.positive_prompt;
         }
         
-        // img2imgの画像URLも保存
+        // モデル名とimg2imgの画像URLも保存
         const parameters = {
             model: this._getCurrentModel(),
             txt2img: txt2imgParams,
@@ -553,7 +569,7 @@ export class UIController {
     }
 
     // 指定タブの現在パラメータを取得
-    _getCurrentTabParameters(tabName, includeDenoising = false) {
+    _getParametersByTabName(tabName, includeDenoising = false) {
         const params = {};
 
         // textareasから取得

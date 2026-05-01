@@ -69,7 +69,7 @@ export class CandidateOperations {
         const textArea = this.uiController.lastPromptArea();
         if (!textArea) return;
 
-        const cursor = this.uiController._matchWordAtPosition(textArea.value, textArea.selectionEnd);
+        const cursor = this.uiController._matchWordAtPosition(textArea.value, textArea.selectionEnd, -1);
         if (!cursor) return;
         const currentWord = textArea.value.substring(cursor.start, cursor.end).trim().toLowerCase();
         if (this._currentWord === currentWord) return;
@@ -82,7 +82,7 @@ export class CandidateOperations {
         const onClickCandidate = (word) => {
             const textArea = this.uiController.lastPromptArea();
             if (!textArea) return;
-            const cursor = this.uiController._matchWordAtPosition(textArea.value, textArea.selectionEnd) || {
+            const cursor = this.uiController._matchWordAtPosition(textArea.value, textArea.selectionEnd, -1) || {
                 end: textArea.selectionEnd,
             };
             const before = textArea.value.substring(0, cursor.end);
@@ -95,7 +95,7 @@ export class CandidateOperations {
             const pos = before.length + insertWord.length;
             textArea.setSelectionRange(pos, pos);
             textArea.focus();
-            setTimeout(() => this.show(), 200);
+            setTimeout(() => this.show(), 1000);
         };
 
         const textArea = this.uiController.lastPromptArea();
@@ -112,7 +112,8 @@ export class CandidateOperations {
         let i = 0;
         while (count < 6 && i < candidates.length) {
             const item = candidates[i++];
-            if (words.includes(item.word)) continue;
+            // 既にプロンプト内に存在する単語は候補から除外
+            // if (words.includes(item.word)) continue;
             const btn = document.createElement("button");
             btn.textContent = item.word;
             btn.className = "helper";

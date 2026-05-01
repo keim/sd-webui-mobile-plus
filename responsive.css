@@ -51,24 +51,13 @@
 #img2maskimg, 
 #inpaint_sketch {
     height: auto !important;
-    aspect-ratio: 2 / 3 !important;
-    overflow: scroll !important;
-    object-fit: contain;
+    aspect-ratio: 1 / 1 !important;
 }
-#img2img_image::-webkit-scrollbar,
-#img2img_sketch::-webkit-scrollbar,
-#img2maskimg::-webkit-scrollbar, 
-#inpaint_sketch::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 6px;
-}
-#img2img_image::-webkit-scrollbar-thumb,
-#img2img_sketch::-webkit-scrollbar-thumb,
-#img2maskimg::-webkit-scrollbar-thumb, 
-#inpaint_sketch::-webkit-scrollbar-thumb {
-  border-radius: 4px;
-  background-color: rgba(0, 0, 0, .5);
-  box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+#img2maskimg canvas {
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
 }
 .contain[uitype="default"] #img2img_image,
 .contain[uitype="default"] #img2img_sketch,
@@ -98,6 +87,7 @@
 .contain[uitype="default"] #img2img_copy_to_inpaint_sketch{
     flex-direction: column !important ;
     gap: 0.2rem !important;
+    pointer-events: none;
 }
 
 /*--- i2i resize mode buttons */

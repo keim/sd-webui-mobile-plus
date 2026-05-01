@@ -66,7 +66,7 @@ export class ClipboardSelector {
             const clipItems = this._el.querySelectorAll(".sspp-clip-item[index]");
             clipItems.forEach((item) => item.remove());
             
-            for (let idx = this._images.length - 1; idx >= 0; idx--) {
+            for (let idx = 0; idx < this._images.length; idx++) {
                 this._appendNewClipItem(idx, this._images[idx].url);
             }
         } else {
@@ -76,7 +76,7 @@ export class ClipboardSelector {
             
             if (!this._el || !this._elItem) return;
             
-            for (let idx = newImages.length - 1; idx >= 0; idx--) {
+            for (let idx = 0; idx < newImages.length; idx++) {
                 this._appendNewClipItem(startIdx + idx, this._images[startIdx + idx].url);
             }
         }
