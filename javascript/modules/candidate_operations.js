@@ -5,6 +5,7 @@ export class CandidateOperations {
         this._wordDictionary = {};
         this._candidateList = {};
         this._currentWord = "";
+        this._targetText = "";
     }
 
     appendWordDictionaryByPrompt(prompt) {
@@ -32,6 +33,7 @@ export class CandidateOperations {
                     this._wordDictionary[context][word] += 5 - c;
                 }
             }
+            // 遅延して候補リストを更新（スコアの減衰と新しいコンテキストの追加を反映）
             this._candidateList[word] = null;
         });
         // 最初と最後の単語も特別に登録
@@ -53,39 +55,52 @@ export class CandidateOperations {
             .filter((w) => w !== "");
     }
 
-    getCandidates(word) {
-        const scores = this._wordDictionary[word];
-        if (!scores) return [];
-        if (!this._candidateList[word]) {
-            this._candidateList[word] = Object.keys(scores)
+    getCandidates(targetText) {
+        const scores = this._wordDictionary[targetText];
+        if (!scores) {
+            // 辞書にない単語は、これまでの候補リストから部分一致するものを返す
+            if (this._currentWord in this._candidateList) {
+                return this._candidateList[this._currentWord].filter(item => item.word.startsWith(targetText));
+            }
+            return [];
+        }
+
+        // 辞書にある単語は、そのスコアに基づいて候補リストを生成
+        this._currentWord = targetText;
+        if (!this._candidateList[targetText]) {
+            this._candidateList[targetText] = Object.keys(scores)
                 .map((candidateWord) => ({ word: candidateWord, score: scores[candidateWord] }))
                 .sort((a, b) => b.score - a.score);
         }
-        return this._candidateList[word];
+        return this._candidateList[targetText];
     }
 
     // 入力候補の表示
     show() {
         const textArea = this.uiController.lastPromptArea();
         if (!textArea) return;
-
         const cursor = this.uiController._matchWordAtPosition(textArea.value, textArea.selectionEnd, -1);
         if (!cursor) return;
-        const currentWord = textArea.value.substring(cursor.start, cursor.end).trim().toLowerCase();
-        if (this._currentWord === currentWord) return;
-        this._currentWord = currentWord;
-        this.updateCandidateButtons(currentWord);
+        let targetText = textArea.value.substring(cursor.start, cursor.end).trim().toLowerCase();
+        // targetText が空白だったら、__first__ の候補を表示
+        if (targetText === "") targetText = "__first__";
+        if (this._targetText === targetText) return;
+        this._targetText = targetText;
+
+        this.updateCandidateButtons(targetText);
     }
 
     // 入力候補ボタンの更新
-    updateCandidateButtons(targetWord) {
+    updateCandidateButtons(targetText) {
         const onClickCandidate = (word) => {
             const textArea = this.uiController.lastPromptArea();
             if (!textArea) return;
             const cursor = this.uiController._matchWordAtPosition(textArea.value, textArea.selectionEnd, -1) || {
+                start: textArea.selectionEnd,
                 end: textArea.selectionEnd,
             };
-            const before = textArea.value.substring(0, cursor.end);
+            let targetText = textArea.value.substring(cursor.start, cursor.end).trim().toLowerCase();
+            const before = textArea.value.substring(0, cursor.end - (word.startsWith(targetText) ? targetText.length : 0));
             const after = textArea.value.substring(cursor.end);
             let insertWord = word;
             if (before && !/\s$/.test(before)) insertWord = ` ${insertWord}`;
@@ -100,8 +115,9 @@ export class CandidateOperations {
 
         const textArea = this.uiController.lastPromptArea();
         if (!textArea) return;
-        const candidates = this.getCandidates(targetWord);
-        if (candidates.length === 0) return;
+
+        const candidates = this.getCandidates(targetText);
+
         const candidateDiv = document.getElementById("sspp-candidate");
         candidateDiv.classList.add("hidden");
 
