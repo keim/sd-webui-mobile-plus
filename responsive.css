@@ -407,6 +407,12 @@
     display: flex;
 }
 
+#lightboxModal,
+#modalImage {
+    z-index: 10000 !important;
+}
+
+
 /* Allow vertical scrolling when entering fullscreen (Mobile & Desktop) */
 html:fullscreen, html:-webkit-full-screen,
 body:fullscreen, body:-webkit-full-screen,

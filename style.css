@@ -19,7 +19,7 @@
     left: 0px;
     right: 0px;
     bottom: 0px;
-    z-index: 10000;
+    z-index: 9999;
 }
 .sspp-panel {
     display: flex;
@@ -102,7 +102,6 @@
     background-size: contain;
     background-position: center;
 }
-
 
 /* size selector */
 #sspp-size-selector {
