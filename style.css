@@ -80,6 +80,7 @@
     flex: 0 0 42%;
     padding: 0.5rem 0.6rem;
     font-size: 0.75rem;
+    background-color: #fff;
     background-image: url('./svg/plus.svg');
     background-position: 0.45rem center;
     background-size: 1.1rem;

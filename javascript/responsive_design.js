@@ -22,6 +22,10 @@ let _moduleLoadPromise = null;
 const _moduleCacheKey = `${Date.now()}`;
 const _pwaManifestPath = "/mobile-plus.webmanifest";
 const _pwaServiceWorkerPath = "/mobile-plus-sw.js";
+const _faviconIcoPath = "/mobile-plus-favicon.ico";
+const _favicon16Path = "/mobile-plus-favicon-16x16.png";
+const _favicon32Path = "/mobile-plus-favicon-32x32.png";
+const _appleTouchIconPath = "/mobile-plus-icon-192.png";
 let _pwaBootstrapPromise = null;
 let _pwaEventHandlersRegistered = false;
 let _pwaInstallPrompt = null;
@@ -65,10 +69,9 @@ async function _loadModules() {
         import(cachePath("./modules/clipboard_selector.js")),
         import(cachePath("./modules/candidate_operations.js")),
         import(cachePath("./modules/word_operations.js")),
-        import(cachePath("./modules/geminiapi.js")),
     ])
         .then(
-            ([imageModule, fileInfoModule, uiModule, sizeModule, textModule, clipboardModule, candidateModule, wordModule, geminiModule]) => {
+            ([imageModule, fileInfoModule, uiModule, sizeModule, textModule, clipboardModule, candidateModule, wordModule]) => {
                 const fileInfoAPI = fileInfoModule.FileInfoAPI;
                 fileInfoAPI.setImageClass(imageModule.SDGeneratedImage);
 
@@ -78,7 +81,6 @@ async function _loadModules() {
                 sspp_sizeSelector = new sizeModule.SizeSelector(ssppUI);
                 sspp_textSelector = new textModule.TextSelector(ssppUI);
                 sspp_clipSelector = new clipboardModule.ClipboardSelector(ssppUI, fileInfoAPI);
-                geminiapi = geminiModule.geminiapi();
             }
         )
         .catch((err) => {
@@ -293,6 +295,18 @@ function _updatePWAState(patch = {}) {
 }
 
 
+function _shouldReplaceFavicon() {
+    const replaceFaviconBox = document.getElementById('sspp_replace_favicon');
+    const replaceFaviconValue = replaceFaviconBox?.querySelector('textarea, input')?.value?.trim().toLowerCase();
+    return replaceFaviconValue === 'true' || replaceFaviconValue === '1' || replaceFaviconValue === 'yes';
+}
+
+
+function _removeHeadTag(selector) {
+    document.head.querySelector(selector)?.remove();
+}
+
+
 function _ensurePWAHeadTags() {
     const ensureTag = (selector, factory) => {
         let element = document.head.querySelector(selector);
@@ -310,6 +324,50 @@ function _ensurePWAHeadTags() {
         return link;
     });
     manifest.href = `${_pwaManifestPath}?v=${encodeURIComponent(_moduleCacheKey)}`;
+
+    if (!_shouldReplaceFavicon()) {
+        _removeHeadTag('link[data-sspp-pwa="favicon"]');
+        _removeHeadTag('link[data-sspp-pwa="favicon-32"]');
+        _removeHeadTag('link[data-sspp-pwa="favicon-16"]');
+        _removeHeadTag('link[data-sspp-pwa="shortcut-icon"]');
+    } else {
+        const favicon = ensureTag('link[data-sspp-pwa="favicon"]', () => {
+            const link = document.createElement('link');
+            link.setAttribute('data-sspp-pwa', 'favicon');
+            link.rel = 'icon';
+            return link;
+        });
+        favicon.type = 'image/x-icon';
+        favicon.href = `${_faviconIcoPath}?v=${encodeURIComponent(_moduleCacheKey)}`;
+
+        const favicon32 = ensureTag('link[data-sspp-pwa="favicon-32"]', () => {
+            const link = document.createElement('link');
+            link.setAttribute('data-sspp-pwa', 'favicon-32');
+            link.rel = 'icon';
+            return link;
+        });
+        favicon32.type = 'image/png';
+        favicon32.sizes = '32x32';
+        favicon32.href = `${_favicon32Path}?v=${encodeURIComponent(_moduleCacheKey)}`;
+
+        const favicon16 = ensureTag('link[data-sspp-pwa="favicon-16"]', () => {
+            const link = document.createElement('link');
+            link.setAttribute('data-sspp-pwa', 'favicon-16');
+            link.rel = 'icon';
+            return link;
+        });
+        favicon16.type = 'image/png';
+        favicon16.sizes = '16x16';
+        favicon16.href = `${_favicon16Path}?v=${encodeURIComponent(_moduleCacheKey)}`;
+
+        const shortcutIcon = ensureTag('link[data-sspp-pwa="shortcut-icon"]', () => {
+            const link = document.createElement('link');
+            link.setAttribute('data-sspp-pwa', 'shortcut-icon');
+            link.rel = 'shortcut icon';
+            return link;
+        });
+        shortcutIcon.href = `${_faviconIcoPath}?v=${encodeURIComponent(_moduleCacheKey)}`;
+    }
 
     const themeColor = ensureTag('meta[name="theme-color"]', () => {
         const meta = document.createElement('meta');
@@ -338,6 +396,14 @@ function _ensurePWAHeadTags() {
         return meta;
     });
     appleTitle.content = 'SD Mobile+';
+
+    const appleTouchIcon = ensureTag('link[data-sspp-pwa="apple-touch-icon"]', () => {
+        const link = document.createElement('link');
+        link.setAttribute('data-sspp-pwa', 'apple-touch-icon');
+        link.rel = 'apple-touch-icon';
+        return link;
+    });
+    appleTouchIcon.href = `${_appleTouchIconPath}?v=${encodeURIComponent(_moduleCacheKey)}`;
 }
 
 
