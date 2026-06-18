@@ -106,6 +106,50 @@ export class UIController {
         return document.getElementById("sd-smartphone-plus-panel");
     }
 
+    updatePWAStatus(state = {}) {
+        const statusElem = document.getElementById("sspp-pwa-status");
+        const installButton = document.getElementById("sspp-install-pwa");
+        if (!statusElem || !installButton) return;
+
+        const nextState = {
+            supported: false,
+            serviceWorkerReady: false,
+            installAvailable: false,
+            standalone: false,
+            reason: "idle",
+            ...state,
+        };
+
+        const statusMap = {
+            idle: "PWA status: checking",
+            insecure-context: "PWA requires localhost or HTTPS",
+            service-worker-unsupported: "This browser does not support service workers",
+            service-worker-registration-failed: "PWA setup failed",
+            service-worker-ready: "PWA ready. Use Install App when available",
+            install-prompt-ready: "Install prompt is ready",
+            install-prompt-unavailable: "Use browser menu to install this app",
+            install-accepted: "Installation requested",
+            install-dismissed: "Install was dismissed",
+            installed: "App installed in standalone mode",
+            standalone: "App is running in standalone mode",
+            already-installed: "App is already installed",
+        };
+
+        const statusText = nextState.standalone
+            ? statusMap.standalone
+            : statusMap[nextState.reason] || (nextState.supported ? statusMap["service-worker-ready"] : statusMap.idle);
+
+        statusElem.textContent = statusText;
+        statusElem.setAttribute("data-state", nextState.reason);
+
+        installButton.hidden = nextState.standalone;
+        installButton.disabled = !nextState.installAvailable;
+        installButton.textContent = nextState.installAvailable ? "Install App" : "Install Unavailable";
+        installButton.setAttribute("aria-disabled", String(installButton.disabled));
+
+        this.root()?.setAttribute("pwa-mode", nextState.standalone ? "standalone" : "browser");
+    }
+
     togglePanel(enabled) {
         this.root().classList.toggle('sspp-injected', enabled);
         if (enabled) {

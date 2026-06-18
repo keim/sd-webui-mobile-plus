@@ -1,6 +1,6 @@
 from modules import script_callbacks, shared, api
 from modules.api import models
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import gradio as gr
 import os
 import glob
@@ -8,9 +8,213 @@ import re
 import json
 from urllib.parse import quote
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import Response
+from fastapi.responses import Response, HTMLResponse
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+
+
+EXTENSION_NAME = "sd-webui-mobile-plus"
+PWA_MANIFEST_PATH = "/mobile-plus.webmanifest"
+PWA_SERVICE_WORKER_PATH = "/mobile-plus-sw.js"
+PWA_OFFLINE_PATH = "/mobile-plus-offline"
+PWA_ICON_PATH_TEMPLATE = "/mobile-plus-icon-{size}.png"
+PWA_THEME_COLOR = "#111827"
+PWA_BACKGROUND_COLOR = "#0f172a"
+
+
+def _extension_root():
+        return os.path.dirname(os.path.dirname(__file__))
+
+
+def _pwa_asset_version():
+        candidates = [
+                os.path.join(_extension_root(), "responsive.css"),
+                os.path.join(_extension_root(), "style.css"),
+                os.path.join(_extension_root(), "javascript", "responsive_design.js"),
+                os.path.join(os.path.dirname(__file__), "panel.html"),
+        ]
+        mtimes = [str(int(os.path.getmtime(path))) for path in candidates if os.path.exists(path)]
+        return "-".join(mtimes) or "1"
+
+
+def _pwa_icon_response(size: int):
+        image = Image.new("RGBA", (size, size), PWA_BACKGROUND_COLOR)
+        draw = ImageDraw.Draw(image)
+
+        margin = max(8, size // 10)
+        radius = max(12, size // 7)
+        draw.rounded_rectangle(
+                [(margin, margin), (size - margin, size - margin)],
+                radius=radius,
+                fill="#1d4ed8",
+        )
+
+        font = ImageFont.load_default()
+        label = "M+"
+        bbox = draw.textbbox((0, 0), label, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        draw.text(
+                ((size - text_width) / 2, (size - text_height) / 2 - size * 0.03),
+                label,
+                fill="white",
+                font=font,
+        )
+
+        import io
+
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return Response(content=buffer.getvalue(), media_type="image/png")
+
+
+def _build_pwa_manifest():
+        return {
+                "name": "Stable Diffusion WebUI Mobile Plus",
+                "short_name": "SD Mobile+",
+                "description": "Mobile-friendly shell for Stable Diffusion WebUI powered by the Mobile+ extension.",
+                "start_url": "/?source=mobile-plus-pwa",
+                "scope": "/",
+                "display": "standalone",
+                "orientation": "portrait",
+                "theme_color": PWA_THEME_COLOR,
+                "background_color": PWA_BACKGROUND_COLOR,
+                "icons": [
+                        {
+                                "src": PWA_ICON_PATH_TEMPLATE.format(size=192),
+                                "sizes": "192x192",
+                                "type": "image/png",
+                                "purpose": "any",
+                        },
+                        {
+                                "src": PWA_ICON_PATH_TEMPLATE.format(size=512),
+                                "sizes": "512x512",
+                                "type": "image/png",
+                                "purpose": "any",
+                        },
+                ],
+        }
+
+
+def _build_offline_html():
+        return """<!doctype html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+    <title>Stable Diffusion WebUI Mobile+</title>
+    <style>
+        :root { color-scheme: dark; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+            color: #e5e7eb;
+            font-family: "Segoe UI", sans-serif;
+        }
+        main {
+            width: min(28rem, calc(100vw - 2rem));
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 1rem;
+            background: rgba(17, 24, 39, 0.9);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+        h1 { margin: 0 0 0.75rem; font-size: 1.25rem; }
+        p { margin: 0.5rem 0; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Offline mode</h1>
+        <p>Mobile+ static assets are cached, but the Stable Diffusion backend is unavailable.</p>
+        <p>Reconnect to localhost to resume generation, history browsing, and image loading.</p>
+    </main>
+</body>
+</html>"""
+
+
+def _build_service_worker_script():
+        version = _pwa_asset_version()
+        extension_asset_base = f"/file=extensions/{EXTENSION_NAME}"
+        return f"""
+const CACHE_VERSION = {json.dumps(version)};
+const SHELL_CACHE = `mobile-plus-shell-${{CACHE_VERSION}}`;
+const OFFLINE_URL = {json.dumps(PWA_OFFLINE_PATH)};
+const PRECACHE_URLS = [
+    {json.dumps(PWA_MANIFEST_PATH)},
+    {json.dumps(PWA_OFFLINE_PATH)},
+    {json.dumps(PWA_ICON_PATH_TEMPLATE.format(size=192))},
+    {json.dumps(PWA_ICON_PATH_TEMPLATE.format(size=512))},
+    {json.dumps(f"{extension_asset_base}/style.css")},
+    {json.dumps(f"{extension_asset_base}/responsive.css")},
+    {json.dumps(f"{extension_asset_base}/javascript/responsive_design.js")},
+];
+
+self.addEventListener('install', (event) => {{
+    event.waitUntil(
+        caches.open(SHELL_CACHE).then((cache) => cache.addAll(PRECACHE_URLS)).then(() => self.skipWaiting())
+    );
+}});
+
+self.addEventListener('activate', (event) => {{
+    event.waitUntil((async () => {{
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((key) => key.startsWith('mobile-plus-') && key !== SHELL_CACHE).map((key) => caches.delete(key)));
+        await self.clients.claim();
+    }})());
+}});
+
+function shouldBypass(request) {{
+    const url = new URL(request.url);
+    if (request.method !== 'GET') return true;
+    if (url.origin !== self.location.origin) return true;
+    if (url.pathname.startsWith('/api/mobile-plus/')) return true;
+    if (url.pathname.startsWith('/sdapi/')) return true;
+    if (url.pathname.startsWith('/internal/')) return true;
+    if (url.pathname.startsWith('/file=')) {{
+        return !url.pathname.startsWith({json.dumps(extension_asset_base)});
+    }}
+    return false;
+}}
+
+self.addEventListener('fetch', (event) => {{
+    const request = event.request;
+    if (shouldBypass(request)) return;
+
+    if (request.mode === 'navigate') {{
+        event.respondWith((async () => {{
+            try {{
+                const response = await fetch(request);
+                const cache = await caches.open(SHELL_CACHE);
+                cache.put(request, response.clone());
+                return response;
+            }} catch (error) {{
+                return (await caches.match(request)) || (await caches.match(OFFLINE_URL));
+            }}
+        }})());
+        return;
+    }}
+
+    event.respondWith((async () => {{
+        const cache = await caches.open(SHELL_CACHE);
+        const cached = await cache.match(request);
+        if (cached) return cached;
+
+        try {{
+            const response = await fetch(request);
+            if (response.ok && request.url.startsWith(self.location.origin)) {{
+                cache.put(request, response.clone());
+            }}
+            return response;
+        }} catch (error) {{
+            return cached || Response.error();
+        }}
+    }})());
+}});
+""".strip()
 
 
 def on_ui_settings():
@@ -375,6 +579,37 @@ def fetch_remote_image(url: str, timeout: int = 10, max_bytes: int = 20 * 1024 *
 
 # API routes
 def on_app_started(demo, app: FastAPI):
+    @app.get(PWA_MANIFEST_PATH)
+    async def pwa_manifest():
+        return Response(
+            content=json.dumps(_build_pwa_manifest(), ensure_ascii=False),
+            media_type="application/manifest+json",
+            headers={"Cache-Control": "no-cache"},
+        )
+
+    @app.get(PWA_SERVICE_WORKER_PATH)
+    async def pwa_service_worker():
+        return Response(
+            content=_build_service_worker_script(),
+            media_type="application/javascript",
+            headers={
+                "Cache-Control": "no-cache",
+                "Service-Worker-Allowed": "/",
+            },
+        )
+
+    @app.get(PWA_OFFLINE_PATH)
+    async def pwa_offline():
+        return HTMLResponse(content=_build_offline_html(), headers={"Cache-Control": "no-cache"})
+
+    @app.get(PWA_ICON_PATH_TEMPLATE.format(size=192))
+    async def pwa_icon_192():
+        return _pwa_icon_response(192)
+
+    @app.get(PWA_ICON_PATH_TEMPLATE.format(size=512))
+    async def pwa_icon_512():
+        return _pwa_icon_response(512)
+
     @app.get("/api/mobile-plus/txt2img")
     async def txt2img(start: int = Query(0, ge=0), count: int = Query(50, ge=1, le=500)):
         result = get_images_from_directory(shared.opts.outdir_txt2img_samples, start, count)

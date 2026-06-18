@@ -15,6 +15,7 @@ An extension that optimizes AUTOMATIC1111 Stable Diffusion WebUI for mobile devi
 - Calculates optimal image dimensions from base pixel size, block size, and aspect ratio
 - Fullscreen mode support to maximize screen usage (experimental)
 - Auto-save/restore of key parameters for mobile browsers with unstable sessions
+- Installability as a Progressive Web App for the whole WebUI on Android Chrome with localhost/secure-context access
 - Additional tweaks: software keyboard suppression, workarounds for OS file picker restrictions, etc.
 
 ## Installation
@@ -46,7 +47,16 @@ Restart WebUI after installation.
 ### 1. Enable Mobile UI
 
 - When viewport width is 768px or less, "InjectCSS" and "InjectCSS & FullScreen" buttons appear at the bottom of the screen.
+- When PWA prerequisites are met, an `Install App` button is also shown in the same panel.
 - Click either button to open the control panel.
+
+### 1.5. Install as a PWA
+
+- The first supported browser target is Android Chrome.
+- The app becomes installable only on localhost or another secure context such as HTTPS.
+- This extension makes the whole WebUI installable, but offline support is limited to cached UI shell assets and Mobile+ static files.
+- Generation, history APIs, and remote image loading still require the Stable Diffusion WebUI backend and do not work offline.
+- If `Install App` is disabled, Chrome may not have exposed `beforeinstallprompt` yet, or installation may need to be triggered from the browser menu instead.
 
 ### 2. Main features of the SP+ panel
 
@@ -156,6 +166,8 @@ sd-webui-mobile-plus/
 
 - PNG history extraction limit is `MAX_IMAGES` in `scripts/mobile-plus.py` (currently 200)
 - DOM structure changes in WebUI may require selector adjustments
+- The PWA service worker only caches Mobile+ static assets and a small amount of WebUI shell content; generated images and API payloads are intentionally excluded
+- Plain HTTP access from another device on the LAN (for example `http://192.168.x.x:7860`) is not installable in Android Chrome unless you add HTTPS in front of WebUI
 
 ## License
 
