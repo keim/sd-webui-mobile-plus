@@ -121,18 +121,18 @@ export class UIController {
         };
 
         const statusMap = {
-            idle: "PWA status: checking",
-            insecure-context: "PWA requires localhost or HTTPS",
-            service-worker-unsupported: "This browser does not support service workers",
-            service-worker-registration-failed: "PWA setup failed",
-            service-worker-ready: "PWA ready. Use Install App when available",
-            install-prompt-ready: "Install prompt is ready",
-            install-prompt-unavailable: "Use browser menu to install this app",
-            install-accepted: "Installation requested",
-            install-dismissed: "Install was dismissed",
-            installed: "App installed in standalone mode",
-            standalone: "App is running in standalone mode",
-            already-installed: "App is already installed",
+            "idle": "PWA status: checking",
+            "insecure-context": "PWA requires localhost or HTTPS",
+            "service-worker-unsupported": "This browser does not support service workers",
+            "service-worker-registration-failed": "PWA setup failed",
+            "service-worker-ready": "PWA ready. Use Install App when available",
+            "install-prompt-ready": "Install prompt is ready",
+            "install-prompt-unavailable": "Use browser menu to install this app",
+            "install-accepted": "Installation requested",
+            "install-dismissed": "Install was dismissed",
+            "installed": "App installed in standalone mode",
+            "standalone": "App is running in standalone mode",
+            "already-installed": "App is already installed",
         };
 
         const statusText = nextState.standalone

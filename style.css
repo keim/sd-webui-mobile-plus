@@ -93,7 +93,10 @@
 }
 
 #sspp-install-pwa:disabled {
-    opacity: 0.7;
+    opacity: 1;
+    color: #888;
+    border-color: #bbb;
+    background-color: #e8e8e8;
 }
 
 
