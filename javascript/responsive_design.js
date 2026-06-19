@@ -7,6 +7,12 @@ async function insertPanel() {
     sspp_clipSelector.refresh();
     sspp_candOps.updateCandidateButtons("__first__");
 
+    // Standalone mode の場合、自動的に CSS Injection を有効にする
+    if (_pwaState.standalone) {
+        _sspp_toggleResponsiveCSS(true, true);
+        ssppUI.togglePanel(true, true);
+    }
+
     console.log("Mobile+: Responsive design CSS injector has been loaded.");
 }
 
@@ -69,25 +75,31 @@ async function _loadModules() {
         import(cachePath("./modules/clipboard_selector.js")),
         import(cachePath("./modules/candidate_operations.js")),
         import(cachePath("./modules/word_operations.js")),
-    ])
-        .then(
-            ([imageModule, fileInfoModule, uiModule, sizeModule, textModule, clipboardModule, candidateModule, wordModule]) => {
-                const fileInfoAPI = fileInfoModule.FileInfoAPI;
-                fileInfoAPI.setImageClass(imageModule.SDGeneratedImage);
+    ]).then(([
+            imageModule, 
+            fileInfoModule, 
+            uiModule, 
+            sizeModule, 
+            textModule, 
+            clipboardModule, 
+            candidateModule, 
+            wordModule
+        ]) => {
+            const fileInfoAPI = fileInfoModule.FileInfoAPI;
+            fileInfoAPI.setImageClass(imageModule.SDGeneratedImage);
 
-                ssppUI = new uiModule.UIController(fileInfoAPI);
-                sspp_wordOps = new wordModule.WordOperations(ssppUI);
-                sspp_candOps = new candidateModule.CandidateOperations(ssppUI);
-                sspp_sizeSelector = new sizeModule.SizeSelector(ssppUI);
-                sspp_textSelector = new textModule.TextSelector(ssppUI);
-                sspp_clipSelector = new clipboardModule.ClipboardSelector(ssppUI, fileInfoAPI);
-            }
-        )
-        .catch((err) => {
-            _moduleLoadPromise = null;
-            console.error("[Mobile+] Failed to load modules:", err);
-            throw err;
-        });
+            ssppUI = new uiModule.UIController(fileInfoAPI);
+            sspp_wordOps = new wordModule.WordOperations(ssppUI);
+            sspp_candOps = new candidateModule.CandidateOperations(ssppUI);
+            sspp_sizeSelector = new sizeModule.SizeSelector(ssppUI);
+            sspp_textSelector = new textModule.TextSelector(ssppUI);
+            sspp_clipSelector = new clipboardModule.ClipboardSelector(ssppUI, fileInfoAPI);
+        }
+    ).catch((err) => {
+        _moduleLoadPromise = null;
+        console.error("[Mobile+] Failed to load modules:", err);
+        throw err;
+    });
 
     return _moduleLoadPromise;
 }
@@ -217,6 +229,12 @@ function _setupMenuButtons() {
         const textArea = ssppUI.promptArea();
         if (textArea) sspp_candOps.appendWordDictionaryByPrompt(textArea.value)
     });
+
+    // Standalone mode の場合、フルスクリーンボタンを非表示にする
+    if (_pwaState.standalone) {
+        const fullscreenBtn = document.getElementById('sspp-inject-css-full');
+        if (fullscreenBtn) fullscreenBtn.style.display = 'none';
+    }
 
     ssppUI.root().appendChild(panel);
 }
@@ -499,7 +517,7 @@ async function _installPWA() {
 
 
 // CSSのインジェクション/解除を切り替える
-function _sspp_toggleResponsiveCSS(enabled) {
+function _sspp_toggleResponsiveCSS(enabled, isStandalone = false) {
     const cssID = 'responsive-design-css';
     const existingLink = document.getElementById(cssID);
     

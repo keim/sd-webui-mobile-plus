@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import Response
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+from PIL import Image
 
 
 PWA_MANIFEST_PATH = "/mobile-plus.webmanifest"
@@ -103,6 +104,14 @@ def on_ui_tabs():
     panel_html_path = os.path.join(os.path.dirname(__file__), "panel.html")
     with open(panel_html_path, "r", encoding="utf-8") as f:
         panel_html = f.read()
+    
+    # Cache busting: Add version parameter to asset references
+    version = _pwa_asset_version()
+    panel_html = re.sub(
+        r'((?:href|src)="(?!(?:https?:|data:)[^"]*\.(?:png|jpg|jpeg))([^"]+(\.(css|js|webmanifest)))")(?!\?v=)',
+        rf'\1?v={version}"',
+        panel_html
+    )
     
     # Process latest images and extract prompts
     def get_prompt_history():
@@ -473,6 +482,7 @@ def on_app_started(demo, app: FastAPI):
     async def pwa_manifest():
         response = _manifest_response()
         response.headers["Cache-Control"] = "no-cache"
+        response.headers["X-Asset-Version"] = _pwa_asset_version()
         return response
 
     @app.get(PWA_SERVICE_WORKER_PATH)
@@ -480,12 +490,14 @@ def on_app_started(demo, app: FastAPI):
         response = _service_worker_response()
         response.headers["Cache-Control"] = "no-cache"
         response.headers["Service-Worker-Allowed"] = "/"
+        response.headers["X-Asset-Version"] = _pwa_asset_version()
         return response
 
     @app.get(PWA_OFFLINE_PATH)
     async def pwa_offline():
         response = _offline_response()
         response.headers["Cache-Control"] = "no-cache"
+        response.headers["X-Asset-Version"] = _pwa_asset_version()
         return response
 
     @app.get(PWA_ICON_PATH_TEMPLATE.format(size=192))

@@ -150,11 +150,11 @@ export class UIController {
         this.root()?.setAttribute("pwa-mode", nextState.standalone ? "standalone" : "browser");
     }
 
-    togglePanel(enabled) {
+    togglePanel(enabled, isStandalone = false) {
         this.root().classList.toggle('sspp-injected', enabled);
         if (enabled) {
-            this.restoreBackupParameters().then(restored => {
-                if (restored) alert("設定が復元されました。");
+            this.restoreBackupParameters(isStandalone).then(restored => {
+                if (restored && !isStandalone) alert("設定が復元されました。");
             });
             this.startBackupCron();
         } else {
@@ -163,7 +163,8 @@ export class UIController {
     }
 
     // localstorageのバックアップと現在のプロンプト内容を比較して、復元するか確認してから復元する
-    async restoreBackupParameters() {
+    // skipConfirm が true の場合、ユーザー確認なしに必ず復元する
+    async restoreBackupParameters(skipConfirm = false) {
         const txt2imgPromptArea = document.querySelector(this.textareas.txt2img_prompt);
         const img2imgPromptArea = document.querySelector(this.textareas.img2img_prompt);
         const txt2imgBackup = localStorage.getItem("sspp_txt2img_prompt");
@@ -174,8 +175,10 @@ export class UIController {
 
         if (!hasTxt2imgDiff && !hasImg2imgDiff) return false;
 
-        const shouldRestore = window.confirm("保存された設定のバックアップが現在の内容と異なります。復元しますか？");
-        if (!shouldRestore) return false;
+        if (!skipConfirm) {
+            const shouldRestore = window.confirm("保存された設定のバックアップが現在の内容と異なります。復元しますか？");
+            if (!shouldRestore) return false;
+        }
 
         return await this.loadCurrentParameters();
     }
