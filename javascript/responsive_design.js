@@ -36,6 +36,8 @@ let _pwaBootstrapPromise = null;
 let _pwaEventHandlersRegistered = false;
 let _pwaInstallPrompt = null;
 let _pwaState = _createPWAState();
+let _panelVisibilityHandlersRegistered = false;
+let _clientWidthThreshold = 768;
 
 window.insertPanel = insertPanel;
 
@@ -45,6 +47,10 @@ window.insertPanel = insertPanel;
 // 初期化処理
 async function _initialize() {
     await _loadModules();
+
+    _clientWidthThreshold = _getClientWidthThreshold();
+    _registerPanelVisibilityHandlers();
+    _updatePanelVisibility();
 
     ssppUI.initialize();
     ssppUI.updatePWAStatus(_pwaState);
@@ -281,6 +287,29 @@ function _insertInteractiveWidget() {
 }
 
 
+function _getClientWidthThreshold() {
+    const thresholdBox = document.getElementById('sspp_client_width_threshold');
+    const rawValue = thresholdBox?.querySelector('textarea, input')?.value;
+    const parsed = Number.parseInt(rawValue ?? '768', 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 768;
+}
+
+
+function _updatePanelVisibility() {
+    const shouldShowPanel = _pwaState.standalone || window.innerWidth <= _clientWidthThreshold;
+    document.documentElement.setAttribute('sspp-mobile-panel', shouldShowPanel ? 'true' : 'false');
+}
+
+
+function _registerPanelVisibilityHandlers() {
+    if (_panelVisibilityHandlersRegistered) return;
+    _panelVisibilityHandlersRegistered = true;
+
+    window.addEventListener('resize', _updatePanelVisibility);
+    window.visualViewport?.addEventListener?.('resize', _updatePanelVisibility);
+}
+
+
 function _createPWAState() {
     return {
         supported: false,
@@ -308,6 +337,7 @@ function _updatePWAState(patch = {}) {
         ...patch,
         standalone: patch.standalone ?? _isStandaloneMode(),
     };
+    _updatePanelVisibility();
     ssppUI?.updatePWAStatus(_pwaState);
     return _pwaState;
 }

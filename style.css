@@ -1,12 +1,10 @@
-/* the Panel is shown only in smart phone */
-@media (max-width: 768px) {
-    #sd-smartphone-plus-panel {
-        display: flex !important;
-    }
+/* the panel visibility is controlled by JS based on configured threshold */
+html[sspp-mobile-panel="true"] #sd-smartphone-plus-panel {
+    display: flex !important;
+}
 
-    .contain {
-        margin-bottom: 10rem;
-    }
+html[sspp-mobile-panel="true"] .contain {
+    margin-bottom: 10rem;
 }
 
 

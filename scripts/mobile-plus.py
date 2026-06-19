@@ -95,7 +95,10 @@ def on_ui_settings():
         shared.OptionInfo("", "Gemini API Key", section=section))
     shared.opts.add_option(
         "mobile_plus_replace_favicon",
-        shared.OptionInfo(True, "setup a1111 favicon", section=section))
+        shared.OptionInfo(True, "Setup a1111 favicon", section=section))
+    shared.opts.add_option(
+        "mobile_plus_client_width_threshold",
+        shared.OptionInfo(768, "Client width threshold (px)", section=section))
 script_callbacks.on_ui_settings(on_ui_settings)
 
 
@@ -138,6 +141,11 @@ def on_ui_tabs():
             value=lambda: "true" if shared.opts.mobile_plus_replace_favicon else "false",
             visible=False,
             elem_id="sspp_replace_favicon"
+        )
+        gr.Textbox(
+            value=lambda: str(int(shared.opts.mobile_plus_client_width_threshold)),
+            visible=False,
+            elem_id="sspp_client_width_threshold"
         )
 
         interface.load(
