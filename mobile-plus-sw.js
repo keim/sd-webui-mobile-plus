@@ -34,13 +34,13 @@ function shouldBypass(request) {
   const url = new URL(request.url);
   if (request.method !== 'GET') return true;
   if (url.origin !== self.location.origin) return true;
-  if (url.pathname.startsWith('/api/mobile-plus/')) return true;
-  if (url.pathname.startsWith('/sdapi/')) return true;
-  if (url.pathname.startsWith('/internal/')) return true;
-  if (url.pathname.startsWith('/file=')) {
-    return !url.pathname.startsWith(EXTENSION_ASSET_BASE);
-  }
-  return false;
+  // Navigations keep the offline fallback; the extension shell stays cached.
+  if (request.mode === 'navigate') return false;
+  if (url.pathname.startsWith('/mobile-plus')) return false;
+  if (url.pathname.startsWith(EXTENSION_ASSET_BASE)) return false;
+  // Let all gradio traffic (/gradio_api/*, /file=*, /queue, /static/*, ...)
+  // pass through untouched. Caching those breaks API info and result images.
+  return true;
 }
 
 self.addEventListener('fetch', (event) => {

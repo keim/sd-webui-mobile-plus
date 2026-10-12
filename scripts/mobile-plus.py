@@ -139,12 +139,21 @@ def on_ui_tabs():
             elem_id="sspp_client_width_threshold"
         )
 
-        interface.load(
-            fn=None, 
-            inputs=None, 
-            outputs=None, 
-            _js="insertPanel"
-        )
+        # Gradio 4+ renamed the `_js` argument to `js` (old A1111 uses Gradio 3).
+        if int(gr.__version__.split(".")[0]) >= 4:
+            interface.load(
+                fn=None,
+                inputs=None,
+                outputs=None,
+                js="insertPanel"
+            )
+        else:
+            interface.load(
+                fn=None,
+                inputs=None,
+                outputs=None,
+                _js="insertPanel"
+            )
     
     return [(interface, "Mobile+", "mobile_plus")]
 script_callbacks.on_ui_tabs(on_ui_tabs)
