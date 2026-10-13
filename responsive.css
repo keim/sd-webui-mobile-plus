@@ -68,6 +68,14 @@
 .contain[uitype="default"] #inpaint_sketch {
     min-width: min(120px, 100%) !important;
     width: 120px !important;
+    min-height: 0 !important;
+    align-self: flex-start !important;
+}
+.contain[uitype="default"] #img2img_image img,
+.contain[uitype="default"] #img2img_sketch img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
 }
 /*--- i2i copy buttons */
 #img2img_copy_to_img2img > button,
