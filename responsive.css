@@ -68,6 +68,7 @@
 .contain[uitype="default"] #inpaint_sketch {
     min-width: min(120px, 100%) !important;
     width: 120px !important;
+    height: 120px !important;
     min-height: 0 !important;
     align-self: flex-start !important;
 }
@@ -76,6 +77,16 @@
     width: 100% !important;
     height: 100% !important;
     object-fit: contain !important;
+}
+/* ForgeCanvas は .forge-container に inline で height:512px を付けるので !important で外枠に追従させる。
+   間の gradio ラッパー div 2 段も height:100% にしないと % が解決されず 0 になる */
+.contain[uitype="default"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) > div,
+.contain[uitype="default"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) > div > div,
+.contain[uitype="default"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) .forge-container {
+    height: 100% !important;
+}
+.contain[uitype="default"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) .forge-image-container {
+    height: 100%;
 }
 /*--- i2i copy buttons */
 #img2img_copy_to_img2img > button,
