@@ -15,7 +15,7 @@ html[sspp-mobile-panel="true"] .contain {
     position: fixed;
     flex-direction: column;
     right: 0px;
-    bottom: 0px;
+    bottom: var(--sspp-keyboard-offset, 0px);
     width: 100%;
     max-width: 768px;;
     z-index: 9999;

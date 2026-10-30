@@ -300,12 +300,22 @@ function _updatePanelVisibility() {
 }
 
 
+// キーボードに覆われた高さ分だけ、fixed のパネルを持ち上げる
+function _updatePanelKeyboardOffset() {
+    const vv = window.visualViewport;
+    const offset = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+    document.documentElement.style.setProperty('--sspp-keyboard-offset', `${offset}px`);
+}
+
+
 function _registerPanelVisibilityHandlers() {
     if (_panelVisibilityHandlersRegistered) return;
     _panelVisibilityHandlersRegistered = true;
 
     window.addEventListener('resize', _updatePanelVisibility);
     window.visualViewport?.addEventListener?.('resize', _updatePanelVisibility);
+    window.visualViewport?.addEventListener?.('resize', _updatePanelKeyboardOffset);
+    window.visualViewport?.addEventListener?.('scroll', _updatePanelKeyboardOffset);
 }
 
 
