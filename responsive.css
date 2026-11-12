@@ -72,8 +72,11 @@
     min-height: 0 !important;
     align-self: flex-start !important;
 }
-.contain[uitype="default"] #img2img_image img,
-.contain[uitype="default"] #img2img_sketch img {
+/* ForgeCanvas の img (.forge-image) は JS が contain フィットした幅・高さ・left/top を
+   inline で付けるので、100% に広げると二重にレターボックスされて表示位置がズレる。
+   対象は素の gradio 画像プレビューだけにする */
+.contain[uitype="default"] #img2img_image img:not(.forge-image),
+.contain[uitype="default"] #img2img_sketch img:not(.forge-image) {
     width: 100% !important;
     height: 100% !important;
     object-fit: contain !important;
