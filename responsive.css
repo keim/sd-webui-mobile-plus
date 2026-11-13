@@ -56,7 +56,10 @@
     height: auto !important;
     aspect-ratio: 1 / 1 !important;
 }
-#img2maskimg canvas {
+/* ForgeCanvas の描画キャンバス (.forge-drawing-canvas) は JS が画像レイヤーと同一の
+   幅・高さ・left/top を inline で付けるので、auto に戻すとビットマップ実寸と max 制約で
+   再計算され、マスクレイヤーだけ大きさがズレる。対象は素の canvas だけにする */
+#img2maskimg canvas:not(.forge-drawing-canvas) {
     width: auto !important;
     height: auto !important;
     max-width: 100% !important;
