@@ -94,6 +94,25 @@
 .contain[uitype="default"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) .forge-image-container {
     height: 100%;
 }
+
+/*--- i2i original image (rendering) */
+/* rendering 表示では内側の高さが ForgeCanvas 既定の 512px のままになり、contain フィットした
+   画像の下に大きな空白ができて、その下のコピーボタンまで遠くなる。枠を 4/3 にし、内側を
+   default と同様に外枠へ追従させて空白を詰める */
+.contain[uitype="rendering"] #img2img_image,
+.contain[uitype="rendering"] #img2img_sketch,
+.contain[uitype="rendering"] #img2maskimg,
+.contain[uitype="rendering"] #inpaint_sketch {
+    aspect-ratio: 4 / 3 !important;
+}
+.contain[uitype="rendering"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) > div,
+.contain[uitype="rendering"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) > div > div,
+.contain[uitype="rendering"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) .forge-container {
+    height: 100% !important;
+}
+.contain[uitype="rendering"] :is(#img2img_image, #img2img_sketch, #img2maskimg, #inpaint_sketch) .forge-image-container {
+    height: 100%;
+}
 /*--- i2i copy buttons */
 #img2img_copy_to_img2img > button,
 #img2img_copy_to_inpaint > button,
