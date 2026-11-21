@@ -7,7 +7,8 @@ import re
 import json
 from urllib.parse import quote
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import Response
+from fastapi.responses import RedirectResponse, Response
+from fastapi.staticfiles import StaticFiles
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from PIL import Image
@@ -20,6 +21,7 @@ PWA_ICON_PATH_TEMPLATE = "/mobile-plus-icon-{size}.png"
 FAVICON_ICO_PATH = "/mobile-plus-favicon.ico"
 FAVICON_16_PATH = "/mobile-plus-favicon-16x16.png"
 FAVICON_32_PATH = "/mobile-plus-favicon-32x32.png"
+WORKBENCH_PATH = "/mobileplus"
 
 
 def _extension_root():
@@ -36,6 +38,10 @@ def _service_worker_file_path():
 
 def _offline_file_path():
     return os.path.join(_extension_root(), "mobile-plus-offline.html")
+
+
+def _workbench_dir():
+    return os.path.join(_extension_root(), "workbench")
 
 
 def _pwa_asset_version():
@@ -535,6 +541,42 @@ def on_app_started(demo, app: FastAPI):
     async def proxy_image(url: str = Query(..., min_length=8, max_length=2048)):
         data, content_type = fetch_remote_image(url)
         return Response(content=data, media_type=content_type)
+
+    # Workbench actions backend: registered BEFORE the static mount
+    # below so POST /mobileplus/actions and GET /mobileplus/files/*
+    # win over the /mobileplus mount. A backend failure must never
+    # break WebUI startup.
+    try:
+        import importlib.util
+
+        _backend_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "workbench_backend.py",
+        )
+        _spec = importlib.util.spec_from_file_location(
+            "mobile_plus_workbench_backend", _backend_path)
+        _backend = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_backend)
+        _backend.register_workbench(app, _extension_root())
+    except Exception as e:  # noqa: BLE001 - never break WebUI startup
+        print(f"[Mobile+] Workbench backend failed to start: {e}")
+
+    # illu SD Workbench UI (UI-only port of the Space client build).
+    # Served from the extension's workbench/ folder; the actions endpoint the
+    # UI calls (/mobileplus/actions) is not wired up yet.
+    @app.get(WORKBENCH_PATH)
+    async def workbench_redirect():
+        return RedirectResponse(url=WORKBENCH_PATH + "/")
+
+    workbench_dir = _workbench_dir()
+    if os.path.isdir(workbench_dir):
+        app.mount(
+            WORKBENCH_PATH,
+            StaticFiles(directory=workbench_dir, html=True),
+            name="mobileplus-workbench",
+        )
+    else:
+        print(f"[Mobile+] Workbench UI folder not found, skipping: {workbench_dir}")
 script_callbacks.on_app_started(on_app_started)
 
 
