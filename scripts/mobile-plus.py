@@ -14,9 +14,7 @@ from urllib.request import Request, urlopen
 from PIL import Image
 
 
-PWA_MANIFEST_PATH = "/mobile-plus.webmanifest"
 PWA_SERVICE_WORKER_PATH = "/mobile-plus-sw.js"
-PWA_OFFLINE_PATH = "/mobile-plus-offline"
 PWA_ICON_PATH_TEMPLATE = "/mobile-plus-icon-{size}.png"
 FAVICON_ICO_PATH = "/mobile-plus-favicon.ico"
 FAVICON_16_PATH = "/mobile-plus-favicon-16x16.png"
@@ -28,16 +26,8 @@ def _extension_root():
     return os.path.dirname(os.path.dirname(__file__))
 
 
-def _manifest_file_path():
-    return os.path.join(_extension_root(), "mobile-plus.webmanifest")
-
-
 def _service_worker_file_path():
     return os.path.join(_extension_root(), "mobile-plus-sw.js")
-
-
-def _offline_file_path():
-    return os.path.join(_extension_root(), "mobile-plus-offline.html")
 
 
 def _workbench_dir():
@@ -50,9 +40,7 @@ def _pwa_asset_version():
         os.path.join(_extension_root(), "style.css"),
         os.path.join(_extension_root(), "javascript", "responsive_design.js"),
         os.path.join(os.path.dirname(__file__), "panel.html"),
-        _manifest_file_path(),
         _service_worker_file_path(),
-        _offline_file_path(),
         os.path.join(_extension_root(), "icons", "favicon.ico"),
         os.path.join(_extension_root(), "icons", "icon-16.png"),
         os.path.join(_extension_root(), "icons", "icon-32.png"),
@@ -82,16 +70,8 @@ def _favicon_response(filename: str, media_type: str):
     return _binary_file_response(_icon_file_path(filename), media_type)
 
 
-def _manifest_response():
-    return _binary_file_response(_manifest_file_path(), "application/manifest+json")
-
-
 def _service_worker_response():
     return _binary_file_response(_service_worker_file_path(), "application/javascript")
-
-
-def _offline_response():
-    return _binary_file_response(_offline_file_path(), "text/html")
 
 
 def on_ui_settings():
@@ -126,7 +106,7 @@ def on_ui_tabs():
     
     with gr.Blocks() as interface:
         gr.Markdown("## Mobile Plus")
-        gr.Markdown("Customize WebUI for mobile devices. Available only when the client width < 768px.")
+        gr.Markdown("[Open the Mobile+ Workbench](/mobileplus/)")
         gr.HTML(panel_html)
 
         gr.Textbox(
@@ -492,25 +472,11 @@ def on_app_started(demo, app: FastAPI):
     async def favicon_32():
         return _favicon_response("icon-32.png", "image/png")
 
-    @app.get(PWA_MANIFEST_PATH)
-    async def pwa_manifest():
-        response = _manifest_response()
-        response.headers["Cache-Control"] = "no-cache"
-        response.headers["X-Asset-Version"] = _pwa_asset_version()
-        return response
-
     @app.get(PWA_SERVICE_WORKER_PATH)
     async def pwa_service_worker():
         response = _service_worker_response()
         response.headers["Cache-Control"] = "no-cache"
         response.headers["Service-Worker-Allowed"] = "/"
-        response.headers["X-Asset-Version"] = _pwa_asset_version()
-        return response
-
-    @app.get(PWA_OFFLINE_PATH)
-    async def pwa_offline():
-        response = _offline_response()
-        response.headers["Cache-Control"] = "no-cache"
         response.headers["X-Asset-Version"] = _pwa_asset_version()
         return response
 

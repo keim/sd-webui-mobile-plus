@@ -1,14 +1,15 @@
 // 画面上部のInjectパネルの表示/非表示を切り替える
 async function insertPanel() {
     await _initialize();
-    await _bootstrapPWA();
+    _ensureHeadTags();
+    await _retireLegacyPWA();
 
     ssppUI.updateSizeLabel();
     sspp_clipSelector.refresh();
     sspp_candOps.updateCandidateButtons("__first__");
 
     // Standalone mode の場合、自動的に CSS Injection を有効にする
-    if (_pwaState.standalone) {
+    if (_isStandaloneMode()) {
         _sspp_toggleResponsiveCSS(true, true);
         ssppUI.togglePanel(true, true);
     }
@@ -25,16 +26,10 @@ let sspp_candOps = null;
 let sspp_wordOps = null;
 let _moduleLoadPromise = null;
 const _moduleCacheKey = `${Date.now()}`;
-const _pwaManifestPath = "/mobile-plus.webmanifest";
-const _pwaServiceWorkerPath = "/mobile-plus-sw.js";
 const _faviconIcoPath = "/mobile-plus-favicon.ico";
 const _favicon16Path = "/mobile-plus-favicon-16x16.png";
 const _favicon32Path = "/mobile-plus-favicon-32x32.png";
 const _appleTouchIconPath = "/mobile-plus-icon-192.png";
-let _pwaBootstrapPromise = null;
-let _pwaEventHandlersRegistered = false;
-let _pwaInstallPrompt = null;
-let _pwaState = _createPWAState();
 let _panelVisibilityHandlersRegistered = false;
 let _clientWidthThreshold = 768;
 
@@ -52,7 +47,6 @@ async function _initialize() {
     _updatePanelVisibility();
 
     ssppUI.initialize();
-    ssppUI.updatePWAStatus(_pwaState);
     sspp_sizeSelector.initialize();
     sspp_textSelector.initialize();
     sspp_clipSelector.initialize();
@@ -130,9 +124,6 @@ function _setupMenuButtons() {
     // CSS Injection ボタン
     onclick('sspp-inject-css', () => {
         ssppUI.togglePanel(_sspp_toggleResponsiveCSS(true));
-    });
-    onclick('sspp-install-pwa', async () => {
-        await _installPWA();
     });
     onclick('sspp-inject-css-full', () => {
         ssppUI.togglePanel(_sspp_toggleResponsiveCSS(true));
@@ -236,7 +227,7 @@ function _setupMenuButtons() {
     });
 
     // Standalone mode の場合、フルスクリーンボタンを非表示にする
-    if (_pwaState.standalone) {
+    if (_isStandaloneMode()) {
         const fullscreenBtn = document.getElementById('sspp-inject-css-full');
         if (fullscreenBtn) fullscreenBtn.style.display = 'none';
     }
@@ -295,7 +286,7 @@ function _getClientWidthThreshold() {
 
 
 function _updatePanelVisibility() {
-    const shouldShowPanel = _pwaState.standalone || window.innerWidth <= _clientWidthThreshold;
+    const shouldShowPanel = _isStandaloneMode() || window.innerWidth <= _clientWidthThreshold;
     document.documentElement.setAttribute('sspp-mobile-panel', shouldShowPanel ? 'true' : 'false');
 }
 
@@ -313,42 +304,15 @@ function _registerPanelVisibilityHandlers() {
     _panelVisibilityHandlersRegistered = true;
 
     window.addEventListener('resize', _updatePanelVisibility);
+    window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', _updatePanelVisibility);
     window.visualViewport?.addEventListener?.('resize', _updatePanelVisibility);
     window.visualViewport?.addEventListener?.('resize', _updatePanelKeyboardOffset);
     window.visualViewport?.addEventListener?.('scroll', _updatePanelKeyboardOffset);
 }
 
 
-function _createPWAState() {
-    return {
-        supported: false,
-        serviceWorkerReady: false,
-        installAvailable: false,
-        standalone: _isStandaloneMode(),
-        reason: "idle",
-    };
-}
-
-
 function _isStandaloneMode() {
     return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-
-
-function _isPWASecureContext() {
-    return window.isSecureContext || ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
-}
-
-
-function _updatePWAState(patch = {}) {
-    _pwaState = {
-        ..._pwaState,
-        ...patch,
-        standalone: patch.standalone ?? _isStandaloneMode(),
-    };
-    _updatePanelVisibility();
-    ssppUI?.updatePWAStatus(_pwaState);
-    return _pwaState;
 }
 
 
@@ -364,7 +328,7 @@ function _removeHeadTag(selector) {
 }
 
 
-function _ensurePWAHeadTags() {
+function _ensureHeadTags() {
     const ensureTag = (selector, factory) => {
         let element = document.head.querySelector(selector);
         if (!element) {
@@ -373,14 +337,6 @@ function _ensurePWAHeadTags() {
         }
         return element;
     };
-
-    const manifest = ensureTag('link[data-sspp-pwa="manifest"]', () => {
-        const link = document.createElement('link');
-        link.setAttribute('data-sspp-pwa', 'manifest');
-        link.rel = 'manifest';
-        return link;
-    });
-    manifest.href = `${_pwaManifestPath}?v=${encodeURIComponent(_moduleCacheKey)}`;
 
     if (!_shouldReplaceFavicon()) {
         _removeHeadTag('link[data-sspp-pwa="favicon"]');
@@ -464,94 +420,29 @@ function _ensurePWAHeadTags() {
 }
 
 
-function _registerPWAEventHandlers() {
-    if (_pwaEventHandlersRegistered) return;
-    _pwaEventHandlersRegistered = true;
-
-    window.addEventListener('beforeinstallprompt', (event) => {
-        event.preventDefault();
-        _pwaInstallPrompt = event;
-        _updatePWAState({
-            supported: true,
-            installAvailable: true,
-            reason: 'install-prompt-ready',
-        });
-    });
-
-    window.addEventListener('appinstalled', () => {
-        _pwaInstallPrompt = null;
-        _updatePWAState({
-            supported: true,
-            installAvailable: false,
-            standalone: true,
-            reason: 'installed',
-        });
-    });
-
-    window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', (event) => {
-        _updatePWAState({
-            standalone: event.matches,
-            supported: true,
-            reason: event.matches ? 'standalone' : _pwaState.reason,
-        });
-    });
-}
-
-
-async function _bootstrapPWA() {
-    if (_pwaBootstrapPromise) return _pwaBootstrapPromise;
-
-    _pwaBootstrapPromise = (async () => {
-        _ensurePWAHeadTags();
-        _registerPWAEventHandlers();
-        _updatePWAState({ standalone: _isStandaloneMode() });
-
-        if (!_isPWASecureContext()) {
-            return _updatePWAState({ reason: 'insecure-context' });
+// The root PWA was retired (the PWA now lives under /mobileplus/).
+// Clean up the legacy service worker and its caches on existing clients.
+let _legacyPWARetired = false;
+async function _retireLegacyPWA() {
+    if (_legacyPWARetired) return;
+    _legacyPWARetired = true;
+    try {
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations
+                .filter((reg) => [reg.active, reg.installing, reg.waiting]
+                    .some((worker) => worker?.scriptURL.includes('/mobile-plus-sw.js')))
+                .map((reg) => reg.unregister()));
         }
-
-        if (!('serviceWorker' in navigator)) {
-            return _updatePWAState({ reason: 'service-worker-unsupported' });
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys
+                .filter((key) => key.startsWith('mobile-plus-'))
+                .map((key) => caches.delete(key)));
         }
-
-        try {
-            await navigator.serviceWorker.register(`${_pwaServiceWorkerPath}?v=${encodeURIComponent(_moduleCacheKey)}`);
-            await navigator.serviceWorker.ready;
-            return _updatePWAState({
-                supported: true,
-                serviceWorkerReady: true,
-                reason: _pwaState.installAvailable ? _pwaState.reason : 'service-worker-ready',
-            });
-        } catch (err) {
-            console.error('[Mobile+] Failed to register PWA service worker:', err);
-            return _updatePWAState({ reason: 'service-worker-registration-failed' });
-        }
-    })();
-
-    return _pwaBootstrapPromise;
-}
-
-
-async function _installPWA() {
-    if (_pwaState.standalone) {
-        _updatePWAState({ reason: 'already-installed' });
-        return;
+    } catch (err) {
+        console.warn('[Mobile+] Legacy PWA cleanup failed:', err);
     }
-
-    if (!_pwaInstallPrompt) {
-        _updatePWAState({ reason: _pwaState.supported ? 'install-prompt-unavailable' : _pwaState.reason });
-        return;
-    }
-
-    const promptEvent = _pwaInstallPrompt;
-    _pwaInstallPrompt = null;
-    promptEvent.prompt();
-    const choice = await promptEvent.userChoice;
-
-    _updatePWAState({
-        installAvailable: false,
-        reason: choice.outcome === 'accepted' ? 'install-accepted' : 'install-dismissed',
-    });
 }
 
 
