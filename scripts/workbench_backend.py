@@ -51,30 +51,7 @@ STANDARD_NEGATIVE = (
     "text, loli, child"
 )
 
-MODEL_TABLE = {
-    "wai": {
-        "checkpoint": "waiNSFWIllustrious_v140",
-        "cfg": 5.5, "steps": 20, "sampler": "DPM++ 2M", "scheduler": "Karras",
-    },
-    "pornmaster": {
-        "checkpoint": "pornmasterPro_realismILV4",
-        "cfg": 5.5, "steps": 20, "sampler": "DPM++ 2M", "scheduler": "Karras",
-    },
-    "zimage": {
-        "checkpoint": "z-image-turbo-quant-bundle",
-        "cfg": 1, "steps": 10, "sampler": "Euler", "scheduler": "Beta",
-    },
-}
 
-MINOR_TAGS = ["loli", "child", "shota", "minor", "underage"]
-NEGATIVE_GUARD_TAGS = ["loli", "child"]
-CHECKPOINT_ALLOWLIST = {
-    "waiNSFWIllustrious_v140",
-    "pornmasterPro_realismILV4",
-    "z-image-turbo-quant-bundle",
-}
-GUARD_MAX_DIM = 2048
-GUARD_MAX_PIXELS = 4194304
 
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
 JPEG_SIG = b"\xff\xd8\xff"
@@ -241,108 +218,6 @@ def _make_display_jpeg(image_bytes):
         return out.getvalue()
     except Exception:  # noqa: BLE001 - display copy is best-effort
         return None
-
-
-def _has_tag(text, tag):
-    return (
-        re.search(r"(?<![a-z])" + re.escape(tag) + r"(?![a-z])",
-                  text, re.IGNORECASE)
-        is not None
-    )
-
-
-def _fmt_weight(x):
-    return "%g" % float(x)
-
-
-# --- Payload composition + guardrails (ports of composePayload and
-# --- sd_job_priv.py's validate_and_guard) ---------------------------
-
-class GuardError(Exception):
-    def __init__(self, stage, message):
-        super().__init__(message)
-        self.stage = stage
-        self.message = message
-
-
-def _compose_payload(job):
-    key = job["model"] if job["model"] in MODEL_TABLE else "wai"
-    m = MODEL_TABLE[key]
-    content = (job["prompt"] or "").strip()
-    prompt = content
-    pw = job["photorealistic_weight"]
-    cw = job["comiclo_weight"]
-    pw = 1 if pw is None else pw
-    cw = 0.7 if cw is None else cw
-    base_parts = []
-    if pw != 0:
-        base_parts.append(f"(photorealistic: {_fmt_weight(pw)})")
-    if cw != 0:
-        base_parts.append(f"<lora:comiclo-xl-pony:{_fmt_weight(cw)}>")
-    if base_parts:
-        joined = ", ".join(base_parts)
-        prompt = f"{joined}, {content}" if content else joined
-    if key == "zimage":
-        negative = ""
-    elif job["negative_prompt"] is not None:
-        negative = job["negative_prompt"]
-    else:
-        extra = (job["extra_negative"] or "").strip()
-        negative = f"{STANDARD_NEGATIVE}, {extra}" if extra else STANDARD_NEGATIVE
-    return {
-        "prompt": prompt,
-        "negative_prompt": negative,
-        "width": job["width"] or 0,
-        "height": job["height"] or 0,
-        "steps": m["steps"],
-        "cfg_scale": m["cfg"],
-        "sampler_name": m["sampler"],
-        "scheduler": m["scheduler"],
-        "seed": job["seed_input"] if job["seed_input"] is not None else -1,
-        "override_settings": {"sd_model_checkpoint": m["checkpoint"]},
-        "override_settings_restore_afterwards": True,
-    }
-
-
-def _apply_guardrails(payload):
-    prompt = payload.get("prompt")
-    if not isinstance(prompt, str) or not prompt.strip():
-        raise GuardError("input", "payload.prompt must be a non-empty string")
-    negative = payload.get("negative_prompt") or ""
-    if len(prompt) > 20000 or len(negative) > 20000:
-        raise GuardError("input", "prompt/negative exceeds 20000 chars")
-    for dim in ("width", "height"):
-        v = payload.get(dim)
-        if not isinstance(v, int) or isinstance(v, bool):
-            raise GuardError("input", f"payload.{dim} must be an int")
-        if v < 64 or v > GUARD_MAX_DIM:
-            raise GuardError(
-                "input", f"payload.{dim} must be within 64..{GUARD_MAX_DIM}")
-    if payload["width"] * payload["height"] > GUARD_MAX_PIXELS:
-        raise GuardError("input", f"width*height must be <= {GUARD_MAX_PIXELS}")
-
-    detected = [t for t in MINOR_TAGS if _has_tag(prompt, t)]
-    if detected:
-        raise GuardError(
-            "guardrail",
-            f"minor tag(s) detected in prompt: {', '.join(detected)}")
-    if not _has_tag(prompt, "adult"):
-        prompt += ", adult"
-    payload["prompt"] = prompt
-
-    for tag in NEGATIVE_GUARD_TAGS:
-        if not _has_tag(negative, tag):
-            negative = (negative + ", " + tag) if negative.strip() else tag
-    payload["negative_prompt"] = negative
-
-    payload["override_settings_restore_afterwards"] = True
-    override = payload.get("override_settings")
-    if isinstance(override, dict) and "sd_model_checkpoint" in override:
-        checkpoint = override.get("sd_model_checkpoint")
-        if checkpoint not in CHECKPOINT_ALLOWLIST:
-            raise GuardError(
-                "guardrail", f"checkpoint not on allowlist: {checkpoint!r}")
-    return payload
 
 
 # --- Word dictionary learning (port of learnPromptWords) ------------
@@ -555,60 +430,43 @@ def _fetch_sd_progress():
         return None
 
 
-def _run_generation(job_id, init_image_path, mask_path, mask_blur=None,
-                    mask_invert=None):
+def _blob_ref(b64):
+    """A stored reference for one base64 blob in used_params: the
+    payload is never persisted with image bytes inlined."""
+    try:
+        raw = base64.b64decode(b64)
+        return {"bytes": len(raw),
+                "sha256": hashlib.sha256(raw).hexdigest()}
+    except Exception:  # noqa: BLE001 - a ref is bookkeeping only
+        return {"bytes": 0, "sha256": None}
+
+
+def _elide_payload(payload):
+    """The used_params copy of the client's payload, with the
+    bulky base64 image fields replaced by byte/hash references."""
+    used = dict(payload)
+    inits = used.get("init_images")
+    if isinstance(inits, list):
+        used["init_images"] = [
+            _blob_ref(x) if isinstance(x, str) else x for x in inits]
+    if isinstance(used.get("mask"), str):
+        used["mask"] = _blob_ref(used["mask"])
+    return used
+
+
+def _run_generation(job_id, payload):
     try:
         job = _get_job(job_id)
         if job is None:
             return
         _set_phase(job_id, "connecting")
-        payload = _apply_guardrails(_compose_payload(job))
-        endpoint = "/sdapi/v1/txt2img"
-        used_params = dict(payload)
-        if job["mode"] == "img2img":
-            endpoint = "/sdapi/v1/img2img"
-            with open(init_image_path, "rb") as f:
-                init_bytes = f.read()
-            payload["init_images"] = [
-                base64.b64encode(init_bytes).decode("ascii")]
-            payload["denoising_strength"] = job["denoising_strength"]
-            payload["include_init_images"] = False
-            used_params = dict(payload)
-            used_params["init_images"] = [{
-                "path": os.path.realpath(init_image_path),
-                "bytes": len(init_bytes),
-                "sha256": hashlib.sha256(init_bytes).hexdigest(),
-            }]
-            if mask_path:
-                with open(mask_path, "rb") as f:
-                    mask_bytes = f.read()
-                payload["mask"] = base64.b64encode(mask_bytes).decode("ascii")
-                payload["resize_mode"] = 1
-                if mask_blur is not None:
-                    payload["mask_blur"] = mask_blur
-                if mask_invert is not None:
-                    payload["inpainting_mask_invert"] = mask_invert
-                payload["inpainting_fill"] = 1
-                payload["inpaint_full_res"] = False
-                payload["inpaint_full_res_padding"] = 32
-                init_ref = used_params["init_images"]
-                used_params = dict(payload)
-                used_params["init_images"] = init_ref
-                used_params["mask"] = {
-                    "path": os.path.realpath(mask_path),
-                    "bytes": len(mask_bytes),
-                    "sha256": hashlib.sha256(mask_bytes).hexdigest(),
-                }
-            else:
-                # Plain img2img follows the panel's resize selector
-                # (0 Cover / 1 Crop / 2 Contain / 3 Latent); jobs
-                # recorded before the column existed read as null
-                # and keep the historical Cover (0).
-                rm = job["resize_mode"]
-                payload["resize_mode"] = rm if rm in (0, 1, 2, 3) else 0
-                used_params["resize_mode"] = payload["resize_mode"]
-                used_params["denoising_strength"] = job["denoising_strength"]
-                used_params["include_init_images"] = False
+        # Payload passthrough: the payload arrived complete from
+        # the client and goes to the API exactly as received. The
+        # endpoint is the only choice made here, from the job's
+        # recorded mode.
+        endpoint = ("/sdapi/v1/img2img" if job["mode"] == "img2img"
+                    else "/sdapi/v1/txt2img")
+        used_params = _elide_payload(payload)
 
         _set_phase(job_id, "generating")
         started = time.time()
@@ -660,8 +518,7 @@ def _run_generation(job_id, init_image_path, mask_path, mask_blur=None,
                     "(job_id, model, width, height, steps, duration_ms, "
                     "created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (job_id, job["model"], job["width"], job["height"],
-                     MODEL_TABLE.get(job["model"] or "wai",
-                                     MODEL_TABLE["wai"])["steps"],
+                     job["steps"],
                      duration_ms, _now_iso()),
                 )
                 conn.commit()
@@ -695,9 +552,6 @@ def _run_generation(job_id, init_image_path, mask_path, mask_blur=None,
                 _set_editor_source("job", job_id=job_id)
         except Exception:  # noqa: BLE001 - completion already recorded
             pass
-    except GuardError as e:
-        _update_job(job_id, status="failed",
-                    error=f"{e.stage}: {e.message}")
     except Exception as e:  # noqa: BLE001 - recorded on the job row
         _update_job(job_id, status="failed", error=str(e)[:800])
     finally:
@@ -705,11 +559,10 @@ def _run_generation(job_id, init_image_path, mask_path, mask_blur=None,
             _THREADS.pop(job_id, None)
 
 
-def _start_generation(job_id, init_image_path, mask_path, mask_blur,
-                      mask_invert):
+def _start_generation(job_id, payload):
     thread = threading.Thread(
         target=_run_generation,
-        args=(job_id, init_image_path, mask_path, mask_blur, mask_invert),
+        args=(job_id, payload),
         daemon=True,
     )
     with _THREADS_LOCK:
@@ -1164,41 +1017,14 @@ def _act_clear_source_image(args):
 
 def _act_create_job(args):
     _sweep_timeouts()
-    is_inpaint = bool(args.get("maskDataBase64"))
-    if is_inpaint and args.get("mode") != "img2img":
+    # Payload passthrough: the client composes the complete sdapi
+    # payload and the worker hands it to the API verbatim — no
+    # composition, no fixed inpaint values, no guardrails on this
+    # side. The only requirement here is transport shape.
+    payload = args.get("payload")
+    if not isinstance(payload, dict):
         return {"ok": False, "jobId": None,
-                "error": "マスク付きの生成は img2img として実行してください。"}
-
-    init_image_path = None
-    if args.get("mode") == "img2img":
-        if args.get("denoisingStrength") is None:
-            return {"ok": False, "jobId": None,
-                    "error": "denoise は 0〜1 の数値で入力してください。"}
-        if args.get("initSource") == "upload":
-            src = _load_editor_source("source_image")
-            upload = None
-            if src and src["kind"] == "upload" and src["upload_id"]:
-                upload = _get_upload(src["upload_id"])
-            if not upload:
-                return {
-                    "ok": False, "jobId": None,
-                    "error": "アップロード画像が元イメージにセットされていません。"
-                             "元画像エリアで画像をアップロードしてください。",
-                }
-            init_image_path = upload["host_path"]
-        elif args.get("sourceJobId") is not None:
-            source_job = _get_job(int(args["sourceJobId"]))
-            if (not source_job or source_job["status"] != "completed"
-                    or not source_job["host_path"]
-                    or not os.path.isfile(source_job["host_path"])):
-                return {
-                    "ok": False, "jobId": None,
-                    "error": "元イメージの生成ジョブが見つかりませんでした。",
-                }
-            init_image_path = source_job["host_path"]
-        else:
-            return {"ok": False, "jobId": None,
-                    "error": "元イメージが指定されていません。"}
+                "error": "payload が必要です。"}
 
     now = _now_iso()
     with _DB_LOCK:
@@ -1240,31 +1066,12 @@ def _act_create_job(args):
         finally:
             conn.close()
 
-    mask_path = None
-    if is_inpaint:
-        mask_bytes = _decode_base64_image(args.get("maskDataBase64"))
-        mask_error = None
-        if mask_bytes is None:
-            mask_error = "マスク画像を読み取れませんでした。"
-        elif len(mask_bytes) > MAX_IMAGE_BYTES:
-            mask_error = "マスク画像が大きすぎます（25 MB まで）。"
-        elif not mask_bytes.startswith(PNG_SIG):
-            mask_error = "マスク画像の形式が PNG ではありません。"
-        if mask_error:
-            _update_job(job_id, status="failed", error=mask_error)
-            return {"ok": False, "jobId": job_id, "error": mask_error}
-        mask_path = os.path.join(
-            _STATE["data_dir"], "masks", f"{job_id}.png")
-        with open(mask_path, "wb") as f:
-            f.write(mask_bytes)
-
     try:
         _learn_from_prompt(args.get("prompt") or "")
     except Exception:  # noqa: BLE001 - learning must not block generation
         pass
 
-    _start_generation(job_id, init_image_path, mask_path,
-                      args.get("maskBlur"), args.get("maskInvert"))
+    _start_generation(job_id, payload)
     return {"ok": True, "jobId": job_id, "error": None}
 
 
