@@ -117,7 +117,7 @@ def _init_db():
               steps INTEGER, cfg REAL, sampler TEXT, scheduler TEXT,
               base_enabled INTEGER,
               photorealistic_weight REAL, comiclo_weight REAL,
-              mode TEXT, denoising_strength REAL,
+              mode TEXT, denoising_strength REAL, resize_mode INTEGER,
               result_seed INTEGER,
               image_key TEXT, display_key TEXT, host_path TEXT,
               used_params TEXT, lora_hashes TEXT,
@@ -147,6 +147,10 @@ def _init_db():
               id INTEGER PRIMARY KEY CHECK (id = 1),
               kind TEXT NOT NULL, job_id INTEGER, upload_id INTEGER
             );
+            CREATE TABLE IF NOT EXISTS source_image (
+              id INTEGER PRIMARY KEY CHECK (id = 1),
+              kind TEXT NOT NULL, job_id INTEGER, upload_id INTEGER
+            );
             CREATE TABLE IF NOT EXISTS workspace_state (
               id INTEGER PRIMARY KEY CHECK (id = 1),
               settings TEXT NOT NULL DEFAULT '',
@@ -173,6 +177,14 @@ def _init_db():
             """
         )
         conn.commit()
+        # Column migrations for databases created before the
+        # column existed (CREATE TABLE IF NOT EXISTS never adds
+        # columns to an existing table).
+        job_cols = [r[1] for r in conn.execute("PRAGMA table_info(jobs)")]
+        if "resize_mode" not in job_cols:
+            conn.execute(
+                "ALTER TABLE jobs ADD COLUMN resize_mode INTEGER")
+            conn.commit()
     finally:
         conn.close()
 
@@ -586,8 +598,13 @@ def _run_generation(job_id, init_image_path, mask_path, mask_blur=None,
                     "sha256": hashlib.sha256(mask_bytes).hexdigest(),
                 }
             else:
-                payload["resize_mode"] = 0
-                used_params["resize_mode"] = 0
+                # Plain img2img follows the panel's resize selector
+                # (0 Cover / 1 Crop / 2 Contain / 3 Latent); jobs
+                # recorded before the column existed read as null
+                # and keep the historical Cover (0).
+                rm = job["resize_mode"]
+                payload["resize_mode"] = rm if rm in (0, 1, 2, 3) else 0
+                used_params["resize_mode"] = payload["resize_mode"]
                 used_params["denoising_strength"] = job["denoising_strength"]
                 used_params["include_init_images"] = False
 
@@ -700,22 +717,23 @@ def _start_generation(job_id, init_image_path, mask_path, mask_blur,
 
 # --- Editor source helpers ---------------------------------------------
 
-def _load_editor_source():
+def _load_editor_source(table="editor_source"):
     conn = _db()
     try:
         row = conn.execute(
-            "SELECT * FROM editor_source WHERE id = 1").fetchone()
+            f"SELECT * FROM {table} WHERE id = 1").fetchone()
         return dict(row) if row else None
     finally:
         conn.close()
 
 
-def _set_editor_source(kind, job_id=None, upload_id=None):
+def _set_editor_source(kind, job_id=None, upload_id=None,
+                       table="editor_source"):
     with _DB_LOCK:
         conn = _db()
         try:
             conn.execute(
-                "INSERT INTO editor_source (id, kind, job_id, upload_id) "
+                f"INSERT INTO {table} (id, kind, job_id, upload_id) "
                 "VALUES (1, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET "
                 "kind = excluded.kind, job_id = excluded.job_id, "
                 "upload_id = excluded.upload_id",
@@ -726,11 +744,11 @@ def _set_editor_source(kind, job_id=None, upload_id=None):
             conn.close()
 
 
-def _clear_editor_source():
+def _clear_editor_source(table="editor_source"):
     with _DB_LOCK:
         conn = _db()
         try:
-            conn.execute("DELETE FROM editor_source WHERE id = 1")
+            conn.execute(f"DELETE FROM {table} WHERE id = 1")
             conn.commit()
         finally:
             conn.close()
@@ -768,8 +786,8 @@ def _upload_view(row):
     }
 
 
-def _editor_source_view():
-    src = _load_editor_source()
+def _editor_source_view(table="editor_source"):
+    src = _load_editor_source(table)
     if not src:
         return _none_source_view()
     if src["kind"] == "job" and src["job_id"] is not None:
@@ -979,7 +997,7 @@ def _decode_base64_image(value):
 def _act_upload_editor_image(args):
     def fail(error):
         return {"ok": False, "error": error,
-                "source": _editor_source_view()}
+                "source": _editor_source_view("source_image")}
 
     data = _decode_base64_image(args.get("dataBase64"))
     if data is None:
@@ -1025,8 +1043,10 @@ def _act_upload_editor_image(args):
             conn.commit()
         finally:
             conn.close()
-    _set_editor_source("upload", upload_id=upload_id)
-    return {"ok": True, "error": None, "source": _editor_source_view()}
+    _set_editor_source("upload", upload_id=upload_id,
+                       table="source_image")
+    return {"ok": True, "error": None,
+            "source": _editor_source_view("source_image")}
 
 
 def _act_list_upload_images(args):
@@ -1059,6 +1079,10 @@ def _act_delete_upload_image(args):
     if (src and src["kind"] == "upload"
             and src["upload_id"] == upload["id"]):
         _clear_editor_source()
+    img_src = _load_editor_source("source_image")
+    if (img_src and img_src["kind"] == "upload"
+            and img_src["upload_id"] == upload["id"]):
+        _clear_editor_source("source_image")
     with _DB_LOCK:
         conn = _db()
         try:
@@ -1114,6 +1138,28 @@ def _act_clear_editor_source(args):
     return {"ok": True, "error": None, "source": _editor_source_view()}
 
 
+def _act_get_source_image(args):
+    return {"source": _editor_source_view("source_image")}
+
+
+def _act_adopt_editor_source(args):
+    src = _load_editor_source()
+    if not src:
+        return {"ok": False,
+                "error": "画像エリアに画像がありません。",
+                "source": _editor_source_view("source_image")}
+    _set_editor_source(src["kind"], job_id=src["job_id"],
+                       upload_id=src["upload_id"], table="source_image")
+    return {"ok": True, "error": None,
+            "source": _editor_source_view("source_image")}
+
+
+def _act_clear_source_image(args):
+    _clear_editor_source("source_image")
+    return {"ok": True, "error": None,
+            "source": _editor_source_view("source_image")}
+
+
 def _act_create_job(args):
     _sweep_timeouts()
     is_inpaint = bool(args.get("maskDataBase64"))
@@ -1127,7 +1173,7 @@ def _act_create_job(args):
             return {"ok": False, "jobId": None,
                     "error": "denoise は 0〜1 の数値で入力してください。"}
         if args.get("initSource") == "upload":
-            src = _load_editor_source()
+            src = _load_editor_source("source_image")
             upload = None
             if src and src["kind"] == "upload" and src["upload_id"]:
                 upload = _get_upload(src["upload_id"])
@@ -1135,7 +1181,7 @@ def _act_create_job(args):
                 return {
                     "ok": False, "jobId": None,
                     "error": "アップロード画像が元イメージにセットされていません。"
-                             "Editor で画像をアップロードしてください。",
+                             "元画像エリアで画像をアップロードしてください。",
                 }
             init_image_path = upload["host_path"]
         elif args.get("sourceJobId") is not None:
@@ -1161,10 +1207,10 @@ def _act_create_job(args):
                 "model, prompt, extra_negative, negative_prompt, width, "
                 "height, seed_mode, seed_input, steps, cfg, sampler, "
                 "scheduler, base_enabled, photorealistic_weight, "
-                "comiclo_weight, mode, denoising_strength, created_at, "
+                "comiclo_weight, mode, denoising_strength, resize_mode, created_at, "
                 "updated_at) VALUES ('generate', 'running', "
                 "'agent_starting', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                "?, ?, ?, ?, ?, ?, ?)",
+                "?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     now,
                     args.get("model"), args.get("prompt"),
@@ -1179,6 +1225,7 @@ def _act_create_job(args):
                     args.get("comicloWeight"),
                     args.get("mode") or "txt2img",
                     args.get("denoisingStrength"),
+                    args.get("resizeMode"),
                     now, now,
                 ),
             )
@@ -1236,6 +1283,7 @@ def _act_poll_generation_job(args):
 def _act_delete_jobs(args):
     deleted = 0
     src = _load_editor_source()
+    img_src = _load_editor_source("source_image")
     with _DB_LOCK:
         conn = _db()
         try:
@@ -1252,6 +1300,11 @@ def _act_delete_jobs(args):
                     conn.execute(
                         "DELETE FROM editor_source WHERE id = 1")
                     src = None
+                if (img_src and img_src["kind"] == "job"
+                        and img_src["job_id"] == int(job_id)):
+                    conn.execute(
+                        "DELETE FROM source_image WHERE id = 1")
+                    img_src = None
                 _delete_file(row["image_key"])
                 _delete_file(row["display_key"])
                 mask = os.path.join(
@@ -1371,6 +1424,9 @@ ACTIONS = {
     "saveUploadImage": _act_save_upload_image,
     "setEditorSourceFromJob": _act_set_editor_source_from_job,
     "clearEditorSource": _act_clear_editor_source,
+    "getSourceImage": _act_get_source_image,
+    "adoptEditorSource": _act_adopt_editor_source,
+    "clearSourceImage": _act_clear_source_image,
     "createJob": _act_create_job,
     "pollGenerationJob": _act_poll_generation_job,
     "deleteJobs": _act_delete_jobs,
