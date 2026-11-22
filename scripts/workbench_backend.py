@@ -662,6 +662,20 @@ def _run_generation(job_id, init_image_path, mask_path, mask_blur=None,
             stats_recorded=1,
             error=None,
         )
+        # A finished generation becomes the Editor's image: point
+        # the editor slot at this job (the client only refreshes
+        # the slot when the newest job completes; it never points
+        # the slot at the job itself). Best-effort: a failure here
+        # must never fail the completion. The slot pointing at an
+        # upload is simply replaced — library uploads are records
+        # of their own and are never deleted by this.
+        try:
+            current = _load_editor_source()
+            if not (current and current["kind"] == "job"
+                    and current["job_id"] == job_id):
+                _set_editor_source("job", job_id=job_id)
+        except Exception:  # noqa: BLE001 - completion already recorded
+            pass
     except GuardError as e:
         _update_job(job_id, status="failed",
                     error=f"{e.stage}: {e.message}")
