@@ -549,7 +549,9 @@ def _fetch_sd_progress():
             "steps": steps if isinstance(steps, int) and steps > 0 else None,
             "fraction": fraction,
         }
-    except Exception:  # noqa: BLE001 - progress is display-only, soft-fail
+    except Exception as e:  # noqa: BLE001 - progress is display-only, soft-fail
+        print(f"[Mobile+] progress fetch failed: "
+              f"{type(e).__name__}: {e}", flush=True)
         return None
 
 
@@ -1441,6 +1443,7 @@ def register_workbench(app, extension_root):
     Must be called BEFORE the /mobileplus StaticFiles mount so these
     routes win over the mount."""
     from fastapi import Request
+    from fastapi.concurrency import run_in_threadpool
     from fastapi.responses import FileResponse, JSONResponse
 
     _STATE["root"] = extension_root
@@ -1463,7 +1466,14 @@ def register_workbench(app, extension_root):
             return JSONResponse(
                 {"error": f"unknown action: {action}"}, status_code=404)
         try:
-            result = handler(args)
+            # The handlers are blocking (SQLite, file IO, and —
+            # for pollGenerationJob — a loopback HTTP read of the
+            # WebUI's own progress endpoint). Running one directly
+            # on the event loop deadlocks that read: the loop is
+            # busy waiting for a response only it can serve, so
+            # the fetch always timed out and progress never
+            # reached the client. Dispatch in the threadpool.
+            result = await run_in_threadpool(handler, args)
             # The space-sdk client unwraps `body.data` and treats a
             # truthy `body.error` as a thrown action error.
             return JSONResponse({"data": result})
