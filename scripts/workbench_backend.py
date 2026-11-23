@@ -39,7 +39,6 @@ from datetime import datetime, timezone
 
 SDAPI_BASE = "http://127.0.0.1:7860"
 FILES_PREFIX = "/mobileplus/files/"
-SAVE_COUNTER_INITIAL = 12713
 MAX_IMAGE_BYTES = 25 * 1024 * 1024
 JOB_TIMEOUT_SECONDS = 300
 
@@ -768,31 +767,68 @@ def _editor_source_view(table="editor_source"):
 _SAVED_NAME_RE = re.compile(r"^(\d+)-\d+\.(?:png|jpg)$")
 
 
-def _claim_save_counter():
-    """Claim the next save counter value, SD WebUI style: scan the
-    saved files' names ({counter}-{seed}.png) and hand out max + 1.
-    With no saved files present, the sequence starts at
-    SAVE_COUNTER_INITIAL (the value the numbering was seeded with).
-    Like SD WebUI's own sequence numbers, deleting the highest file
-    makes its number reusable, and copying saved files in from
-    elsewhere moves the sequence along automatically. Callers must
-    read their source files BEFORE claiming, so a failed read never
-    burns a number; the claim and the following insert run under the
-    DB lock so concurrent saves cannot take the same number."""
+def _scan_saved_highest():
+    """The highest counter among the saved files' names
+    ({counter}-{seed}.png), or None when the folder is empty."""
+    saved_dir = os.path.join(_STATE["data_dir"], "files", "saved")
+    highest = None
+    try:
+        names = os.listdir(saved_dir)
+    except OSError:
+        names = []
+    for name in names:
+        m = _SAVED_NAME_RE.match(name)
+        if m:
+            value = int(m.group(1))
+            if highest is None or value > highest:
+                highest = value
+    return highest
+
+
+def _store_save_index(value):
     with _DB_LOCK:
-        saved_dir = os.path.join(_STATE["data_dir"], "files", "saved")
-        highest = None
+        conn = _db()
         try:
-            names = os.listdir(saved_dir)
-        except OSError:
-            names = []
-        for name in names:
-            m = _SAVED_NAME_RE.match(name)
-            if m:
-                value = int(m.group(1))
-                if highest is None or value > highest:
-                    highest = value
-        return SAVE_COUNTER_INITIAL if highest is None else highest + 1
+            conn.execute(
+                "INSERT INTO save_counter (id, value) VALUES (1, ?) "
+                "ON CONFLICT(id) DO UPDATE SET value = excluded.value",
+                (int(value),))
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def _stored_save_index():
+    """The latest save index the server holds. The counter is
+    managed by the client (keim, 2026-11-23): the server only
+    remembers the newest value it received — via a save action
+    or setSaveIndex — and hands it back as the client's initial
+    value at startup. On first read it is seeded from the saved
+    files (the highest counter present) so the client's first
+    increment continues the existing sequence; a fresh install
+    with no saved files starts at 0 (keim, 2026-11-23)."""
+    conn = _db()
+    try:
+        row = conn.execute(
+            "SELECT value FROM save_counter WHERE id = 1").fetchone()
+        if row:
+            return row["value"]
+    finally:
+        conn.close()
+    highest = _scan_saved_highest()
+    value = highest if highest is not None else 0
+    _store_save_index(value)
+    return value
+
+
+def _index_from_args(args):
+    """The save index for a save action: the value the client
+    incremented and passed. A missing or invalid value falls
+    back to the stored latest + 1 so the save still lands."""
+    raw = args.get("index")
+    if isinstance(raw, int) and not isinstance(raw, bool) and raw >= 0:
+        return raw
+    return _stored_save_index() + 1
 
 
 def _save_image_response_fail(error):
@@ -870,10 +906,22 @@ def _act_get_workspace_state(args):
             "SELECT settings, prompt FROM workspace_state WHERE id = 1"
         ).fetchone()
         if not row:
-            return {"settings": "", "prompt": ""}
-        return {"settings": row["settings"], "prompt": row["prompt"]}
+            return {"settings": "", "prompt": "",
+                    "saveIndex": _stored_save_index()}
+        return {"settings": row["settings"], "prompt": row["prompt"],
+                "saveIndex": _stored_save_index()}
     finally:
         conn.close()
+
+
+def _act_set_save_index(args):
+    raw = args.get("index")
+    if (not isinstance(raw, int) or isinstance(raw, bool)
+            or raw < 0 or raw > 999999999):
+        return {"ok": False,
+                "error": "保存インデクスは 0 以上の整数で指定してください。"}
+    _store_save_index(raw)
+    return {"ok": True, "error": None}
 
 
 def _save_workspace_field(field, value):
@@ -1048,8 +1096,8 @@ def _act_save_upload_image(args):
     if data is None:
         return _save_image_response_fail(
             "元画像ファイルを読み取れませんでした。")
+    counter = _index_from_args(args)
     with _DB_LOCK:
-        counter = _claim_save_counter()
         name = f"{counter}-0"
         file_ext = upload["stored_name"].rsplit(".", 1)[-1].lower()
         image_key = f"saved/{name}.{file_ext}"
@@ -1062,6 +1110,7 @@ def _act_save_upload_image(args):
                 _write_file(display_key, display)
         _insert_saved(counter, 0, None, "upload", upload["id"], file_ext,
                       image_key, display_key)
+        _store_save_index(counter)
     return {"ok": True, "error": None, "name": name,
             "counter": counter, "seed": 0}
 
@@ -1234,8 +1283,8 @@ def _act_save_job_image(args):
     if not data.startswith(PNG_SIG):
         return _save_image_response_fail(
             "元画像ファイルの形式が PNG ではありませんでした。")
+    counter = _index_from_args(args)
     with _DB_LOCK:
-        counter = _claim_save_counter()
         seed = job["result_seed"]
         name = f"{counter}-{seed}"
         image_key = f"saved/{name}.png"
@@ -1248,6 +1297,7 @@ def _act_save_job_image(args):
                 _write_file(display_key, display)
         _insert_saved(counter, seed, job["id"], "job", None, "png",
                       image_key, display_key)
+        _store_save_index(counter)
     return {"ok": True, "error": None, "name": name,
             "counter": counter, "seed": seed}
 
@@ -1310,6 +1360,7 @@ ACTIONS = {
     "getTextSnippets": _act_get_text_snippets,
     "saveTextSnippets": _act_save_text_snippets,
     "getWorkspaceState": _act_get_workspace_state,
+    "setSaveIndex": _act_set_save_index,
     "saveSettings": _act_save_settings,
     "savePrompt": _act_save_prompt,
     "listJobs": _act_list_jobs,
