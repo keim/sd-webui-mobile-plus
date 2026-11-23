@@ -785,6 +785,14 @@ def _scan_saved_highest():
     return highest
 
 
+def _save_index_marker_path():
+    # Present once the browser-managed flow has written a value.
+    # A save_counter row WITHOUT this marker is a leftover from
+    # the pre-2026-11-23 counter schemes and may lag behind the
+    # saved files, so it must not win on its own (see below).
+    return os.path.join(_STATE["data_dir"], "save-index-browser-managed")
+
+
 def _store_save_index(value):
     with _DB_LOCK:
         conn = _db()
@@ -796,6 +804,11 @@ def _store_save_index(value):
             conn.commit()
         finally:
             conn.close()
+    try:
+        with open(_save_index_marker_path(), "w") as f:
+            f.write("1")
+    except OSError:
+        pass
 
 
 def _stored_save_index():
@@ -803,20 +816,25 @@ def _stored_save_index():
     managed by the client (keim, 2026-11-23): the server only
     remembers the newest value it received — via a save action
     or setSaveIndex — and hands it back as the client's initial
-    value at startup. On first read it is seeded from the saved
-    files (the highest counter present) so the client's first
-    increment continues the existing sequence; a fresh install
-    with no saved files starts at 0 (keim, 2026-11-23)."""
+    value at startup. Once the browser-managed flow has written
+    (marker file present), the stored value is authoritative —
+    even when the user deliberately lowers it in the pane. On
+    the first read before that, the seed continues the existing
+    sequence: the higher of the legacy stored value and the
+    highest saved-file counter; a fresh install with neither
+    starts at 0 (keim, 2026-11-23)."""
     conn = _db()
     try:
         row = conn.execute(
             "SELECT value FROM save_counter WHERE id = 1").fetchone()
-        if row:
-            return row["value"]
+        stored = row["value"] if row else None
     finally:
         conn.close()
+    if os.path.exists(_save_index_marker_path()):
+        return stored if stored is not None else 0
     highest = _scan_saved_highest()
-    value = highest if highest is not None else 0
+    value = max(stored if stored is not None else 0,
+                highest if highest is not None else 0)
     _store_save_index(value)
     return value
 
