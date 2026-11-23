@@ -34,6 +34,7 @@ import sqlite3
 import threading
 import time
 import urllib.request
+import zlib
 from datetime import datetime, timezone
 
 SDAPI_BASE = "http://127.0.0.1:7860"
@@ -109,6 +110,7 @@ def _init_db():
               mime_type TEXT NOT NULL, byte_size INTEGER NOT NULL,
               host_path TEXT NOT NULL, image_key TEXT NOT NULL,
               display_key TEXT,
+              prompt TEXT,
               created_at TEXT NOT NULL
             );
             CREATE TABLE IF NOT EXISTS saved_images (
@@ -161,6 +163,12 @@ def _init_db():
         if "resize_mode" not in job_cols:
             conn.execute(
                 "ALTER TABLE jobs ADD COLUMN resize_mode INTEGER")
+            conn.commit()
+        upload_cols = [r[1] for r in conn.execute(
+            "PRAGMA table_info(upload_images)")]
+        if "prompt" not in upload_cols:
+            conn.execute(
+                "ALTER TABLE upload_images ADD COLUMN prompt TEXT")
             conn.commit()
     finally:
         conn.close()
@@ -628,6 +636,80 @@ def _get_upload(upload_id):
         conn.close()
 
 
+def _png_text_chunks(data):
+    """The PNG's text chunks as {keyword: text} (tEXt / zTXt /
+    iTXt). WebUI-generated PNGs carry their infotext under the
+    "parameters" keyword."""
+    texts = {}
+    if not data.startswith(PNG_SIG):
+        return texts
+    pos = len(PNG_SIG)
+    while pos + 8 <= len(data):
+        length = int.from_bytes(data[pos:pos + 4], "big")
+        ctype = data[pos + 4:pos + 8]
+        chunk = data[pos + 8:pos + 8 + length]
+        if len(chunk) < length:
+            break
+        pos += 8 + length + 4
+        if ctype == b"IEND":
+            break
+        if ctype not in (b"tEXt", b"zTXt", b"iTXt"):
+            continue
+        try:
+            if ctype == b"tEXt":
+                key, _, value = chunk.partition(b"\x00")
+                texts[key.decode("latin-1")] = value.decode(
+                    "utf-8", "replace")
+            elif ctype == b"zTXt":
+                key, _, rest = chunk.partition(b"\x00")
+                if rest[:1] == b"\x00":
+                    texts[key.decode("latin-1")] = zlib.decompress(
+                        rest[1:]).decode("utf-8", "replace")
+            else:  # iTXt: key \0 flag method lang \0 translated \0 text
+                key, _, rest = chunk.partition(b"\x00")
+                if len(rest) < 2:
+                    continue
+                compressed = rest[0]
+                rest = rest[2:]
+                _lang, _, rest = rest.partition(b"\x00")
+                _translated, _, text = rest.partition(b"\x00")
+                if compressed == 1:
+                    text = zlib.decompress(text)
+                texts[key.decode("utf-8", "replace")] = text.decode(
+                    "utf-8", "replace")
+        except Exception:
+            continue
+    return texts
+
+
+def _prompt_from_infotext(text):
+    """The positive prompt of a WebUI infotext: everything before
+    the "Negative prompt:" line, minus the trailing "Steps: ..."
+    parameter line."""
+    lines = text.split("\n")
+    if lines and lines[-1].startswith("Steps: "):
+        lines = lines[:-1]
+    out = []
+    for line in lines:
+        if line.startswith("Negative prompt:"):
+            break
+        out.append(line)
+    prompt = "\n".join(out).strip()
+    return prompt or None
+
+
+def _extract_png_prompt(data):
+    """The positive prompt embedded in an uploaded PNG's
+    metadata, or None. A "parameters" chunk (WebUI infotext) is
+    parsed; a bare "prompt" chunk is taken as-is."""
+    texts = _png_text_chunks(data)
+    if texts.get("parameters"):
+        return _prompt_from_infotext(texts["parameters"])
+    if texts.get("prompt"):
+        return texts["prompt"].strip() or None
+    return None
+
+
 def _upload_view(row):
     return {
         "id": row["id"],
@@ -637,6 +719,7 @@ def _upload_view(row):
         "byteSize": row["byte_size"],
         "imageUrl": _file_url(row["image_key"]),
         "displayUrl": _file_url(row["display_key"] or row["image_key"]),
+        "prompt": row["prompt"],
         "createdAt": row["created_at"],
     }
 
@@ -884,15 +967,20 @@ def _act_upload_editor_image(args):
                 f"uploads/{stored_name.rsplit('.', 1)[0]}.display.jpg")
             _write_file(display_key, display)
 
+    # A PNG's embedded positive prompt (WebUI infotext) is taken
+    # into the record so the upload list can show it.
+    prompt = _extract_png_prompt(data) if ext == "png" else None
+
     with _DB_LOCK:
         conn = _db()
         try:
             cur = conn.execute(
                 "INSERT INTO upload_images (file_name, stored_name, "
                 "mime_type, byte_size, host_path, image_key, display_key, "
-                "created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "prompt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (args.get("fileName") or "", stored_name, mime,
-                 len(data), host_path, image_key, display_key, _now_iso()),
+                 len(data), host_path, image_key, display_key, prompt,
+                 _now_iso()),
             )
             upload_id = cur.lastrowid
             conn.commit()
