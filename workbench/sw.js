@@ -1,7 +1,7 @@
 // Workbench service worker (scope: the /mobileplus/ directory).
 // Shell-only caching: the app shell and its hashed assets are cached;
 // the actions API and generated/user images are never cached.
-const CACHE_VERSION = "0d5967a";
+const CACHE_VERSION = "f9fc4b1";
 const SHELL_CACHE = `workbench-shell-${CACHE_VERSION}`;
 const PRECACHE_URLS = [
   "./",
