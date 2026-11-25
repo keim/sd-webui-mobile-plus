@@ -413,6 +413,55 @@ def _sdapi_post(path, payload, timeout=960):
         return json.loads(resp.read().decode("utf-8"))
 
 
+def _sdapi_get(path, timeout=30):
+    req = urllib.request.Request(SDAPI_BASE + path)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def _sync_additional_modules(payload):
+    """Match Forge's global additional-modules state to the payload
+    before a generation.
+
+    Forge loads VAE / text-encoder modules from the global
+    `forge_additional_modules` option, and the txt2img/img2img
+    request field of the same name is inert: it neither loads the
+    modules a model needs (Anima then fails with "You do not have
+    VAE state dict!") nor clears ones a previous model left behind
+    (every later model decodes through the wrong VAE and comes
+    out black). Verified on illu 2026-11-25. So the state is
+    synchronized here from the payload's declared modules,
+    resolved to absolute paths through /sdapi/v1/sd-modules.
+    A payload without modules means the state must be empty.
+    """
+    wanted = payload.get("additional_modules") or []
+    desired = []
+    if wanted:
+        catalog = {}
+        for entry in _sdapi_get("/sdapi/v1/sd-modules"):
+            filename = entry.get("filename")
+            name = entry.get("model_name")
+            if filename:
+                catalog[filename] = filename
+                if name:
+                    catalog[name] = filename
+        for item in wanted:
+            if not isinstance(item, str):
+                continue
+            path = catalog.get(item) or catalog.get(
+                item + ".safetensors")
+            if path is None:
+                raise RuntimeError(
+                    f"additional module not found: {item}")
+            if path not in desired:
+                desired.append(path)
+    options = _sdapi_get("/sdapi/v1/options")
+    current = options.get("forge_additional_modules") or []
+    if sorted(current) != sorted(desired):
+        _sdapi_post("/sdapi/v1/options",
+                    {"forge_additional_modules": desired})
+
+
 def _fetch_sd_progress():
     try:
         req = urllib.request.Request(
@@ -475,6 +524,7 @@ def _run_generation(job_id, payload):
                     else "/sdapi/v1/txt2img")
         used_params = _elide_payload(payload)
 
+        _sync_additional_modules(payload)
         _set_phase(job_id, "generating")
         started = time.time()
         result = _sdapi_post(endpoint, payload)
