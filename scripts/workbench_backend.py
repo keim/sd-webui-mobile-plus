@@ -1,8 +1,7 @@
 """Workbench actions backend for the Mobile+ extension.
 
-Implements the illu SD Workbench action contract (the same 22
-client-facing actions the Muse Space "illu-sd-wakusupesu-v2"
-exposed) directly inside Forge's FastAPI app:
+Implements the workbench action contract (27 client-facing
+actions) directly inside Forge's FastAPI app:
 
   POST /mobileplus/actions        {"action": <name>, "args": {...}}
   GET  /mobileplus/files/<key>    stored image files (jobs/uploads/saved)
@@ -12,13 +11,11 @@ SQLite database (jobs, upload library, saved images, editor source,
 workspace state, word dictionary, text snippets, save counter,
 generation stats) plus image files under workbench-data/files/.
 Generation runs against Forge's own SD API on loopback
-(127.0.0.1:7860) from a worker thread per job — payload composition
-and guardrails port composePayload (Space actions.ts) and
-sd_job_priv.py: per-model parameter table, standard positive base
-from the two weights, editable negative verbatim (legacy fallback:
-standard negative + extra), minor-tag fail-closed check, forced
-"adult" insertion, forced "loli, child" negative insertion for
-every model, checkpoint allowlist, restore-afterwards forced on.
+(127.0.0.1:7860) from a worker thread per job: the client composes
+the full sdapi payload and the worker POSTs it verbatim; the
+backend only syncs Forge's additional-modules state to the
+payload's declared modules first (see _sync_additional_modules)
+and records the outcome.
 
 Loaded by scripts/mobile-plus.py via importlib; registering must
 never break WebUI startup, so the caller wraps it in try/except.
@@ -41,17 +38,6 @@ SDAPI_BASE = "http://127.0.0.1:7860"
 FILES_PREFIX = "/mobileplus/files/"
 MAX_IMAGE_BYTES = 25 * 1024 * 1024
 JOB_TIMEOUT_SECONDS = 300
-
-STANDARD_NEGATIVE = (
-    "(heavy makeup, muscle, worst quality, low quality, lowres: 1.5), "
-    "huge breasts, body hair, ugly, bad anatomy, bad hands, futanari, "
-    "missing fingers, extra digit, long neck, long body, missing arms, "
-    "missing legs, extra arms, extra legs, painting, sketch, "
-    "illustration, flat color, monochrome, greyscale, watermark, "
-    "text, loli, child"
-)
-
-
 
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
 JPEG_SIG = b"\xff\xd8\xff"
@@ -92,8 +78,6 @@ def _init_db():
               width INTEGER, height INTEGER,
               seed_mode TEXT, seed_input INTEGER,
               steps INTEGER, cfg REAL, sampler TEXT, scheduler TEXT,
-              base_enabled INTEGER,
-              photorealistic_weight REAL, comiclo_weight REAL,
               mode TEXT, denoising_strength REAL, resize_mode INTEGER,
               result_seed INTEGER,
               image_key TEXT, display_key TEXT, host_path TEXT,
@@ -163,6 +147,19 @@ def _init_db():
             conn.execute(
                 "ALTER TABLE jobs ADD COLUMN resize_mode INTEGER")
             conn.commit()
+        # The legacy style-weight columns (removed 2026-11-26 with
+        # the photorealistic / comiclo record fields): drop them
+        # from databases created while they existed. A failed drop
+        # is harmless — nothing reads them any more.
+        for legacy_col in ("base_enabled", "photorealistic_weight",
+                           "comiclo_weight"):
+            if legacy_col in job_cols:
+                try:
+                    conn.execute(
+                        f"ALTER TABLE jobs DROP COLUMN {legacy_col}")
+                    conn.commit()
+                except Exception:  # noqa: BLE001 - see above
+                    pass
         upload_cols = [r[1] for r in conn.execute(
             "PRAGMA table_info(upload_images)")]
         if "prompt" not in upload_cols:
@@ -345,10 +342,6 @@ def _job_view(row):
         "cfg": row["cfg"],
         "sampler": row["sampler"],
         "scheduler": row["scheduler"],
-        "baseEnabled": bool(row["base_enabled"])
-        if row["base_enabled"] is not None else None,
-        "photorealisticWeight": row["photorealistic_weight"],
-        "comicloWeight": row["comiclo_weight"],
         "mode": row["mode"],
         "denoisingStrength": row["denoising_strength"],
         "canSendToEditor": can_send,
@@ -368,8 +361,8 @@ def _job_view(row):
 
 def _sweep_timeouts():
     """Fail stale running jobs whose worker thread is gone (e.g. the
-    WebUI restarted mid-generation). Mirrors the Space's 5-minute
-    sweep + reconciliation, simplified: our worker threads always
+    WebUI restarted mid-generation). A 5-minute sweep +
+    reconciliation, simplified: our worker threads always
     write a terminal state themselves, so a live thread is proof of
     life and a dead one means the run is gone."""
     cutoff = time.time() - JOB_TIMEOUT_SECONDS
@@ -429,7 +422,7 @@ def _sync_additional_modules(payload):
     modules a model needs (Anima then fails with "You do not have
     VAE state dict!") nor clears ones a previous model left behind
     (every later model decodes through the wrong VAE and comes
-    out black). Verified on illu 2026-11-25. So the state is
+    out black). Verified 2026-11-25. So the state is
     synchronized here from the payload's declared modules,
     resolved to absolute paths through /sdapi/v1/sd-modules.
     A payload without modules means the state must be empty.
@@ -863,7 +856,7 @@ def _store_save_index(value):
 
 def _stored_save_index():
     """The latest save index the server holds. The counter is
-    managed by the client (keim, 2026-11-23): the server only
+    managed by the client (2026-11-23): the server only
     remembers the newest value it received — via a save action
     or setSaveIndex — and hands it back as the client's initial
     value at startup. Once the browser-managed flow has written
@@ -872,7 +865,7 @@ def _stored_save_index():
     the first read before that, the seed continues the existing
     sequence: the higher of the legacy stored value and the
     highest saved-file counter; a fresh install with neither
-    starts at 0 (keim, 2026-11-23)."""
+    starts at 0 (2026-11-23)."""
     conn = _db()
     try:
         row = conn.execute(
@@ -924,10 +917,6 @@ def _insert_saved(counter, seed, source_job_id, source_kind,
 
 # --- Action handlers ----------------------------------------------------
 
-def _act_get_standard_negative(args):
-    return {"standardNegative": STANDARD_NEGATIVE}
-
-
 def _act_get_model_list(args):
     """The checkpoints Forge currently knows, for the template
     pane's model dropdown. `name` is the canonical model_name from
@@ -950,6 +939,21 @@ def _act_get_model_list(args):
             stem = base.rsplit(".", 1)[0] if "." in base else base
         result.append({"name": name, "stem": stem or name})
     return {"models": result}
+
+
+def _act_get_sampler_list(args):
+    """The samplers and schedulers Forge offers, for the Parameter
+    pane's selects: the name lists of /sdapi/v1/samplers and
+    /sdapi/v1/schedulers, so the panel offers exactly what the
+    server supports."""
+    samplers = _sdapi_get("/sdapi/v1/samplers")
+    schedulers = _sdapi_get("/sdapi/v1/schedulers")
+    return {
+        "samplers": [e.get("name") for e in samplers or []
+                     if e.get("name")],
+        "schedulers": [e.get("name") for e in schedulers or []
+                       if e.get("name")],
+    }
 
 
 def _act_get_word_dictionary(args):
@@ -1263,11 +1267,10 @@ def _act_create_job(args):
                 "INSERT INTO jobs (kind, status, phase, phase_updated_at, "
                 "model, prompt, extra_negative, negative_prompt, width, "
                 "height, seed_mode, seed_input, steps, cfg, sampler, "
-                "scheduler, base_enabled, photorealistic_weight, "
-                "comiclo_weight, mode, denoising_strength, resize_mode, created_at, "
+                "scheduler, mode, denoising_strength, resize_mode, created_at, "
                 "updated_at) VALUES ('generate', 'running', "
-                "'agent_starting', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                "?, ?, ?, ?, ?, ?, ?, ?)",
+                "'agent_starting', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                "?, ?, ?, ?, ?)",
                 (
                     now,
                     args.get("model"), args.get("prompt"),
@@ -1277,9 +1280,6 @@ def _act_create_job(args):
                     args.get("seedMode"), args.get("seed"),
                     args.get("steps"), args.get("cfg"),
                     args.get("sampler"), args.get("scheduler"),
-                    1 if args.get("baseEnabled") else 0,
-                    args.get("photorealisticWeight"),
-                    args.get("comicloWeight"),
                     args.get("mode") or "txt2img",
                     args.get("denoisingStrength"),
                     args.get("resizeMode"),
@@ -1447,8 +1447,8 @@ def _act_delete_saved_images(args):
 
 
 ACTIONS = {
-    "getStandardNegative": _act_get_standard_negative,
     "getModelList": _act_get_model_list,
+    "getSamplerList": _act_get_sampler_list,
     "getWordDictionary": _act_get_word_dictionary,
     "getTextSnippets": _act_get_text_snippets,
     "saveTextSnippets": _act_save_text_snippets,

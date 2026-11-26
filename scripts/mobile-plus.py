@@ -527,9 +527,9 @@ def on_app_started(demo, app: FastAPI):
     except Exception as e:  # noqa: BLE001 - never break WebUI startup
         print(f"[Mobile+] Workbench backend failed to start: {e}")
 
-    # illu SD Workbench UI (UI-only port of the Space client build).
-    # Served from the extension's workbench/ folder; the actions endpoint the
-    # UI calls (/mobileplus/actions) is not wired up yet.
+    # SD Workbench UI, served from the extension's workbench/
+    # folder; the UI calls the actions endpoint registered above
+    # (/mobileplus/actions).
     @app.get(WORKBENCH_PATH)
     async def workbench_redirect():
         return RedirectResponse(url=WORKBENCH_PATH + "/")

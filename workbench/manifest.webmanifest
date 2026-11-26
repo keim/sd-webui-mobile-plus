@@ -1,7 +1,7 @@
 {
   "name": "Stable Diffusion WebUI Mobile Plus",
   "short_name": "SD Mobile+",
-  "description": "illu SD Workbench: the Mobile+ image generation workbench for Stable Diffusion WebUI.",
+  "description": "The Mobile+ image generation workbench for Stable Diffusion WebUI.",
   "id": ".",
   "start_url": ".",
   "scope": ".",
