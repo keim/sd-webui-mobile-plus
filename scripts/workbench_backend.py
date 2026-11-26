@@ -69,11 +69,10 @@ def _init_db():
             CREATE TABLE IF NOT EXISTS jobs (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               kind TEXT NOT NULL DEFAULT 'generate',
-              job_key TEXT,
               status TEXT NOT NULL DEFAULT 'running',
               phase TEXT,
               phase_updated_at TEXT,
-              model TEXT, prompt TEXT, extra_negative TEXT,
+              model TEXT, prompt TEXT,
               negative_prompt TEXT,
               width INTEGER, height INTEGER,
               seed_mode TEXT, seed_input INTEGER,
@@ -147,12 +146,13 @@ def _init_db():
             conn.execute(
                 "ALTER TABLE jobs ADD COLUMN resize_mode INTEGER")
             conn.commit()
-        # The legacy style-weight columns (removed 2026-11-26 with
-        # the photorealistic / comiclo record fields): drop them
-        # from databases created while they existed. A failed drop
-        # is harmless — nothing reads them any more.
+        # Legacy columns (the style weights, job_key and
+        # extra_negative, removed 2026-11-26): drop them from
+        # databases created while they existed. A failed drop is
+        # harmless — nothing reads them any more.
         for legacy_col in ("base_enabled", "photorealistic_weight",
-                           "comiclo_weight"):
+                           "comiclo_weight", "job_key",
+                           "extra_negative"):
             if legacy_col in job_cols:
                 try:
                     conn.execute(
@@ -326,13 +326,11 @@ def _job_view(row):
     return {
         "id": row["id"],
         "kind": row["kind"],
-        "direct": True,
         "status": row["status"],
         "phase": row["phase"],
         "phaseUpdatedAt": row["phase_updated_at"],
         "model": row["model"],
         "prompt": row["prompt"],
-        "extraNegative": row["extra_negative"],
         "negativePrompt": row["negative_prompt"],
         "width": row["width"],
         "height": row["height"],
@@ -350,9 +348,6 @@ def _job_view(row):
         "displayUrl": _file_url(row["display_key"]) if completed else None,
         "usedParams": row["used_params"],
         "loraHashes": row["lora_hashes"],
-        "checkModels": None,
-        "checkCheckpoint": None,
-        "checkSamplers": None,
         "error": row["error"],
         "createdAt": row["created_at"],
         "updatedAt": row["updated_at"],
@@ -807,35 +802,6 @@ def _editor_source_view(table="editor_source"):
     return _none_source_view()
 
 
-_SAVED_NAME_RE = re.compile(r"^(\d+)-\d+\.(?:png|jpg)$")
-
-
-def _scan_saved_highest():
-    """The highest counter among the saved files' names
-    ({counter}-{seed}.png), or None when the folder is empty."""
-    saved_dir = os.path.join(_STATE["data_dir"], "files", "saved")
-    highest = None
-    try:
-        names = os.listdir(saved_dir)
-    except OSError:
-        names = []
-    for name in names:
-        m = _SAVED_NAME_RE.match(name)
-        if m:
-            value = int(m.group(1))
-            if highest is None or value > highest:
-                highest = value
-    return highest
-
-
-def _save_index_marker_path():
-    # Present once the browser-managed flow has written a value.
-    # A save_counter row WITHOUT this marker is a leftover from
-    # the pre-2026-11-23 counter schemes and may lag behind the
-    # saved files, so it must not win on its own (see below).
-    return os.path.join(_STATE["data_dir"], "save-index-browser-managed")
-
-
 def _store_save_index(value):
     with _DB_LOCK:
         conn = _db()
@@ -847,39 +813,21 @@ def _store_save_index(value):
             conn.commit()
         finally:
             conn.close()
-    try:
-        with open(_save_index_marker_path(), "w") as f:
-            f.write("1")
-    except OSError:
-        pass
 
 
 def _stored_save_index():
     """The latest save index the server holds. The counter is
-    managed by the client (2026-11-23): the server only
-    remembers the newest value it received — via a save action
-    or setSaveIndex — and hands it back as the client's initial
-    value at startup. Once the browser-managed flow has written
-    (marker file present), the stored value is authoritative —
-    even when the user deliberately lowers it in the pane. On
-    the first read before that, the seed continues the existing
-    sequence: the higher of the legacy stored value and the
-    highest saved-file counter; a fresh install with neither
-    starts at 0 (2026-11-23)."""
+    managed by the client (2026-11-23): the server only remembers
+    the newest value it received — via a save action or
+    setSaveIndex — and hands it back as the client's initial
+    value at startup. A fresh install starts at 0."""
     conn = _db()
     try:
         row = conn.execute(
             "SELECT value FROM save_counter WHERE id = 1").fetchone()
-        stored = row["value"] if row else None
+        return row["value"] if row else 0
     finally:
         conn.close()
-    if os.path.exists(_save_index_marker_path()):
-        return stored if stored is not None else 0
-    highest = _scan_saved_highest()
-    value = max(stored if stored is not None else 0,
-                highest if highest is not None else 0)
-    _store_save_index(value)
-    return value
 
 
 def _index_from_args(args):
@@ -1265,16 +1213,15 @@ def _act_create_job(args):
         try:
             cur = conn.execute(
                 "INSERT INTO jobs (kind, status, phase, phase_updated_at, "
-                "model, prompt, extra_negative, negative_prompt, width, "
+                "model, prompt, negative_prompt, width, "
                 "height, seed_mode, seed_input, steps, cfg, sampler, "
                 "scheduler, mode, denoising_strength, resize_mode, created_at, "
                 "updated_at) VALUES ('generate', 'running', "
                 "'agent_starting', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                "?, ?, ?, ?, ?)",
+                "?, ?, ?, ?)",
                 (
                     now,
                     args.get("model"), args.get("prompt"),
-                    args.get("extraNegative") or "",
                     args.get("negativePrompt"),
                     args.get("width"), args.get("height"),
                     args.get("seedMode"), args.get("seed"),
@@ -1287,10 +1234,6 @@ def _act_create_job(args):
                 ),
             )
             job_id = cur.lastrowid
-            conn.execute(
-                "UPDATE jobs SET job_key = ? WHERE id = ?",
-                (f"priv-{job_id}", job_id),
-            )
             conn.commit()
         finally:
             conn.close()
