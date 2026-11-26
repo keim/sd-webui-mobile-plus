@@ -1217,7 +1217,7 @@ def _act_create_job(args):
                 "height, seed_mode, seed_input, steps, cfg, sampler, "
                 "scheduler, mode, denoising_strength, resize_mode, created_at, "
                 "updated_at) VALUES ('generate', 'running', "
-                "'agent_starting', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                "'agent_starting', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
                 "?, ?, ?, ?)",
                 (
                     now,
