@@ -1208,6 +1208,143 @@ def _act_create_job(args):
     return {"ok": True, "jobId": job_id, "error": None}
 
 
+def _act_create_edited_job(args):
+    """画像加工の保存： bake the processing pane's adjustments
+    (brightness / saturation / contrast, -100..100 percent) into
+    the source image with PIL and record the result as a new
+    completed job, which becomes the Editor's image — the same
+    end state as a finished generation, without a generation.
+    The factors are 1 + v/100 applied in brightness, contrast,
+    color order, matching the pane's CSS filter preview."""
+    def _fail(msg):
+        return {"ok": False, "jobId": None, "error": msg}
+
+    def _pct(name):
+        try:
+            v = int(round(float(args.get(name) or 0)))
+        except (TypeError, ValueError):
+            v = 0
+        return max(-100, min(100, v))
+
+    brightness = _pct("brightness")
+    saturation = _pct("saturation")
+    contrast = _pct("contrast")
+    source_kind = args.get("sourceKind")
+    src_job = None
+    src_upload = None
+    conn = _db()
+    try:
+        if source_kind == "job":
+            row = conn.execute(
+                "SELECT * FROM jobs WHERE id = ?",
+                (args.get("jobId"),)).fetchone()
+            if row is None or not row["image_key"]:
+                return _fail("加工元の生成画像が見つかりません。")
+            src_job = dict(row)
+            image_key = src_job["image_key"]
+        elif source_kind == "upload":
+            row = conn.execute(
+                "SELECT * FROM upload_images WHERE id = ?",
+                (args.get("uploadId"),)).fetchone()
+            if row is None:
+                return _fail("加工元のアップロード画像が見つかりません。")
+            src_upload = dict(row)
+            image_key = f"uploads/{src_upload['stored_name']}"
+        else:
+            return _fail("加工元の画像が指定されていません。")
+    finally:
+        conn.close()
+
+    path = _file_path(image_key)
+    if not path or not os.path.isfile(path):
+        return _fail("加工元の画像ファイルが見つかりません。")
+    try:
+        with open(path, "rb") as f:
+            src_bytes = f.read()
+        from PIL import Image, ImageEnhance
+        img = Image.open(io.BytesIO(src_bytes)).convert("RGB")
+        if brightness != 0:
+            img = ImageEnhance.Brightness(img).enhance(1 + brightness / 100)
+        if contrast != 0:
+            img = ImageEnhance.Contrast(img).enhance(1 + contrast / 100)
+        if saturation != 0:
+            img = ImageEnhance.Color(img).enhance(1 + saturation / 100)
+        out = io.BytesIO()
+        img.save(out, "PNG")
+        png_bytes = out.getvalue()
+        width, height = img.size
+    except Exception as e:  # noqa: BLE001 - surfaced to the client
+        return _fail(f"画像の加工に失敗しました: {e}"[:800])
+
+    now = _now_iso()
+    with _DB_LOCK:
+        conn = _db()
+        try:
+            cur = conn.execute(
+                "INSERT INTO jobs (kind, status, phase, phase_updated_at, "
+                "model, prompt, negative_prompt, width, "
+                "height, seed_mode, seed_input, steps, cfg, sampler, "
+                "scheduler, mode, denoising_strength, resize_mode, created_at, "
+                "updated_at) VALUES ('generate', 'running', "
+                "'saving', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                "?, ?, ?, ?)",
+                (
+                    now,
+                    src_job["model"] if src_job else None,
+                    (src_job["prompt"] if src_job
+                     else src_upload["prompt"]),
+                    src_job["negative_prompt"] if src_job else None,
+                    width, height,
+                    src_job["seed_mode"] if src_job else None,
+                    src_job["seed_input"] if src_job else None,
+                    src_job["steps"] if src_job else None,
+                    src_job["cfg"] if src_job else None,
+                    src_job["sampler"] if src_job else None,
+                    src_job["scheduler"] if src_job else None,
+                    src_job["mode"] if src_job else "txt2img",
+                    None, None,
+                    now, now,
+                ),
+            )
+            job_id = cur.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
+
+    image_key = f"jobs/{job_id}.png"
+    host_path = _write_file(image_key, png_bytes)
+    display_key = None
+    display = _make_display_jpeg(png_bytes)
+    if display:
+        display_key = f"jobs/{job_id}.display.jpg"
+        _write_file(display_key, display)
+    used_params = {
+        "edited": True,
+        "sourceKind": source_kind,
+        "sourceJobId": src_job["id"] if src_job else None,
+        "sourceUploadId": src_upload["id"] if src_upload else None,
+        "brightness": brightness,
+        "saturation": saturation,
+        "contrast": contrast,
+    }
+    _update_job(
+        job_id,
+        status="completed",
+        phase=None,
+        result_seed=src_job["result_seed"] if src_job else None,
+        image_key=image_key,
+        display_key=display_key,
+        host_path=host_path,
+        used_params=json.dumps(used_params, ensure_ascii=False),
+        error=None,
+    )
+    try:
+        _set_editor_source("job", job_id=job_id)
+    except Exception:  # noqa: BLE001 - the job itself is recorded
+        pass
+    return {"ok": True, "jobId": job_id, "error": None}
+
+
 def _act_poll_generation_job(args):
     job = _get_job(int(args["jobId"]))
     if job is None:
@@ -1371,6 +1508,7 @@ ACTIONS = {
     "adoptEditorSource": _act_adopt_editor_source,
     "clearSourceImage": _act_clear_source_image,
     "createJob": _act_create_job,
+    "createEditedJob": _act_create_edited_job,
     "pollGenerationJob": _act_poll_generation_job,
     "deleteJobs": _act_delete_jobs,
     "saveJobImage": _act_save_job_image,
