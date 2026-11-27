@@ -509,7 +509,7 @@ def on_app_started(demo, app: FastAPI):
         return Response(content=data, media_type=content_type)
 
     # Workbench actions backend: registered BEFORE the static mount
-    # below so POST /mobileplus/actions and GET /mobileplus/files/*
+    # below so POST /mobileplus/api/<action> and GET /mobileplus/files/*
     # win over the /mobileplus mount. A backend failure must never
     # break WebUI startup.
     try:
@@ -529,7 +529,7 @@ def on_app_started(demo, app: FastAPI):
 
     # SD Workbench UI, served from the extension's workbench/
     # folder; the UI calls the actions endpoint registered above
-    # (/mobileplus/actions).
+    # (/mobileplus/api/<action>).
     @app.get(WORKBENCH_PATH)
     async def workbench_redirect():
         return RedirectResponse(url=WORKBENCH_PATH + "/")

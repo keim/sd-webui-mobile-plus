@@ -1,7 +1,7 @@
 // Workbench service worker (scope: the /mobileplus/ directory).
 // Shell-only caching: the app shell and its hashed assets are cached;
 // the actions API and generated/user images are never cached.
-const CACHE_VERSION = "d40ce3f";
+const CACHE_VERSION = "a229f0b";
 const SHELL_CACHE = `workbench-shell-${CACHE_VERSION}`;
 const PRECACHE_URLS = [
   "./",
@@ -40,7 +40,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   // Actions API and image files: network only, never cached.
-  if (url.pathname.includes("/actions") || url.pathname.includes("/files/")) {
+  if (url.pathname.includes("/api/") || url.pathname.includes("/files/")) {
     return;
   }
   if (request.mode === "navigate") {

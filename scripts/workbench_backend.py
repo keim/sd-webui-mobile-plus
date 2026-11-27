@@ -3,7 +3,7 @@
 Implements the workbench action contract (27 client-facing
 actions) directly inside Forge's FastAPI app:
 
-  POST /mobileplus/actions        {"action": <name>, "args": {...}}
+  POST /mobileplus/api/<action>   the action's args as the JSON body
   GET  /mobileplus/files/<key>    stored image files (jobs/uploads/saved)
 
 State lives in the extension's own workbench-data/ directory: a
@@ -1393,15 +1393,16 @@ def register_workbench(app, extension_root):
     os.makedirs(_STATE["data_dir"], exist_ok=True)
     _init_db()
 
-    @app.post("/mobileplus/actions")
-    async def workbench_actions(request: Request):
+    @app.post("/mobileplus/api/{action}")
+    async def workbench_api(action: str, request: Request):
         try:
-            body = await request.json()
+            args = await request.json()
         except Exception:  # noqa: BLE001
             return JSONResponse({"error": "invalid JSON body"},
                                 status_code=400)
-        action = body.get("action")
-        args = body.get("args") or {}
+        if not isinstance(args, dict):
+            return JSONResponse({"error": "invalid JSON body"},
+                                status_code=400)
         handler = ACTIONS.get(action)
         if handler is None:
             return JSONResponse(
@@ -1415,9 +1416,9 @@ def register_workbench(app, extension_root):
             # the fetch always timed out and progress never
             # reached the client. Dispatch in the threadpool.
             result = await run_in_threadpool(handler, args)
-            # The space-sdk client unwraps `body.data` and treats a
-            # truthy `body.error` as a thrown action error.
-            return JSONResponse({"data": result})
+            # The client reads the result JSON directly; failures
+            # are a non-2xx status with {"error": str} (below).
+            return JSONResponse(result)
         except Exception as e:  # noqa: BLE001 - surfaced to the client
             return JSONResponse({"error": str(e)[:800]}, status_code=500)
 
