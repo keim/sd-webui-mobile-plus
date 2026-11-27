@@ -865,45 +865,6 @@ def _insert_saved(counter, seed, source_job_id, source_kind,
 
 # --- Action handlers ----------------------------------------------------
 
-def _act_get_model_list(args):
-    """The checkpoints Forge currently knows, for the template
-    pane's model dropdown. `name` is the canonical model_name from
-    /sdapi/v1/sd-models (checkpoints in a subfolder carry a prefix,
-    e.g. illustrious_waiNSFWIllustrious_v140); `stem` is the bare
-    file stem, which saved templates may still carry. The client
-    matches a template's model on either and migrates it to `name`
-    on the next commit. Both forms resolve as sd_model_checkpoint
-    (verified live 2026-11-26)."""
-    models = _sdapi_get("/sdapi/v1/sd-models")
-    result = []
-    for entry in models or []:
-        name = entry.get("model_name") or ""
-        if not name:
-            continue
-        stem = ""
-        filename = entry.get("filename") or ""
-        if filename:
-            base = filename.replace("\\", "/").rsplit("/", 1)[-1]
-            stem = base.rsplit(".", 1)[0] if "." in base else base
-        result.append({"name": name, "stem": stem or name})
-    return {"models": result}
-
-
-def _act_get_sampler_list(args):
-    """The samplers and schedulers Forge offers, for the Parameter
-    pane's selects: the name lists of /sdapi/v1/samplers and
-    /sdapi/v1/schedulers, so the panel offers exactly what the
-    server supports."""
-    samplers = _sdapi_get("/sdapi/v1/samplers")
-    schedulers = _sdapi_get("/sdapi/v1/schedulers")
-    return {
-        "samplers": [e.get("name") for e in samplers or []
-                     if e.get("name")],
-        "schedulers": [e.get("name") for e in schedulers or []
-                       if e.get("name")],
-    }
-
-
 def _act_get_word_dictionary(args):
     conn = _db()
     try:
@@ -1390,8 +1351,6 @@ def _act_delete_saved_images(args):
 
 
 ACTIONS = {
-    "getModelList": _act_get_model_list,
-    "getSamplerList": _act_get_sampler_list,
     "getWordDictionary": _act_get_word_dictionary,
     "getTextSnippets": _act_get_text_snippets,
     "saveTextSnippets": _act_save_text_snippets,
