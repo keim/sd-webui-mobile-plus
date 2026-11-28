@@ -1210,12 +1210,14 @@ def _act_create_job(args):
 
 def _act_create_edited_job(args):
     """画像加工の保存： bake the processing pane's adjustments
-    (brightness / saturation / contrast, -100..100 percent) into
-    the source image with PIL and record the result as a new
-    completed job, which becomes the Editor's image — the same
-    end state as a finished generation, without a generation.
-    The factors are 1 + v/100 applied in brightness, contrast,
-    color order, matching the pane's CSS filter preview."""
+    (brightness / saturation / contrast / temperature, -100..100
+    percent) into the source image with PIL and record the result
+    as a new completed job, which becomes the Editor's image —
+    the same end state as a finished generation, without a
+    generation. The factors are 1 + v/100 applied in brightness,
+    contrast, color order, then the temperature channel gains
+    (mirroring temperatureGains in the client), matching the
+    pane's preview."""
     def _fail(msg):
         return {"ok": False, "jobId": None, "error": msg}
 
@@ -1229,6 +1231,7 @@ def _act_create_edited_job(args):
     brightness = _pct("brightness")
     saturation = _pct("saturation")
     contrast = _pct("contrast")
+    temperature = _pct("temperature")
     source_kind = args.get("sourceKind")
     src_job = None
     src_upload = None
@@ -1269,6 +1272,13 @@ def _act_create_edited_job(args):
             img = ImageEnhance.Contrast(img).enhance(1 + contrast / 100)
         if saturation != 0:
             img = ImageEnhance.Color(img).enhance(1 + saturation / 100)
+        if temperature != 0:
+            k = temperature / 100
+            gains = (1 + 0.25 * k, 1 + 0.05 * k, 1 - 0.25 * k)
+            img = Image.merge("RGB", tuple(
+                ch.point([max(0, min(255, round(i * g))) for i in range(256)])
+                for ch, g in zip(img.split(), gains)
+            ))
         drawing_b64 = args.get("drawing")
         drew = False
         if isinstance(drawing_b64, str) and drawing_b64:
@@ -1337,6 +1347,7 @@ def _act_create_edited_job(args):
         "brightness": brightness,
         "saturation": saturation,
         "contrast": contrast,
+        "temperature": temperature,
         "drawing": drew,
     }
     _update_job(
