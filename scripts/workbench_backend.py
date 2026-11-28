@@ -1269,6 +1269,17 @@ def _act_create_edited_job(args):
             img = ImageEnhance.Contrast(img).enhance(1 + contrast / 100)
         if saturation != 0:
             img = ImageEnhance.Color(img).enhance(1 + saturation / 100)
+        drawing_b64 = args.get("drawing")
+        drew = False
+        if isinstance(drawing_b64, str) and drawing_b64:
+            layer = Image.open(
+                io.BytesIO(base64.b64decode(drawing_b64))).convert("RGBA")
+            if layer.size != img.size:
+                layer = layer.resize(img.size)
+            base_rgba = img.convert("RGBA")
+            base_rgba.alpha_composite(layer)
+            img = base_rgba.convert("RGB")
+            drew = True
         out = io.BytesIO()
         img.save(out, "PNG")
         png_bytes = out.getvalue()
@@ -1326,6 +1337,7 @@ def _act_create_edited_job(args):
         "brightness": brightness,
         "saturation": saturation,
         "contrast": contrast,
+        "drawing": drew,
     }
     _update_job(
         job_id,
